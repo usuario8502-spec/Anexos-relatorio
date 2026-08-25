@@ -66,8 +66,38 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
         .popup-blur { backdrop-filter: blur(5px); }
         
-        .cropper-view-box { outline: 3px solid rgba(59, 130, 246, 0.9) !important; border-radius: 4px; }
+        /* ========================================================
+           CROPPER CSS (Bordas grossas e área de toque expandida)
+           ======================================================== */
+        .cropper-view-box { outline: 4px solid #3b82f6 !important; border-radius: 4px; }
+        .cropper-dashed { border: 1px dashed rgba(255, 255, 255, 0.8) !important; }
+        
+        /* Expande o espaço invisível nas laterais para o toque no celular */
         .cropper-line { background-color: transparent !important; }
+        .cropper-line.line-e { width: 50px !important; right: -25px !important; cursor: e-resize !important; }
+        .cropper-line.line-w { width: 50px !important; left: -25px !important; cursor: w-resize !important; }
+        .cropper-line.line-n { height: 50px !important; top: -25px !important; cursor: n-resize !important; }
+        .cropper-line.line-s { height: 50px !important; bottom: -25px !important; cursor: s-resize !important; }
+
+        /* Bolinhas Azuis nos Cantos e Meios (8 pontos) */
+        .cropper-point { width: 50px !important; height: 50px !important; background-color: transparent !important; opacity: 1 !important; }
+        .cropper-point::before {
+            content: ''; position: absolute; width: 18px; height: 18px; background-color: #3b82f6; border-radius: 50%;
+            top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 5px rgba(0,0,0,0.8); border: 2px solid white;
+        }
+        
+        .cropper-point.point-nw { top: -25px !important; left: -25px !important; }
+        .cropper-point.point-ne { top: -25px !important; right: -25px !important; }
+        .cropper-point.point-sw { bottom: -25px !important; left: -25px !important; }
+        .cropper-point.point-se { bottom: -25px !important; right: -25px !important; }
+        .cropper-point.point-n { top: -25px !important; margin-left: -25px !important; }
+        .cropper-point.point-s { bottom: -25px !important; margin-left: -25px !important; }
+        .cropper-point.point-e { right: -25px !important; margin-top: -25px !important; }
+        .cropper-point.point-w { left: -25px !important; margin-top: -25px !important; }
+        .cropper-center { display: none !important; }
+
+        .filtro-ativo { border-color: #3b82f6 !important; background-color: #1e3a8a !important; color: #60a5fa !important; }
+
         input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; background: transparent; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; height: 18px; width: 18px; border-radius: 50%; background: #3b82f6; cursor: pointer; margin-top: -7px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #475569; border-radius: 2px; }
@@ -75,7 +105,7 @@
 </head>
 <body class="bg-gray-950 text-gray-100 font-sans min-h-screen flex flex-col relative pb-24">
 
-    <!-- MODAL DE LOGIN -->
+    <!-- MODAL DE LOGIN EMBUTIDO COM PROTEÇÃO ANTI-REFRESH -->
     <div id="modalLoginApp" class="fixed inset-0 bg-black/95 popup-blur z-[100] flex items-center justify-center p-4">
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl flex flex-col gap-4">
             <div class="text-center flex flex-col items-center gap-2">
@@ -85,6 +115,7 @@
                 <h2 class="text-lg font-bold text-white">Acessar o Sistema</h2>
                 <p class="text-xs text-gray-400">Digite seu usuário e senha para continuar.</p>
             </div>
+
             <form id="formLogin" onsubmit="event.preventDefault(); if(window.executarLoginFirebase) window.executarLoginFirebase(event);" class="flex flex-col gap-3">
                 <div class="flex flex-col gap-1">
                     <label class="text-[10px] text-gray-400 font-bold uppercase">Usuário</label>
@@ -228,7 +259,7 @@
         </div>
     </aside>
 
-    <!-- Cabeçalho (Sino Removido) -->
+    <!-- Cabeçalho -->
     <header class="bg-gray-900 border-b border-gray-800 p-4 sticky top-0 z-40 shadow-md">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <button onclick="window.toggleSidebar && window.toggleSidebar(true)" class="text-gray-300 hover:text-white text-xl p-2 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-700 focus:outline-none w-10 h-10 flex items-center justify-center">
@@ -339,7 +370,7 @@
                         <span class="text-xs font-bold text-red-400"><i class="fas fa-file-pdf"></i> Revisão de Documentos</span>
                         <span id="txtQtdPaginas" class="text-[10px] text-gray-400 bg-gray-800 px-2 py-1 rounded border border-gray-700">0 páginas</span>
                     </div>
-                    <p class="text-[10px] text-yellow-500 mb-1 leading-tight"><i class="fas fa-info-circle"></i> O carimbo inserido em uma página é aplicado nas próximas automaticamente. A IA seleciona o nome. Clique no Lápis para editar a página.</p>
+                    <p class="text-[10px] text-yellow-500 mb-1 leading-tight"><i class="fas fa-info-circle"></i> O carimbo inserido em uma página é aplicado nas próximas. A IA seleciona o nome. Clique no Lápis para editar a página.</p>
                     
                     <div id="gridPaginasScanner" class="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto custom-scrollbar p-1"></div>
                     
@@ -1015,8 +1046,13 @@
                         if (perfilUsuario !== "administrador" && p.excluidoPorExecutor) return;
 
                         listaPacientesCadastrados.push(p);
-                        
-                        if(container) {
+                    });
+                    
+                    // Ordenação de A a Z ignorando acentos
+                    listaPacientesCadastrados.sort((a,b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
+
+                    if(container) {
+                        listaPacientesCadastrados.forEach(p => {
                             let acoesHtml = '';
                             if (perfilUsuario === "administrador" && p.excluidoPorExecutor) {
                                 acoesHtml = `<button onclick="window.restaurarPacienteFirebase('${p.id}', '${p.nome.replace(/'/g, "\\'")}')" title="Restaurar (Apagado por Executor)" class="text-green-400 hover:text-green-300 p-1.5"><i class="fas fa-recycle"></i></button>
@@ -1037,11 +1073,8 @@
                                     ${acoesHtml}
                                 </div>
                             </div>`;
-                        }
-                    });
-                    
-                    // Ordenação de A a Z ignorando acentos
-                    listaPacientesCadastrados.sort((a,b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
+                        });
+                    }
                 } else {
                     if(container) container.innerHTML = `<div class="text-center text-gray-500 text-xs py-4">Nenhum paciente cadastrado.</div>`;
                 }
@@ -1356,58 +1389,97 @@
             const ctxBruto = canvasCortado.getContext('2d');
             canvasOriginalContextData = ctxBruto.getImageData(0, 0, larguraCrop, alturaCrop);
 
-            caixasTexto = [{
-                id: Date.now(),
-                texto: "",
-                posicao: { x: 40, y: alturaCrop - 150 },
-                cor: "#000000",
-                tamanhoFonte: 24,
-                larguraCaixa: Math.min(400, larguraCrop - 80),
-                dimensaoCalculada: { w: 400, h: 40 }
-            }];
-            indiceCaixaTextoAtiva = 0;
-
-            posicaoAssinatura = { x: larguraCrop / 2, y: alturaCrop / 2 };
-            posicaoCarimbo = { x: (larguraCrop - 400) / 2, y: (alturaCrop / 2) - 65 };
-            imgAssinaturaElemento = null;
-            imgCarimboElemento = null;
-            
-            const slB = document.getElementById("sliderBrilho"); if (slB) slB.value = 0;
-            const slC = document.getElementById("sliderContraste"); if (slC) slC.value = 0;
-            const slAss = document.getElementById("sliderEscalaAssinatura"); if (slAss) slAss.value = 120;
-            const slCar = document.getElementById("sliderEscalaCarimbo"); if (slCar) slCar.value = 85;
-            
-            const pAss = document.getElementById("painelControleAssinatura");
-            if (pAss) { pAss.classList.add("hidden"); pAss.classList.remove("flex"); }
-            const txtBtnAss = document.getElementById("txtBtnAssinatura");
-            if (txtBtnAss) txtBtnAss.innerText = "Adicionar Assinatura";
-
-            const pCar = document.getElementById("painelControleCarimbo");
-            if (pCar) { pCar.classList.add("hidden"); pCar.classList.remove("flex"); }
-            const txtB = document.getElementById("txtBtnCarimbo");
-            if (txtB) txtB.innerText = "Carimbar";
-
-            const slLarg = document.getElementById("sliderLarguraCaixaTexto");
-            if (slLarg) {
-                slLarg.max = larguraCrop;
-                slLarg.value = Math.min(400, larguraCrop - 80);
+            // Herdar estado da página anterior se for uma página NOVA
+            let estadoAnterior = null;
+            if (indicePaginaSendoEditada === null && arrayPaginasEscaneadas.length > 0) {
+                for(let i = arrayPaginasEscaneadas.length - 1; i >= 0; i--){
+                    if(arrayPaginasEscaneadas[i].estadoEdicao) {
+                        estadoAnterior = arrayPaginasEscaneadas[i].estadoEdicao;
+                        break;
+                    }
+                }
             }
 
-            const modalCrop = document.getElementById("modalCropperScanner");
-            if (modalCrop) { modalCrop.classList.add("hidden"); modalCrop.classList.remove("flex"); }
-            
-            const modalFiltros = document.getElementById("modalFiltrosScanner");
-            if (modalFiltros) { modalFiltros.classList.remove("hidden"); modalFiltros.classList.add("flex"); }
+            if (estadoAnterior) {
+                caixasTexto = JSON.parse(JSON.stringify(estadoAnterior.caixasTexto || []));
+                posicaoAssinatura = { ...estadoAnterior.posicaoAssinatura };
+                posicaoCarimbo = { ...estadoAnterior.posicaoCarimbo };
 
-            const canvasLive = document.getElementById("canvasLivePreview");
-            if (canvasLive) {
-                canvasLive.width = larguraCrop;
-                canvasLive.height = alturaCrop;
-                configurarEventosArrastoCanvas(canvasLive);
+                const slB = document.getElementById("sliderBrilho"); if (slB) slB.value = estadoAnterior.brilho;
+                const slC = document.getElementById("sliderContraste"); if (slC) slC.value = estadoAnterior.contraste;
+                const slAss = document.getElementById("sliderEscalaAssinatura"); if (slAss) slAss.value = estadoAnterior.escalaAssinatura;
+                const slCar = document.getElementById("sliderEscalaCarimbo"); if (slCar) slCar.value = estadoAnterior.escalaCarimbo;
+
+                let promises = [];
+                if (estadoAnterior.imgAssinaturaSrc) {
+                    promises.push(new Promise((res) => {
+                        let imgA = new Image();
+                        imgA.onload = () => { imgAssinaturaElemento = imgA; res(); };
+                        imgA.src = estadoAnterior.imgAssinaturaSrc;
+                    }));
+                } else { imgAssinaturaElemento = null; }
+
+                if (estadoAnterior.imgCarimboSrc) {
+                    promises.push(new Promise((res) => {
+                        let imgC = new Image();
+                        imgC.onload = () => { imgCarimboElemento = imgC; res(); };
+                        imgC.src = estadoAnterior.imgCarimboSrc;
+                    }));
+                } else { imgCarimboElemento = null; }
+
+                Promise.all(promises).then(() => {
+                    abrirModalsFiltro(true);
+                });
+            } else {
+                caixasTexto = [{ id: Date.now(), texto: "", posicao: { x: 40, y: alturaCrop - 150 }, cor: "#000000", tamanhoFonte: 24, larguraCaixa: Math.min(400, larguraCrop - 80), dimensaoCalculada: { w: 400, h: 40 } }];
+                indiceCaixaTextoAtiva = 0;
+
+                posicaoAssinatura = { x: larguraCrop / 2, y: alturaCrop / 2 };
+                posicaoCarimbo = { x: (larguraCrop - 400) / 2, y: (alturaCrop / 2) - 65 };
+                imgAssinaturaElemento = null;
+                imgCarimboElemento = null;
+                
+                const slB = document.getElementById("sliderBrilho"); if (slB) slB.value = 0;
+                const slC = document.getElementById("sliderContraste"); if (slC) slC.value = 0;
+                const slAss = document.getElementById("sliderEscalaAssinatura"); if (slAss) slAss.value = 120;
+                const slCar = document.getElementById("sliderEscalaCarimbo"); if (slCar) slCar.value = 85;
+                abrirModalsFiltro(false);
             }
-            
-            sincronizarPainelComCaixaAtiva();
-            window.aplicarFiltroBase('pb'); 
+
+            function abrirModalsFiltro(hasState) {
+                const canvasLive = document.getElementById("canvasLivePreview");
+                if (canvasLive) {
+                    canvasLive.width = larguraCrop;
+                    canvasLive.height = alturaCrop;
+                    configurarEventosArrastoCanvas(canvasLive);
+                }
+                
+                const pAss = document.getElementById("painelControleAssinatura");
+                if (pAss) { pAss.classList[imgAssinaturaElemento ? 'remove' : 'add']("hidden"); pAss.classList[imgAssinaturaElemento ? 'add' : 'remove']("flex"); }
+                const txtBtnAss = document.getElementById("txtBtnAssinatura");
+                if (txtBtnAss) txtBtnAss.innerText = imgAssinaturaElemento ? "Refazer Assinatura" : "Adicionar Assinatura";
+
+                const pCar = document.getElementById("painelControleCarimbo");
+                if (pCar) { pCar.classList[imgCarimboElemento ? 'remove' : 'add']("hidden"); pCar.classList[imgCarimboElemento ? 'add' : 'remove']("flex"); }
+                const txtB = document.getElementById("txtBtnCarimbo");
+                if (txtB) txtB.innerText = imgCarimboElemento ? "Reaplicar Carimbo" : "Carimbar";
+
+                const slLarg = document.getElementById("sliderLarguraCaixaTexto");
+                if (slLarg) {
+                    slLarg.max = larguraCrop;
+                    slLarg.value = Math.min(400, larguraCrop - 80);
+                }
+
+                const modalCrop = document.getElementById("modalCropperScanner");
+                if (modalCrop) { modalCrop.classList.add("hidden"); modalCrop.classList.remove("flex"); }
+                
+                const modalFiltros = document.getElementById("modalFiltrosScanner");
+                if (modalFiltros) { modalFiltros.classList.remove("hidden"); modalFiltros.classList.add("flex"); }
+
+                sincronizarPainelComCaixaAtiva();
+                if(!hasState) window.filtroAtivo = 'pb';
+                window.renderizarFiltroAtual(true); 
+            }
         };
 
         window.voltarParaCropper = function() {
@@ -1771,7 +1843,7 @@
             const canvasAss = document.getElementById("canvasAssinatura");
             if (!canvasAss) return;
 
-            // Remove distorção de escala, usa resolução base pura
+            // Remove distorção, usa resolução base
             canvasAss.width = canvasAss.offsetWidth;
             canvasAss.height = canvasAss.offsetHeight;
             
@@ -1843,7 +1915,7 @@
             const img = new Image();
             img.onload = function() {
                 imgAssinaturaElemento = img;
-                // Centraliza se for a primeira vez para não sumir da tela
+                // Centraliza se for a primeira vez para não sumir da tela (Bug da Assinatura invisível resolvido)
                 posicaoAssinatura = { x: (larguraCrop - img.width) / 2, y: (alturaCrop - img.height) / 2 };
                 
                 const pAss = document.getElementById("painelControleAssinatura");
@@ -1937,29 +2009,45 @@
                             let scaleX = img.width / refWidth;
                             let scaleY = img.height / refHeight;
 
-                            if (imgAssinaturaElemento) {
-                                const slEsc = document.getElementById("sliderEscalaAssinatura");
-                                let escala = slEsc ? parseInt(slEsc.value) / 100 : 0.5;
-                                let larguraAss = (refWidth * 0.35) * escala * scaleX;
-                                let alturaAss = (imgAssinaturaElemento.height * (larguraAss / scaleX)) / imgAssinaturaElemento.width * scaleY;
-                                tCtx.drawImage(imgAssinaturaElemento, posicaoAssinatura.x * scaleX, posicaoAssinatura.y * scaleY, larguraAss, alturaAss);
+                            // Desenhar o carimbo (se houver)
+                            if (estadoEdicao.imgCarimboSrc) {
+                                let imgC = new Image();
+                                imgC.onload = () => {
+                                    let escalaC = estadoEdicao.escalaCarimbo / 100;
+                                    let larguraCar = 380 * escalaC * scaleX;
+                                    let alturaCar = (imgC.height * (larguraCar / scaleX)) / imgC.width * scaleY;
+                                    tCtx.drawImage(imgC, estadoEdicao.posicaoCarimbo.x * scaleX, estadoEdicao.posicaoCarimbo.y * scaleY, larguraCar, alturaCar);
+                                    drawAssinatura(tCtx, tempCanvas, scaleX, scaleY, resolve, pag);
+                                };
+                                imgC.src = estadoEdicao.imgCarimboSrc;
+                            } else {
+                                drawAssinatura(tCtx, tempCanvas, scaleX, scaleY, resolve, pag);
                             }
-
-                            if (imgCarimboElemento) {
-                                const slCar = document.getElementById("sliderEscalaCarimbo");
-                                let escalaC = slCar ? parseInt(slCar.value) / 100 : 0.85;
-                                let larguraCar = 380 * escalaC * scaleX;
-                                let alturaCar = (imgCarimboElemento.height * (larguraCar / scaleX)) / imgCarimboElemento.width * scaleY;
-                                tCtx.drawImage(imgCarimboElemento, posicaoCarimbo.x * scaleX, posicaoCarimbo.y * scaleY, larguraCar, alturaCar);
-                            }
-
-                            pag.finalDataUrl = tempCanvas.toDataURL('image/jpeg', 0.85);
-                            resolve();
                         };
                         img.src = baseSrc;
                     });
                 }
                 if(btnSalvar) { btnSalvar.innerHTML = originalText; btnSalvar.disabled = false; }
+            }
+
+            // Função auxiliar pra assinar nas cópias
+            function drawAssinatura(tCtx, tempCanvas, scaleX, scaleY, resolve, pag) {
+                if (estadoEdicao.imgAssinaturaSrc) {
+                    let imgA = new Image();
+                    imgA.onload = () => {
+                        let escalaA = estadoEdicao.escalaAssinatura / 100;
+                        let larguraAss = (refWidth * 0.35) * escalaA * scaleX;
+                        let alturaAss = (imgA.height * (larguraAss / scaleX)) / imgA.width * scaleY;
+                        tCtx.drawImage(imgA, estadoEdicao.posicaoAssinatura.x * scaleX, estadoEdicao.posicaoAssinatura.y * scaleY, larguraAss, alturaAss);
+                        
+                        pag.finalDataUrl = tempCanvas.toDataURL('image/jpeg', 0.85);
+                        resolve();
+                    };
+                    imgA.src = estadoEdicao.imgAssinaturaSrc;
+                } else {
+                    pag.finalDataUrl = tempCanvas.toDataURL('image/jpeg', 0.85);
+                    resolve();
+                }
             }
 
             modoUploadAtual = 'scanner';
@@ -2000,11 +2088,12 @@
                 div.className = "relative border border-gray-700 rounded-lg overflow-hidden h-40 bg-gray-900 flex flex-col group shadow-lg"; 
                 div.innerHTML = `
                     <div class="flex-1 relative overflow-hidden group-hover:opacity-90 transition">
+                        <!-- IMAGEM COM FUNÇÃO DE ZOOM AO CLICAR -->
                         <img src="${imgUrl}" onclick="window.abrirZoomPagina(${index})" class="w-full h-full object-cover opacity-80 cursor-zoom-in hover:opacity-100 transition">
                         <div class="absolute bottom-0 left-0 right-0 bg-black/80 text-[9px] text-center py-0.5 font-bold shadow-inner z-10 pointer-events-none">Pág ${index + 1}</div>
                         
                         <div class="absolute top-1 right-1 flex gap-1 z-20">
-                            <!-- BOTÃO EDITAR VOLTA MEMÓRIA DE ESTADO -->
+                            <!-- BOTÃO EDITAR DE VOLTA NA TELA -->
                             <button onclick="window.editarPaginaScanner(${index})" title="Editar (Carimbo/Filtro)" class="bg-blue-600 hover:bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow"><i class="fas fa-pen text-[9px]"></i></button>
                             <button onclick="window.removerPaginaScanner(${index})" title="Remover Página" class="bg-red-600 hover:bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow"><i class="fas fa-times text-[9px]"></i></button>
                         </div>
@@ -2316,7 +2405,6 @@
             }
         }
 
-        // RENDERIZAÇÃO DA GALERIA
         function carregarGaleriaDeAnexos() {
             const container = document.getElementById("listaAnexos");
             if (container && todosAnexosNaMemoria.length === 0) {
@@ -2325,16 +2413,28 @@
 
             onValue(dbRef(db, 'arquivos_anexos'), (snapshot) => {
                 todosAnexosNaMemoria = [];
+                const selectUsuario = document.getElementById("filtroUsuario");
+                let usuariosUnicos = new Set();
+
                 if (snapshot.exists()) {
                     snapshot.forEach(child => { 
                         const anexo = { id: child.key, ...child.val() };
                         if (!anexo.tipo) anexo.tipo = 'imagem'; 
                         if (perfilUsuario === "administrador" || anexo.statusExclusao !== "pendente_aprovacao") {
                             todosAnexosNaMemoria.push(anexo);
+                            if (anexo.enviadoPor) usuariosUnicos.add(anexo.enviadoPor);
                         }
                     });
                     todosAnexosNaMemoria.sort((a, b) => b.dataEnvio - a.dataEnvio);
                 }
+
+                if (selectUsuario) {
+                    const valorAtualSelect = selectUsuario.value;
+                    selectUsuario.innerHTML = '<option value="todos">Todos os Usuários</option>';
+                    usuariosUnicos.forEach(user => { selectUsuario.innerHTML += `<option value="${user}">@${user}</option>`; });
+                    selectUsuario.value = usuariosUnicos.has(valorAtualSelect) ? valorAtualSelect : "todos";
+                }
+
                 window.aplicarFiltrosNaGaleria();
             });
         }
@@ -2353,17 +2453,21 @@
             const inBusca = document.getElementById("inputBuscaAnexo");
             const inIni = document.getElementById("dataInicioFiltro");
             const inFim = document.getElementById("dataFimFiltro");
+            const selUser = document.getElementById("filtroUsuario");
 
             const termoBusca = inBusca ? inBusca.value.toLowerCase().trim() : "";
             const dataInicio = inIni ? inIni.value : "";
             const dataFim = inFim ? inFim.value : "";
+            const usuarioFiltro = selUser ? selUser.value : "todos";
 
             const container = document.getElementById("listaAnexos");
             const areaBreadcrumb = document.getElementById("areaBreadcrumb");
             if (!container) return;
             container.innerHTML = "";
 
-            let anexosFiltrados = todosAnexosNaMemoria.filter(arq => {
+            let anexosFiltrados = todosAnexosNaMemoria;
+            
+            anexosFiltrados = anexosFiltrados.filter(arq => {
                 const dataObj = new Date(arq.dataEnvio);
                 const dataFormatadaDia = dataObj.toLocaleDateString('pt-BR'); 
                 const mesAnoFormatado = String(dataObj.getMonth() + 1).padStart(2, '0') + '/' + dataObj.getFullYear();
@@ -2376,12 +2480,13 @@
                                  (arq.pastaPaciente && arq.pastaPaciente.toLowerCase().includes(termoBusca));
                 }
 
+                const passaUsuario = usuarioFiltro === "todos" || arq.enviadoPor === usuarioFiltro;
                 let passaData = true;
                 dataObj.setHours(0,0,0,0);
                 if (dataInicio) { const dataIni = new Date(dataInicio + "T00:00:00"); if (dataObj < dataIni) passaData = false; }
                 if (dataFim) { const dataF = new Date(dataFim + "T23:59:59"); if (dataObj > dataF) passaData = false; }
                 
-                return passaTexto && passaData;
+                return passaTexto && passaUsuario && passaData;
             });
 
             const isBuscaAtiva = termoBusca.length > 0;
@@ -2626,6 +2731,7 @@
                 remove(dbRef(db, 'arquivos_anexos/' + window.idImagemAtiva)).then(() => { window.fecharModalVisualizacao(); }).catch(err => alert("Erro ao excluir: " + err.message));
             } else {
                 update(dbRef(db, 'arquivos_anexos/' + window.idImagemAtiva), { statusExclusao: "pendente_aprovacao", solicitadoPor: usuarioLogado }).then(() => {
+                    push(dbRef(db, 'notificacoes_sistema'), { titulo: "Exclusão Solicitada", mensagem: `@${usuarioLogado} pediu para excluir "${nomeArquivo}".`, tipo: "alerta", timestamp: Date.now() });
                     window.fecharModalVisualizacao();
                 }).catch(err => alert("Erro ao processar: " + err.message));
             }
@@ -2659,6 +2765,16 @@
             });
         };
 
+        window.abrirModalNotificacoes = function() { 
+            const modal = document.getElementById("modalNotificacoes"); const content = document.getElementById("modalNotificacoesContent"); 
+            if (modal && content) { modal.classList.remove("hidden"); modal.classList.add("flex"); setTimeout(() => { content.classList.remove("scale-95", "opacity-0"); content.classList.add("scale-100", "opacity-100"); }, 10); }
+        };
+
+        window.fecharModalNotificacoes = function() { 
+            const modal = document.getElementById("modalNotificacoes"); const content = document.getElementById("modalNotificacoesContent"); 
+            if (modal && content) { content.classList.remove("scale-100", "opacity-100"); content.classList.add("scale-95", "opacity-0"); setTimeout(() => { modal.classList.remove("flex"); modal.classList.add("hidden"); }, 200); }
+        };
+
         onAuthStateChanged(auth, (user) => {
             const modalLogin = document.getElementById("modalLoginApp");
 
@@ -2684,15 +2800,25 @@
                     if (elSidebarNome) elSidebarNome.innerText = `@${usuarioLogado}`;
                     if (elSidebarPerfil) elSidebarPerfil.innerText = perfilUsuario === "administrador" ? "Administrativo" : "Usuário";
 
+                    const areaSino = document.getElementById("areaSinoAdmin");
+                    const espacador = document.getElementById("espacadorHeader");
                     const btnBancoPacientes = document.getElementById("btnSidebarPacientes");
                     const btnCadastroUsuario = document.getElementById("btnSidebarCadastrarUsuario");
                     const areaImportacao = document.getElementById("areaImportacaoPacientes");
                     
                     if (perfilUsuario === "administrador") {
+                        if (areaSino) areaSino.classList.remove("hidden");
+                        if (espacador) espacador.classList.add("hidden");
                         if (btnBancoPacientes) { btnBancoPacientes.classList.remove("hidden"); btnBancoPacientes.classList.add("flex"); }
                         if (btnCadastroUsuario) { btnCadastroUsuario.classList.remove("hidden"); btnCadastroUsuario.classList.add("flex"); }
                         if (areaImportacao) { areaImportacao.classList.remove("hidden"); }
+                        
+                        if (typeof window.inicializarNotificacoes === 'function') {
+                            window.inicializarNotificacoes(dadosUser, "containerNotificacoes", "badgeNotificacoes");
+                        }
                     } else {
+                        if (areaSino) areaSino.classList.add("hidden");
+                        if (espacador) espacador.classList.remove("hidden");
                         if (btnBancoPacientes) { btnBancoPacientes.classList.remove("hidden"); btnBancoPacientes.classList.add("flex"); }
                         if (btnCadastroUsuario) { btnCadastroUsuario.classList.add("hidden"); btnCadastroUsuario.classList.remove("flex"); }
                         if (areaImportacao) { areaImportacao.classList.add("hidden"); }
