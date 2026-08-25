@@ -46,14 +46,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Bibliotecas para Scanner, Manipulação de PDF, OCR e Leitura de Texto em PDF -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://unpkg.com/tesseract.js@5.0.5/dist/tesseract.min.js"></script>
     
-    <!-- PDF.JS para extrair texto de PDFs upados pelo "Outros Arquivos" -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
@@ -64,7 +62,6 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
         .popup-blur { backdrop-filter: blur(5px); }
-        
         .cropper-view-box { outline: 3px solid rgba(59, 130, 246, 0.9) !important; border-radius: 4px; }
         .cropper-line { background-color: transparent !important; }
         input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; background: transparent; }
@@ -74,7 +71,7 @@
 </head>
 <body class="bg-gray-950 text-gray-100 font-sans min-h-screen flex flex-col relative pb-24">
 
-    <!-- MODAL DE LOGIN EMBUTIDO COM PROTEÇÃO ANTI-REFRESH -->
+    <!-- MODAL DE LOGIN EMBUTIDO -->
     <div id="modalLoginApp" class="fixed inset-0 bg-black/95 popup-blur z-[100] flex items-center justify-center p-4">
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl flex flex-col gap-4">
             <div class="text-center flex flex-col items-center gap-2">
@@ -92,7 +89,13 @@
                 </div>
                 <div class="flex flex-col gap-1">
                     <label class="text-[10px] text-gray-400 font-bold uppercase">Senha</label>
-                    <input type="password" id="loginSenha" required placeholder="******" class="p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
+                    <div class="relative w-full">
+                        <input type="password" id="loginSenha" required placeholder="******" class="w-full p-3 pr-10 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
+                        <!-- BOTÃO VER SENHA -->
+                        <button type="button" onclick="window.toggleVisibilidadeSenha('loginSenha', 'iconLoginSenha')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition focus:outline-none">
+                            <i class="fas fa-eye" id="iconLoginSenha"></i>
+                        </button>
+                    </div>
                     <div class="flex justify-end pt-1">
                         <button type="button" onclick="window.abrirModalRecuperarSenha()" class="text-[10px] text-blue-400 hover:underline font-semibold">Esqueceu a senha?</button>
                     </div>
@@ -111,7 +114,6 @@
             </div>
             <h3 class="text-sm font-bold text-white">Recuperar Senha</h3>
             <p class="text-xs text-gray-400">Digite seu nome de usuário. O sistema localizará seu e-mail e enviará o link de redefinição.</p>
-            
             <form onsubmit="event.preventDefault(); if(window.confirmarRecuperacaoSenha) window.confirmarRecuperacaoSenha(event);" class="flex flex-col gap-3">
                 <input type="text" id="recUsuario" required placeholder="Digite o nome de usuário..." class="p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
                 <div class="flex gap-2">
@@ -148,7 +150,13 @@
                 </div>
                 <div class="flex flex-col gap-1">
                     <label class="text-[10px] text-gray-400 font-bold uppercase">Senha</label>
-                    <input type="password" id="cadSenha" required placeholder="Mínimo 6 caracteres..." class="p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
+                    <div class="relative w-full">
+                        <input type="password" id="cadSenha" required placeholder="Mínimo 6 caracteres..." class="w-full p-3 pr-10 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
+                        <!-- BOTÃO VER SENHA -->
+                        <button type="button" onclick="window.toggleVisibilidadeSenha('cadSenha', 'iconCadSenha')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition focus:outline-none">
+                            <i class="fas fa-eye" id="iconCadSenha"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="flex gap-2 mt-2">
@@ -180,7 +188,7 @@
         </div>
     </div>
 
-    <!-- OVERLAY E MENU LATERAL (SIDEBAR) -->
+    <!-- OVERLAY E MENU LATERAL -->
     <div id="overlaySidebar" onclick="window.toggleSidebar(false)" class="fixed inset-0 bg-black/70 popup-blur z-50 hidden transition-opacity"></div>
     <aside id="sidebar" class="fixed top-0 left-0 w-72 h-full bg-gray-900 border-r border-gray-800 z-50 transform -translate-x-full transition-transform duration-300 flex flex-col justify-between shadow-2xl">
         <div class="p-5 border-b border-gray-800 flex items-center justify-between">
@@ -548,7 +556,7 @@
                 </div>
             </div>
 
-            <!-- CONTROLES DO CARIMBO DA EMPRESA COM ORDEM DE CAMADAS -->
+            <!-- CONTROLES DO CARIMBO DA EMPRESA -->
             <div id="painelControleCarimbo" class="hidden px-4 mt-2">
                 <div class="bg-red-950/40 p-3 rounded-xl border border-red-800/60 flex flex-col gap-2">
                     <div class="flex justify-between items-center">
@@ -580,7 +588,7 @@
         </div>
     </div>
 
-    <!-- MODAL 3: POP-UP DE ASSINATURA EXPANDIDO E EM ALTA DEFINIÇÃO -->
+    <!-- MODAL 3: POP-UP DE ASSINATURA -->
     <div id="modalAssinatura" class="fixed inset-0 bg-black/95 popup-blur hidden items-center justify-center p-4 z-[80]">
         <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 w-full max-w-lg shadow-2xl flex flex-col gap-4">
             <div class="flex justify-between items-center border-b border-gray-800 pb-3">
@@ -598,13 +606,14 @@
         </div>
     </div>
 
-    <!-- SCRIPT PRINCIPAL E FIREBASE COM SUPORTE AO FATIAMENTO E LEITURA DE PDFS -->
+    <!-- SCRIPT PRINCIPAL E FIREBASE COM PROTEÇÃO CONTRA NULL -->
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, setPersistence, browserSessionPersistence, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getDatabase, ref as dbRef, push, onValue, update, remove, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
+        // CREDENCIAIS
         const firebaseConfig = {
             apiKey: "AIzaSyCfzVSlcB2BU1TTqn_kyo_Gq-EtDps8yys",
             authDomain: "anexos-relatorio.firebaseapp.com",
@@ -622,21 +631,21 @@
 
         setPersistence(auth, browserSessionPersistence).catch(err => console.warn(err));
 
-        let timerInatividade = null;
+        window.timerInatividade = null;
         const TEMPO_INATIVIDADE_MS = 8 * 60 * 1000;
 
-        function resetarTimerInatividade() {
-            if (timerInatividade) clearTimeout(timerInatividade);
+        window.resetarTimerInatividade = function() {
+            if (window.timerInatividade) clearTimeout(window.timerInatividade);
             if (auth.currentUser) {
-                timerInatividade = setTimeout(() => {
+                window.timerInatividade = setTimeout(() => {
                     alert("⏰ Sessão expirada devido a 8 minutos de inatividade.");
                     window.fazerLogout();
                 }, TEMPO_INATIVIDADE_MS);
             }
-        }
+        };
 
         ['mousemove', 'mousedown', 'keypress', 'touchstart', 'scroll', 'click'].forEach(evt => {
-            window.addEventListener(evt, resetarTimerInatividade, true);
+            window.addEventListener(evt, window.resetarTimerInatividade, true);
         });
 
         let usuarioLogado = "Operador";
@@ -683,6 +692,23 @@
             const el = document.getElementById(idElemento);
             if (el) el.addEventListener(evento, callback);
         }
+
+        // --- SISTEMA DE SENHA VISÍVEL ---
+        window.toggleVisibilidadeSenha = function(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (input && icon) {
+                if (input.type === "password") {
+                    input.type = "text";
+                    icon.classList.remove("fa-eye");
+                    icon.classList.add("fa-eye-slash");
+                } else {
+                    input.type = "password";
+                    icon.classList.remove("fa-eye-slash");
+                    icon.classList.add("fa-eye");
+                }
+            }
+        };
 
         window.alterarOrdemCarimbo = function(direcao) {
             ordemCamadas = ordemCamadas.filter(c => c !== 'carimbo');
@@ -774,9 +800,7 @@
                         }
                     }
                 }
-            } catch (err) {
-                console.warn("Aviso de leitura:", err);
-            }
+            } catch (err) {}
 
             if (!emailVinculado) {
                 emailVinculado = usernameDigitado.includes("@") ? usernameDigitado : `${usernameDigitado}@anexos.com`;
@@ -786,7 +810,7 @@
                 .then(() => {
                     const modalLogin = document.getElementById("modalLoginApp");
                     if (modalLogin) modalLogin.classList.add("hidden");
-                    resetarTimerInatividade();
+                    window.resetarTimerInatividade();
                 })
                 .catch((error) => {
                     alert("❌ Usuário ou senha incorretos.");
@@ -900,7 +924,7 @@
         };
 
         window.fazerLogout = function() {
-            if (timerInatividade) clearTimeout(timerInatividade);
+            if (window.timerInatividade) clearTimeout(window.timerInatividade);
             signOut(auth).then(() => {
                 const modalLogin = document.getElementById("modalLoginApp");
                 if (modalLogin) modalLogin.classList.remove("hidden");
@@ -1158,38 +1182,33 @@
             const ctxBruto = canvasCortado.getContext('2d');
             canvasOriginalContextData = ctxBruto.getImageData(0, 0, larguraCrop, alturaCrop);
 
-            let larguraCaixaPadrao = Math.min(500, larguraCrop * 0.7);
             caixasTexto = [{
                 id: Date.now(),
                 texto: "",
-                posicao: { x: (larguraCrop - larguraCaixaPadrao) / 2, y: (alturaCrop / 2) - 50 },
+                posicao: { x: 40, y: alturaCrop - 150 },
                 cor: "#000000",
-                tamanhoFonte: 36,
-                negrito: false,
-                larguraCaixa: larguraCaixaPadrao,
-                dimensaoCalculada: { w: larguraCaixaPadrao, h: 50 }
+                tamanhoFonte: 24,
+                larguraCaixa: Math.min(400, larguraCrop - 80),
+                dimensaoCalculada: { w: 400, h: 40 }
             }];
             indiceCaixaTextoAtiva = 0;
 
-            let larguraAssPadrao = larguraCrop * 0.65;
-            posicaoAssinatura = { x: (larguraCrop - larguraAssPadrao) / 2, y: (alturaCrop / 2) + 50 };
+            posicaoAssinatura = { x: larguraCrop - 220, y: alturaCrop - 150 };
             imgAssinaturaElemento = null;
-            imgCarimboElemento = null;
             
             const slB = document.getElementById("sliderBrilho"); if (slB) slB.value = 0;
             const slC = document.getElementById("sliderContraste"); if (slC) slC.value = 0;
-            const slAss = document.getElementById("sliderEscalaAssinatura"); if (slAss) slAss.value = 120;
             
-            const pAss = document.getElementById("painelControleAssinatura"); if (pAss) { pAss.classList.add("hidden"); pAss.classList.remove("flex"); }
-            const pCar = document.getElementById("painelControleCarimbo"); if (pCar) { pCar.classList.add("hidden"); pCar.classList.remove("flex"); }
+            const pAss = document.getElementById("painelControleAssinatura");
+            if (pAss) { pAss.classList.add("hidden"); pAss.classList.remove("flex"); }
             
-            const txtBtnAss = document.getElementById("txtBtnAssinatura"); if (txtBtnAss) txtBtnAss.innerText = "Assinar";
-            const txtBtnCar = document.getElementById("txtBtnCarimbo"); if (txtBtnCar) txtBtnCar.innerText = "Carimbar";
+            const txtBtnAss = document.getElementById("txtBtnAssinatura");
+            if (txtBtnAss) txtBtnAss.innerText = "Adicionar Assinatura";
 
             const slLarg = document.getElementById("sliderLarguraCaixaTexto");
             if (slLarg) {
                 slLarg.max = larguraCrop;
-                slLarg.value = larguraCaixaPadrao;
+                slLarg.value = Math.min(400, larguraCrop - 80);
             }
 
             const modalCrop = document.getElementById("modalCropperScanner");
@@ -1240,16 +1259,14 @@
         };
 
         window.adicionarNovaCaixaTexto = function() {
-            let larguraCaixaPadrao = Math.min(400, larguraCrop * 0.7);
             const novaCaixa = {
                 id: Date.now(),
                 texto: "Novo Texto",
-                posicao: { x: (larguraCrop - larguraCaixaPadrao) / 2, y: 100 + (caixasTexto.length * 40) },
+                posicao: { x: 40, y: 60 + (caixasTexto.length * 30) },
                 cor: "#000000",
-                tamanhoFonte: 36,
-                negrito: false,
-                larguraCaixa: larguraCaixaPadrao,
-                dimensaoCalculada: { w: larguraCaixaPadrao, h: 50 }
+                tamanhoFonte: 24,
+                larguraCaixa: Math.min(300, larguraCrop - 80),
+                dimensaoCalculada: { w: 300, h: 40 }
             };
             caixasTexto.push(novaCaixa);
             indiceCaixaTextoAtiva = caixasTexto.length - 1;
@@ -1266,18 +1283,9 @@
             }
         };
 
-        window.alternarNegritoCaixaAtiva = function() {
-            if (indiceCaixaTextoAtiva !== null && caixasTexto[indiceCaixaTextoAtiva]) {
-                caixasTexto[indiceCaixaTextoAtiva].negrito = !caixasTexto[indiceCaixaTextoAtiva].negrito;
-                sincronizarPainelComCaixaAtiva();
-                window.renderizarFiltroAtual(true);
-            }
-        };
-
         function sincronizarPainelComCaixaAtiva() {
             const painel = document.getElementById("painelEdicaoCaixaAtiva");
             const msg = document.getElementById("msgSemCaixaTexto");
-            const btnN = document.getElementById("btnNegritoTexto");
 
             if (indiceCaixaTextoAtiva !== null && caixasTexto[indiceCaixaTextoAtiva]) {
                 const caixa = caixasTexto[indiceCaixaTextoAtiva];
@@ -1289,16 +1297,6 @@
                 const slFonte = document.getElementById("sliderTamanhoFonte"); if (slFonte) slFonte.value = caixa.tamanhoFonte;
                 const slLarg = document.getElementById("sliderLarguraCaixaTexto"); 
                 if (slLarg) { slLarg.max = larguraCrop; slLarg.value = caixa.larguraCaixa; }
-
-                if (btnN) {
-                    if (caixa.negrito) {
-                        btnN.classList.replace("bg-gray-900", "bg-blue-600");
-                        btnN.classList.replace("text-gray-300", "text-white");
-                    } else {
-                        btnN.classList.replace("bg-blue-600", "bg-gray-900");
-                        btnN.classList.replace("text-white", "text-gray-300");
-                    }
-                }
             } else {
                 if (painel) { painel.classList.add("hidden"); painel.classList.remove("flex"); }
                 if (msg) msg.classList.remove("hidden");
@@ -1337,20 +1335,19 @@
             }
         };
 
-        function desenharTextoEstiloDocumentoAutoAjustavel(ctx, caixa, x, y) {
-            ctx.fillStyle = caixa.cor;
+        function desenharTextoEstiloDocumentoAutoAjustavel(ctx, texto, x, y, larguraCaixaMax, tamanhoFonteDesejado, cor) {
+            ctx.fillStyle = cor;
             ctx.textBaseline = "top";
             
-            let tamanhoFonteFinal = caixa.tamanhoFonte;
+            let tamanhoFonteFinal = tamanhoFonteDesejado;
             let linhasFinais = [];
             let alturaLinha = tamanhoFonteFinal * 1.25;
-            let estiloFonte = caixa.negrito ? "bold " : "";
 
             while (tamanhoFonteFinal > 8) {
-                ctx.font = `${estiloFonte}${tamanhoFonteFinal}px Arial`;
+                ctx.font = `${tamanhoFonteFinal}px Arial`;
                 alturaLinha = tamanhoFonteFinal * 1.25;
                 
-                let linhasBrutas = caixa.texto.split('\n');
+                let linhasBrutas = texto.split('\n');
                 linhasFinais = [];
                 let palavraExcedeLargura = false;
 
@@ -1360,7 +1357,7 @@
 
                     for (let n = 0; n < palavras.length; n++) {
                         let larguraPalavraUnica = ctx.measureText(palavras[n]).width;
-                        if (larguraPalavraUnica > caixa.larguraCaixa) {
+                        if (larguraPalavraUnica > larguraCaixaMax) {
                             palavraExcedeLargura = true;
                             break;
                         }
@@ -1368,7 +1365,7 @@
                         let linhaTeste = linhaAtual + palavras[n] + ' ';
                         let larguraTeste = ctx.measureText(linhaTeste).width;
 
-                        if (larguraTeste > caixa.larguraCaixa && n > 0) {
+                        if (larguraTeste > larguraCaixaMax && n > 0) {
                             linhasFinais.push(linhaAtual);
                             linhaAtual = palavras[n] + ' ';
                         } else {
@@ -1388,7 +1385,7 @@
             }
 
             return {
-                w: caixa.larguraCaixa,
+                w: larguraCaixaMax,
                 h: Math.max(alturaLinha, linhasFinais.length * alturaLinha)
             };
         }
@@ -1451,46 +1448,30 @@
                 ctxLive.putImageData(imgData, 0, 0);
             }
 
-            ordemCamadas.forEach(camada => {
-                if (camada === 'texto') {
-                    caixasTexto.forEach((caixa, index) => {
-                        if (caixa.texto.trim() !== "") {
-                            caixa.dimensaoCalculada = desenharTextoEstiloDocumentoAutoAjustavel(
-                                ctxLive, caixa, caixa.posicao.x, caixa.posicao.y
-                            );
-
-                            if (mostrarGuias) {
-                                let eSelecionada = (index === indiceCaixaTextoAtiva);
-                                ctxLive.strokeStyle = eSelecionada ? "rgba(59, 130, 246, 0.9)" : "rgba(156, 163, 175, 0.4)";
-                                ctxLive.lineWidth = eSelecionada ? 2 : 1;
-                                ctxLive.setLineDash([4, 4]);
-                                ctxLive.strokeRect(caixa.posicao.x - 4, caixa.posicao.y - 4, caixa.dimensaoCalculada.w + 8, caixa.dimensaoCalculada.h + 8);
-                                ctxLive.setLineDash([]);
-                            }
-                        }
-                    });
-                } else if (camada === 'assinatura' && imgAssinaturaElemento) {
-                    const slEsc = document.getElementById("sliderEscalaAssinatura");
-                    let escala = slEsc ? parseInt(slEsc.value) / 100 : 1.2;
-                    let larguraAss = (larguraCrop * 0.45) * escala;
-                    let alturaAss = (imgAssinaturaElemento.height * larguraAss) / imgAssinaturaElemento.width;
-                    ctxLive.drawImage(imgAssinaturaElemento, posicaoAssinatura.x, posicaoAssinatura.y, larguraAss, alturaAss);
-                } else if (camada === 'carimbo' && imgCarimboElemento) {
-                    const slCar = document.getElementById("sliderEscalaCarimbo");
-                    let escalaC = slCar ? parseInt(slCar.value) / 100 : 0.85;
-                    let larguraCar = 380 * escalaC;
-                    let alturaCar = (imgCarimboElemento.height * larguraCar) / imgCarimboElemento.width;
-                    ctxLive.drawImage(imgCarimboElemento, posicaoCarimbo.x, posicaoCarimbo.y, larguraCar, alturaCar);
+            caixasTexto.forEach((caixa, index) => {
+                if (caixa.texto.trim() !== "") {
+                    caixa.dimensaoCalculada = desenharTextoEstiloDocumentoAutoAjustavel(
+                        ctxLive, caixa.texto, caixa.posicao.x, caixa.posicao.y, caixa.larguraCaixa, caixa.tamanhoFonte, caixa.cor
+                    );
 
                     if (mostrarGuias) {
-                        ctxLive.strokeStyle = "rgba(220, 38, 38, 0.8)";
-                        ctxLive.lineWidth = 2;
+                        let eSelecionada = (index === indiceCaixaTextoAtiva);
+                        ctxLive.strokeStyle = eSelecionada ? "rgba(59, 130, 246, 0.9)" : "rgba(156, 163, 175, 0.4)";
+                        ctxLive.lineWidth = eSelecionada ? 2 : 1;
                         ctxLive.setLineDash([4, 4]);
-                        ctxLive.strokeRect(posicaoCarimbo.x - 4, posicaoCarimbo.y - 4, larguraCar + 8, alturaCar + 8);
+                        ctxLive.strokeRect(caixa.posicao.x - 4, caixa.posicao.y - 4, caixa.dimensaoCalculada.w + 8, caixa.dimensaoCalculada.h + 8);
                         ctxLive.setLineDash([]);
                     }
                 }
             });
+
+            if (imgAssinaturaElemento) {
+                const slEsc = document.getElementById("sliderEscalaAssinatura");
+                let escala = slEsc ? parseInt(slEsc.value) / 100 : 0.5;
+                let larguraAss = (larguraCrop * 0.35) * escala;
+                let alturaAss = (imgAssinaturaElemento.height * larguraAss) / imgAssinaturaElemento.width;
+                ctxLive.drawImage(imgAssinaturaElemento, posicaoAssinatura.x, posicaoAssinatura.y, larguraAss, alturaAss);
+            }
         };
 
         function configurarEventosArrastoCanvas(canvas) {
@@ -1508,25 +1489,11 @@
 
             const iniciarArrasto = (e) => {
                 const pos = obterPosicaoRealCanvas(e);
-
-                if (imgCarimboElemento) {
-                    const slCar = document.getElementById("sliderEscalaCarimbo");
-                    let escalaC = slCar ? parseInt(slCar.value) / 100 : 0.85;
-                    let larguraCar = 380 * escalaC;
-                    let alturaCar = (imgCarimboElemento.height * larguraCar) / imgCarimboElemento.width;
-
-                    if (pos.x >= posicaoCarimbo.x && pos.x <= posicaoCarimbo.x + larguraCar &&
-                        pos.y >= posicaoCarimbo.y && pos.y <= posicaoCarimbo.y + alturaCar) {
-                        elementoSendoArrastado = 'carimbo';
-                        offsetArrasto = { x: pos.x - posicaoCarimbo.x, y: pos.y - posicaoCarimbo.y };
-                        return;
-                    }
-                }
                 
                 if (imgAssinaturaElemento) {
                     const slEsc = document.getElementById("sliderEscalaAssinatura");
-                    let escala = slEsc ? parseInt(slEsc.value) / 100 : 1.2;
-                    let larguraAss = (larguraCrop * 0.45) * escala;
+                    let escala = slEsc ? parseInt(slEsc.value) / 100 : 0.5;
+                    let larguraAss = (larguraCrop * 0.35) * escala;
                     let alturaAss = (imgAssinaturaElemento.height * larguraAss) / imgAssinaturaElemento.width;
                     
                     if (pos.x >= posicaoAssinatura.x && pos.x <= posicaoAssinatura.x + larguraAss &&
@@ -1569,9 +1536,6 @@
                 } else if (elementoSendoArrastado === 'assinatura') {
                     posicaoAssinatura.x = pos.x - offsetArrasto.x;
                     posicaoAssinatura.y = pos.y - offsetArrasto.y;
-                } else if (elementoSendoArrastado === 'carimbo') {
-                    posicaoCarimbo.x = pos.x - offsetArrasto.x;
-                    posicaoCarimbo.y = pos.y - offsetArrasto.y;
                 }
                 window.renderizarFiltroAtual(true);
             };
@@ -1593,22 +1557,13 @@
             
             const canvasAss = document.getElementById("canvasAssinatura");
             if (!canvasAss) return;
-
-            const ratio = window.devicePixelRatio || 1;
-            const width = canvasAss.offsetWidth;
-            const height = canvasAss.offsetHeight;
-
-            canvasAss.width = width * ratio;
-            canvasAss.height = height * ratio;
+            canvasAss.width = canvasAss.offsetWidth;
+            canvasAss.height = canvasAss.offsetHeight;
             
             ctxAssinaturaPad = canvasAss.getContext("2d");
-            ctxAssinaturaPad.scale(ratio, ratio);
             ctxAssinaturaPad.strokeStyle = "#000000";
-            ctxAssinaturaPad.lineWidth = 3;
+            ctxAssinaturaPad.lineWidth = 2.5;
             ctxAssinaturaPad.lineCap = "round";
-            ctxAssinaturaPad.lineJoin = "round";
-
-            pontosTraçoAssinatura = [];
 
             const getPosPad = (e) => {
                 const rect = canvasAss.getBoundingClientRect();
@@ -1617,29 +1572,8 @@
                 return { x: clientX - rect.left, y: clientY - rect.top };
             };
 
-            const iniciar = (e) => { 
-                assinandoPad = true; 
-                const p = getPosPad(e); 
-                pontosTraçoAssinatura = [p];
-                ctxAssinaturaPad.beginPath(); 
-                ctxAssinaturaPad.moveTo(p.x, p.y); 
-            };
-
-            const desenhar = (e) => { 
-                if (!assinandoPad) return; 
-                e.preventDefault();
-                const p = getPosPad(e); 
-                pontosTraçoAssinatura.push(p);
-
-                if (pontosTraçoAssinatura.length > 2) {
-                    const len = pontosTraçoAssinatura.length;
-                    const xc = (pontosTraçoAssinatura[len - 1].x + pontosTraçoAssinatura[len - 2].x) / 2;
-                    const yc = (pontosTraçoAssinatura[len - 1].y + pontosTraçoAssinatura[len - 2].y) / 2;
-                    ctxAssinaturaPad.quadraticCurveTo(pontosTraçoAssinatura[len - 2].x, pontosTraçoAssinatura[len - 2].y, xc, yc);
-                    ctxAssinaturaPad.stroke();
-                }
-            };
-
+            const iniciar = (e) => { assinandoPad = true; const p = getPosPad(e); ctxAssinaturaPad.beginPath(); ctxAssinaturaPad.moveTo(p.x, p.y); };
+            const desenhar = (e) => { if (!assinandoPad) return; const p = getPosPad(e); ctxAssinaturaPad.lineTo(p.x, p.y); ctxAssinaturaPad.stroke(); };
             const parar = () => { assinandoPad = false; };
 
             canvasAss.onmousedown = iniciar; canvasAss.onmousemove = desenhar; canvasAss.onmouseup = parar;
@@ -1649,9 +1583,7 @@
         window.limparAssinaturaPad = function() {
             const canvasAss = document.getElementById("canvasAssinatura");
             if (ctxAssinaturaPad && canvasAss) {
-                const ratio = window.devicePixelRatio || 1;
-                ctxAssinaturaPad.clearRect(0, 0, canvasAss.width / ratio, canvasAss.height / ratio);
-                pontosTraçoAssinatura = [];
+                ctxAssinaturaPad.clearRect(0, 0, canvasAss.width, canvasAss.height);
             }
         };
 
@@ -1686,12 +1618,12 @@
             if (pAss) { pAss.classList.add("hidden"); pAss.classList.remove("flex"); }
             
             const txtBtnAss = document.getElementById("txtBtnAssinatura");
-            if (txtBtnAss) txtBtnAss.innerText = "Assinar";
+            if (txtBtnAss) txtBtnAss.innerText = "Adicionar Assinatura";
             
             window.renderizarFiltroAtual(true);
         };
 
-        // SALVAR PÁGINA (VAI PARA O CARRINHO) E NÃO SALVA DIRETO NO BANCO
+        // SALVAR PÁGINA NO PREVIEW
         window.confirmarSalvarPaginaScanner = function() {
             window.renderizarFiltroAtual(false);
             const canvasLive = document.getElementById("canvasLivePreview");
@@ -1709,7 +1641,7 @@
             window.renderizarCarrinhoScanner();
         };
 
-        // --- SISTEMA DE CARRINHO COM DROPDOWN DE PACIENTES PARA REVISÃO INTELIGENTE ---
+        // --- PREVIEW INTELIGENTE PARA DROPDOWN ---
         window.renderizarCarrinhoScanner = function() {
             const areaEscolha = document.getElementById("areaEscolhaModo");
             const areaPrev = document.getElementById("areaPreviewScanner");
@@ -1729,7 +1661,7 @@
                 let imgUrl = pagData.finalDataUrl;
                 let nomePacSugerido = pagData.paciente || "";
 
-                // Monta o select de Pacientes Baseado no Banco Referência
+                // Dropdown aprimorado: texto mais curto para caber na tela do celular
                 let optionsHTML = `<option value="">(Mesmo da Pág. Anterior)</option>`;
                 listaPacientesCadastrados.forEach(pac => {
                     let selected = (nomePacSugerido === pac.nome) ? "selected" : "";
@@ -1737,18 +1669,18 @@
                 });
 
                 const div = document.createElement("div");
-                div.className = "relative border border-gray-700 rounded-lg overflow-hidden h-36 bg-gray-900 flex flex-col group shadow-lg";
+                div.className = "relative border border-gray-700 rounded-lg overflow-hidden h-36 bg-gray-900 flex flex-col group shadow-lg"; 
                 div.innerHTML = `
-                    <div class="flex-1 relative">
+                    <div class="flex-1 relative overflow-hidden">
                         <img src="${imgUrl}" class="w-full h-full object-cover opacity-80">
                         <div class="absolute bottom-0 left-0 right-0 bg-black/80 text-[9px] text-center py-0.5 font-bold shadow-inner z-10">Pág ${index + 1}</div>
                         
                         <div class="absolute top-1 right-1 flex gap-1 z-20">
-                            <button onclick="window.removerPaginaScanner(${index})" title="Remover" class="bg-red-600 hover:bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow"><i class="fas fa-times text-[9px]"></i></button>
+                            <button onclick="window.removerPaginaScanner(${index})" title="Remover Página" class="bg-red-600 hover:bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow"><i class="fas fa-times text-[9px]"></i></button>
                         </div>
                     </div>
-                    <div class="h-8 bg-gray-950 flex flex-col p-1 border-t border-gray-800">
-                        <select id="selectNomePac_${index}" class="w-full h-full bg-gray-800 text-[10px] text-center text-white font-bold rounded border border-gray-600 focus:outline-none focus:border-blue-500 transition">
+                    <div class="h-9 bg-gray-950 flex flex-col p-1 border-t border-gray-800 shrink-0">
+                        <select id="selectNomePac_${index}" class="w-full h-full bg-gray-800 text-[10px] text-center text-white font-bold rounded border border-gray-600 focus:outline-none focus:border-blue-500 transition truncate px-1">
                             ${optionsHTML}
                         </select>
                     </div>
@@ -2401,7 +2333,7 @@
             if (user) {
                 if (modalLogin) modalLogin.classList.add("hidden");
                 uidUsuarioLogado = user.uid;
-                resetarTimerInatividade();
+                window.resetarTimerInatividade();
                 const fallbackUsername = user.email.split('@')[0];
 
                 onValue(dbRef(db, 'usuarios_sistema/' + user.uid), (snap) => {
