@@ -46,12 +46,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Bibliotecas para Scanner, Manipulação de PDF, OCR e Leitura de Texto em PDF -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://unpkg.com/tesseract.js@5.0.5/dist/tesseract.min.js"></script>
     
+    <!-- PDF.JS para extrair texto de PDFs upados pelo "Outros Arquivos" -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
@@ -62,6 +64,7 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
         .popup-blur { backdrop-filter: blur(5px); }
+        
         .cropper-view-box { outline: 3px solid rgba(59, 130, 246, 0.9) !important; border-radius: 4px; }
         .cropper-line { background-color: transparent !important; }
         input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; background: transparent; }
@@ -71,7 +74,7 @@
 </head>
 <body class="bg-gray-950 text-gray-100 font-sans min-h-screen flex flex-col relative pb-24">
 
-    <!-- MODAL DE LOGIN EMBUTIDO -->
+    <!-- MODAL DE LOGIN EMBUTIDO COM PROTEÇÃO ANTI-REFRESH -->
     <div id="modalLoginApp" class="fixed inset-0 bg-black/95 popup-blur z-[100] flex items-center justify-center p-4">
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl flex flex-col gap-4">
             <div class="text-center flex flex-col items-center gap-2">
@@ -91,7 +94,6 @@
                     <label class="text-[10px] text-gray-400 font-bold uppercase">Senha</label>
                     <div class="relative w-full">
                         <input type="password" id="loginSenha" required placeholder="******" class="w-full p-3 pr-10 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
-                        <!-- BOTÃO VER SENHA -->
                         <button type="button" onclick="window.toggleVisibilidadeSenha('loginSenha', 'iconLoginSenha')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition focus:outline-none">
                             <i class="fas fa-eye" id="iconLoginSenha"></i>
                         </button>
@@ -100,7 +102,6 @@
                         <button type="button" onclick="window.abrirModalRecuperarSenha()" class="text-[10px] text-blue-400 hover:underline font-semibold">Esqueceu a senha?</button>
                     </div>
                 </div>
-
                 <button type="submit" id="btnEntrarLogin" class="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold text-xs transition shadow-lg">Entrar</button>
             </form>
         </div>
@@ -131,7 +132,6 @@
                 <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fas fa-user-plus text-blue-500"></i> Cadastrar Novo Usuário</h3>
                 <button onclick="window.fecharModalCadastroUsuario()" class="text-gray-500 hover:text-white"><i class="fas fa-times text-lg"></i></button>
             </div>
-            
             <form onsubmit="event.preventDefault(); if(window.executarCadastroFirebase) window.executarCadastroFirebase(event);" class="flex flex-col gap-3">
                 <div class="flex flex-col gap-1">
                     <label class="text-[10px] text-gray-400 font-bold uppercase">Tipo de Conta / Perfil</label>
@@ -152,13 +152,11 @@
                     <label class="text-[10px] text-gray-400 font-bold uppercase">Senha</label>
                     <div class="relative w-full">
                         <input type="password" id="cadSenha" required placeholder="Mínimo 6 caracteres..." class="w-full p-3 pr-10 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
-                        <!-- BOTÃO VER SENHA -->
                         <button type="button" onclick="window.toggleVisibilidadeSenha('cadSenha', 'iconCadSenha')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition focus:outline-none">
                             <i class="fas fa-eye" id="iconCadSenha"></i>
                         </button>
                     </div>
                 </div>
-
                 <div class="flex gap-2 mt-2">
                     <button type="button" onclick="window.fecharModalCadastroUsuario()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 py-3 rounded-xl font-bold text-xs transition">Cancelar</button>
                     <button type="submit" id="btnSalvarCadastro" class="flex-1 bg-green-600 hover:bg-green-500 text-white py-3 rounded-xl font-bold text-xs transition">Salvar Cadastro</button>
@@ -167,24 +165,19 @@
         </div>
     </div>
 
-    <!-- MODAL DE GERENCIAR PACIENTES (BANCO DE DADOS REFERÊNCIA OCR) -->
+    <!-- MODAL DE GERENCIAR PACIENTES -->
     <div id="modalGerenciarPacientes" class="fixed inset-0 bg-black/90 popup-blur hidden items-center justify-center p-4 z-[120]">
         <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 w-full max-w-md shadow-2xl flex flex-col gap-4">
             <div class="flex justify-between items-center border-b border-gray-800 pb-3">
                 <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fas fa-users text-blue-500"></i> Banco de Pacientes</h3>
                 <button onclick="window.fecharModalPacientes()" class="text-gray-500 hover:text-white"><i class="fas fa-times text-lg"></i></button>
             </div>
-            
             <p class="text-xs text-gray-400">Adicione os nomes completos dos pacientes. A Inteligência Artificial cruzará esses nomes para não errar a leitura da letra cursiva.</p>
-
             <form onsubmit="event.preventDefault(); if(window.adicionarPacienteFirebase) window.adicionarPacienteFirebase(event);" class="flex gap-2 mt-1">
                 <input type="text" id="cadNomePaciente" required placeholder="Digite o nome completo do paciente..." class="flex-1 p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
                 <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 rounded-xl font-bold text-xs transition shadow"><i class="fas fa-plus"></i></button>
             </form>
-
-            <div class="flex flex-col gap-2 max-h-60 overflow-y-auto custom-scrollbar pr-1 mt-2" id="listaPacientesBanco">
-                <!-- Lista injetada via JS -->
-            </div>
+            <div class="flex flex-col gap-2 max-h-60 overflow-y-auto custom-scrollbar pr-1 mt-2" id="listaPacientesBanco"></div>
         </div>
     </div>
 
@@ -220,14 +213,12 @@
         </div>
     </aside>
 
-    <!-- Cabeçalho -->
     <header class="bg-gray-900 border-b border-gray-800 p-4 sticky top-0 z-40 shadow-md">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <button onclick="window.toggleSidebar && window.toggleSidebar(true)" class="text-gray-300 hover:text-white text-xl p-2 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-700 focus:outline-none w-10 h-10 flex items-center justify-center">
                 <i class="fas fa-bars"></i>
             </button> 
             <h1 class="text-xl sm:text-2xl font-bold text-blue-500 tracking-wide text-center flex-1">Anexos</h1>
-            
             <div id="areaSinoAdmin" class="hidden relative">
                 <button onclick="window.abrirModalNotificacoes()" class="text-gray-300 hover:text-white text-xl p-2 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-700 focus:outline-none w-10 h-10 flex items-center justify-center relative transition">
                     <i class="fas fa-bell"></i>
@@ -239,13 +230,11 @@
     </header>
 
     <main class="flex-1 max-w-5xl w-full mx-auto p-4 flex flex-col gap-6">
-        <!-- Barra de Filtros -->
         <section class="bg-gray-900 border border-gray-800 p-4 rounded-xl shadow-lg flex flex-col gap-3">
             <div class="relative w-full">
                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500"></i>
                 <input type="text" id="inputBuscaAnexo" placeholder="Buscar por paciente, relatórios ou data..." class="w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-blue-500 focus:outline-none text-sm transition-all">
             </div>
-            
             <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
                 <div class="flex flex-col gap-1">
                     <label class="text-[10px] text-gray-400 font-bold uppercase">Data Início</label>
@@ -263,8 +252,6 @@
                 </div>
             </div>
         </section>
-
-        <!-- Galeria Principal Dinâmica -->
         <section class="flex flex-col gap-3">
             <div class="flex justify-between items-center text-sm text-gray-400 px-1 border-b border-gray-800 pb-2" id="areaBreadcrumb"></div>
             <div class="flex justify-between items-center text-xs text-gray-500 px-1 pt-1">
@@ -275,12 +262,10 @@
         </section>
     </main>
 
-    <!-- Botão Flutuante (FAB) -->
     <button onclick="window.abrirModalUpload()" class="fixed bottom-6 right-6 w-16 h-16 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-[0_0_20px_rgba(37,99,235,0.5)] flex items-center justify-center text-2xl transition-transform hover:scale-105 z-40 focus:outline-none">
         <i class="fas fa-plus"></i>
     </button>
 
-    <!-- MODAL DO SINO: CENTRAL DE NOTIFICAÇÕES -->
     <div id="modalNotificacoes" class="fixed inset-0 bg-black/80 popup-blur hidden items-center justify-center p-4 z-50">
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 w-full max-w-lg shadow-2xl flex flex-col gap-4 transform transition-all scale-95 opacity-0" id="modalNotificacoesContent">
             <div class="flex justify-between items-center border-b border-gray-800 pb-3">
@@ -295,15 +280,13 @@
         </div>
     </div>
 
-    <!-- MODAL DE VISUALIZAÇÃO E EDIÇÃO DO ANEXO -->
+    <!-- MODAL DE VISUALIZAÇÃO E EDIÇÃO DO ANEXO DA GALERIA -->
     <div id="modalVisualizacao" class="fixed inset-0 bg-black/90 popup-blur hidden items-center justify-center p-4 z-50">
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 w-full max-w-lg shadow-2xl flex flex-col gap-4 transform transition-all scale-95 opacity-0" id="modalVisualizacaoContent">
-            
             <div class="flex justify-between items-start border-b border-gray-800 pb-3 gap-3">
                 <h3 class="text-lg font-bold text-white flex-1 leading-tight break-words" id="tituloImagemCard">Carregando...</h3>
                 <button onclick="window.fecharModalVisualizacao()" class="text-gray-500 hover:text-white transition text-2xl p-1 leading-none"><i class="fas fa-times"></i></button>
             </div>
-
             <div id="areaEdicaoNome" class="hidden flex-col gap-2 bg-gray-800/50 p-3 rounded-lg border border-gray-700">
                 <label class="text-[10px] text-gray-400 font-bold uppercase">Editar Nome do Arquivo</label>
                 <input type="text" id="inputEdicaoNome" class="w-full p-2 rounded-lg bg-gray-900 border border-gray-600 text-white focus:outline-none focus:border-blue-500 text-sm">
@@ -312,17 +295,14 @@
                     <button onclick="window.cancelarEdicaoNome()" class="flex-1 bg-red-600/20 hover:bg-red-600/40 text-red-500 py-2 rounded-lg font-bold text-xs transition border border-red-900/50"><i class="fas fa-times"></i> Cancelar</button>
                 </div>
             </div>
-
             <div class="w-full h-64 sm:h-80 bg-gray-950 rounded-lg border border-gray-800 flex items-center justify-center overflow-hidden relative shadow-inner">
                 <img id="imagemEmDestaque" src="" class="max-w-full max-h-full object-contain hidden">
                 <iframe id="iframePreview" src="" class="w-full h-full hidden bg-white rounded-lg"></iframe>
-
                 <div id="iconeDestaque" class="hidden flex-col items-center justify-center gap-3 text-gray-500">
                     <i id="iconeDestaqueFa" class="fas fa-file text-6xl"></i>
                     <span id="txtDestaqueExt" class="text-sm font-bold uppercase">Arquivo</span>
                 </div>
             </div>
-
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button onclick="window.abrirEdicaoNome()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-pen text-blue-500"></i> Editar</button>
                 <button onclick="window.compartilharAnexoAtivo()" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-share-nodes"></i> Enviar</button>
@@ -332,7 +312,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE UPLOAD (MÚLTIPLOS MÉTODOS E REVISÃO INTELIGENTE) -->
+    <!-- MODAL DE UPLOAD -->
     <div id="modalUpload" class="fixed inset-0 bg-black/80 popup-blur hidden items-center justify-center p-4 z-50 overflow-y-auto">
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 w-full max-w-md shadow-2xl flex flex-col gap-4 transform transition-all scale-95 opacity-0 my-auto" id="modalUploadContent">
             
@@ -348,18 +328,14 @@
                 <div id="areaEscolhaModo" class="grid grid-cols-2 gap-2 mt-2">
                     <button onclick="document.getElementById('inputArquivoCamera').click()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition"><i class="fas fa-camera text-blue-400"></i><span class="text-[11px] font-bold">Câmera</span></button>
                     <button onclick="document.getElementById('inputArquivoGaleria').click()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition"><i class="fas fa-images text-blue-400"></i><span class="text-[11px] font-bold">Múltiplas Fotos</span></button>
-                    
                     <button onclick="window.abrirModalOrigemScanner()" class="col-span-2 sm:col-span-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition relative overflow-hidden"><div class="absolute inset-0 bg-red-500/10 opacity-50"></div><i class="fas fa-file-pdf text-red-500"></i><span class="text-[11px] font-bold">Escanear Documento</span></button>
-                    
                     <button onclick="document.getElementById('inputArquivoGenerico').click()" class="col-span-2 sm:col-span-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition"><i class="fas fa-file-upload text-purple-400"></i><span class="text-[11px] font-bold">PDF / Outros</span></button>
                 </div>
 
                 <input type="file" id="inputArquivoCamera" accept="image/*" capture="environment" class="hidden" onchange="window.processarArquivosLote(this, 'camera')">
                 <input type="file" id="inputArquivoGaleria" accept="image/*" multiple class="hidden" onchange="window.processarArquivosLote(this, 'galeria')">
-                
                 <input type="file" id="inputArquivoScannerCamera" accept="image/*" capture="environment" class="hidden" onchange="window.abrirModoScanner(this)">
                 <input type="file" id="inputArquivoScannerGaleria" accept="image/*" class="hidden" onchange="window.abrirModoScanner(this)">
-                
                 <input type="file" id="inputArquivoGenerico" class="hidden" accept="*/*" multiple onchange="window.processarArquivosLote(this, 'generico')">
 
                 <!-- PREVIEW SCANNER E REVISÃO INTELIGENTE -->
@@ -368,7 +344,7 @@
                         <span class="text-xs font-bold text-red-400"><i class="fas fa-file-pdf"></i> Revisão de Documentos</span>
                         <span id="txtQtdPaginas" class="text-[10px] text-gray-400 bg-gray-800 px-2 py-1 rounded border border-gray-700">0 páginas</span>
                     </div>
-                    <p class="text-[10px] text-yellow-500 mb-1 leading-tight"><i class="fas fa-info-circle"></i> A IA selecionou o nome pelo Banco de Pacientes. Se falhar ou estiver em branco, selecione você mesmo na caixinha da foto.</p>
+                    <p class="text-[10px] text-yellow-500 mb-1 leading-tight"><i class="fas fa-info-circle"></i> A IA selecionou o nome. Clique na foto para ler o conteúdo ou altere a caixa de seleção abaixo de cada página.</p>
                     
                     <div id="gridPaginasScanner" class="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto custom-scrollbar p-1"></div>
                     
@@ -399,6 +375,12 @@
         </div>
     </div>
 
+    <!-- MODAL DE ZOOM DA PÁGINA (LIGHTBOX) -->
+    <div id="modalZoomPagina" onclick="window.fecharZoomPagina()" class="fixed inset-0 bg-black/95 popup-blur hidden items-center justify-center p-4 z-[200] cursor-zoom-out">
+        <img id="imgZoomPagina" src="" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
+        <button onclick="window.fecharZoomPagina()" class="absolute top-4 right-4 text-white hover:text-red-400 transition text-3xl"><i class="fas fa-times"></i></button>
+    </div>
+
     <!-- POP-UP ORIGEM DO SCANNER -->
     <div id="modalOrigemScanner" class="fixed inset-0 bg-black/85 popup-blur hidden items-center justify-center p-4 z-[75]">
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-5 w-full max-w-xs shadow-2xl flex flex-col gap-4 text-center">
@@ -426,11 +408,9 @@
             <h3 class="text-white font-bold text-sm flex items-center gap-2"><i class="fas fa-crop-alt text-blue-500"></i> Ajustar Bordas</h3>
             <button onclick="window.cancelarScannerTotal()" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
         </div>
-        
         <div class="flex-1 w-full bg-black relative overflow-hidden flex items-center justify-center p-4">
             <img id="imgParaCortar" src="" class="max-w-full max-h-full">
         </div>
-
         <div class="bg-gray-900 px-5 pt-4 border-t border-gray-800 flex flex-col gap-2">
             <div class="flex justify-between text-[10px] text-gray-400 font-bold uppercase tracking-wide">
                 <span><i class="fas fa-balance-scale text-blue-400"></i> Nivelamento (Ângulo)</span>
@@ -442,7 +422,6 @@
                 <button onclick="window.ajustarNivelamento(1)" class="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 border border-gray-700 w-8 h-8 rounded-full flex items-center justify-center transition shadow-md"><i class="fas fa-plus text-xs"></i></button>
             </div>
         </div>
-
         <div class="bg-gray-900 p-4 pb-8 flex gap-3">
             <button onclick="window.cancelarScannerTotal()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-3.5 rounded-xl font-bold text-sm">Cancelar</button>
             <button onclick="window.girarCropper()" class="bg-gray-700 hover:bg-gray-600 text-white w-14 rounded-xl font-bold text-lg flex items-center justify-center transition shadow-md"><i class="fas fa-rotate-right"></i></button>
@@ -707,6 +686,30 @@
                     icon.classList.remove("fa-eye-slash");
                     icon.classList.add("fa-eye");
                 }
+            }
+        };
+
+        // --- SISTEMA DE ZOOM DO CARRINHO (LIGHTBOX) ---
+        window.abrirZoomPagina = function(index) {
+            const pag = arrayPaginasEscaneadas[index];
+            if(!pag) return;
+            const imgUrl = typeof pag === 'string' ? pag : pag.finalDataUrl;
+            const modal = document.getElementById("modalZoomPagina");
+            const img = document.getElementById("imgZoomPagina");
+            if (modal && img) {
+                img.src = imgUrl;
+                modal.classList.remove("hidden");
+                modal.classList.add("flex");
+            }
+        };
+
+        window.fecharZoomPagina = function() {
+            const modal = document.getElementById("modalZoomPagina");
+            if (modal) {
+                modal.classList.add("hidden");
+                modal.classList.remove("flex");
+                const img = document.getElementById("imgZoomPagina");
+                if (img) img.src = "";
             }
         };
 
@@ -1489,6 +1492,20 @@
 
             const iniciarArrasto = (e) => {
                 const pos = obterPosicaoRealCanvas(e);
+
+                if (imgCarimboElemento) {
+                    const slCar = document.getElementById("sliderEscalaCarimbo");
+                    let escalaC = slCar ? parseInt(slCar.value) / 100 : 0.85;
+                    let larguraCar = 380 * escalaC;
+                    let alturaCar = (imgCarimboElemento.height * larguraCar) / imgCarimboElemento.width;
+
+                    if (pos.x >= posicaoCarimbo.x && pos.x <= posicaoCarimbo.x + larguraCar &&
+                        pos.y >= posicaoCarimbo.y && pos.y <= posicaoCarimbo.y + alturaCar) {
+                        elementoSendoArrastado = 'carimbo';
+                        offsetArrasto = { x: pos.x - posicaoCarimbo.x, y: pos.y - posicaoCarimbo.y };
+                        return;
+                    }
+                }
                 
                 if (imgAssinaturaElemento) {
                     const slEsc = document.getElementById("sliderEscalaAssinatura");
@@ -1536,6 +1553,9 @@
                 } else if (elementoSendoArrastado === 'assinatura') {
                     posicaoAssinatura.x = pos.x - offsetArrasto.x;
                     posicaoAssinatura.y = pos.y - offsetArrasto.y;
+                } else if (elementoSendoArrastado === 'carimbo') {
+                    posicaoCarimbo.x = pos.x - offsetArrasto.x;
+                    posicaoCarimbo.y = pos.y - offsetArrasto.y;
                 }
                 window.renderizarFiltroAtual(true);
             };
@@ -1557,13 +1577,22 @@
             
             const canvasAss = document.getElementById("canvasAssinatura");
             if (!canvasAss) return;
-            canvasAss.width = canvasAss.offsetWidth;
-            canvasAss.height = canvasAss.offsetHeight;
+
+            const ratio = window.devicePixelRatio || 1;
+            const width = canvasAss.offsetWidth;
+            const height = canvasAss.offsetHeight;
+
+            canvasAss.width = width * ratio;
+            canvasAss.height = height * ratio;
             
             ctxAssinaturaPad = canvasAss.getContext("2d");
+            ctxAssinaturaPad.scale(ratio, ratio);
             ctxAssinaturaPad.strokeStyle = "#000000";
-            ctxAssinaturaPad.lineWidth = 2.5;
+            ctxAssinaturaPad.lineWidth = 3;
             ctxAssinaturaPad.lineCap = "round";
+            ctxAssinaturaPad.lineJoin = "round";
+
+            pontosTraçoAssinatura = [];
 
             const getPosPad = (e) => {
                 const rect = canvasAss.getBoundingClientRect();
@@ -1572,8 +1601,29 @@
                 return { x: clientX - rect.left, y: clientY - rect.top };
             };
 
-            const iniciar = (e) => { assinandoPad = true; const p = getPosPad(e); ctxAssinaturaPad.beginPath(); ctxAssinaturaPad.moveTo(p.x, p.y); };
-            const desenhar = (e) => { if (!assinandoPad) return; const p = getPosPad(e); ctxAssinaturaPad.lineTo(p.x, p.y); ctxAssinaturaPad.stroke(); };
+            const iniciar = (e) => { 
+                assinandoPad = true; 
+                const p = getPosPad(e); 
+                pontosTraçoAssinatura = [p];
+                ctxAssinaturaPad.beginPath(); 
+                ctxAssinaturaPad.moveTo(p.x, p.y); 
+            };
+
+            const desenhar = (e) => { 
+                if (!assinandoPad) return; 
+                e.preventDefault();
+                const p = getPosPad(e); 
+                pontosTraçoAssinatura.push(p);
+
+                if (pontosTraçoAssinatura.length > 2) {
+                    const len = pontosTraçoAssinatura.length;
+                    const xc = (pontosTraçoAssinatura[len - 1].x + pontosTraçoAssinatura[len - 2].x) / 2;
+                    const yc = (pontosTraçoAssinatura[len - 1].y + pontosTraçoAssinatura[len - 2].y) / 2;
+                    ctxAssinaturaPad.quadraticCurveTo(pontosTraçoAssinatura[len - 2].x, pontosTraçoAssinatura[len - 2].y, xc, yc);
+                    ctxAssinaturaPad.stroke();
+                }
+            };
+
             const parar = () => { assinandoPad = false; };
 
             canvasAss.onmousedown = iniciar; canvasAss.onmousemove = desenhar; canvasAss.onmouseup = parar;
@@ -1583,7 +1633,9 @@
         window.limparAssinaturaPad = function() {
             const canvasAss = document.getElementById("canvasAssinatura");
             if (ctxAssinaturaPad && canvasAss) {
-                ctxAssinaturaPad.clearRect(0, 0, canvasAss.width, canvasAss.height);
+                const ratio = window.devicePixelRatio || 1;
+                ctxAssinaturaPad.clearRect(0, 0, canvasAss.width / ratio, canvasAss.height / ratio);
+                pontosTraçoAssinatura = [];
             }
         };
 
@@ -1623,7 +1675,7 @@
             window.renderizarFiltroAtual(true);
         };
 
-        // SALVAR PÁGINA NO PREVIEW
+        // SALVAR PÁGINA (VAI PARA O CARRINHO) E NÃO SALVA DIRETO NO BANCO
         window.confirmarSalvarPaginaScanner = function() {
             window.renderizarFiltroAtual(false);
             const canvasLive = document.getElementById("canvasLivePreview");
@@ -1641,7 +1693,7 @@
             window.renderizarCarrinhoScanner();
         };
 
-        // --- PREVIEW INTELIGENTE PARA DROPDOWN ---
+        // --- SISTEMA DE CARRINHO COM DROPDOWN E LIGHTBOX PARA REVISÃO INTELIGENTE ---
         window.renderizarCarrinhoScanner = function() {
             const areaEscolha = document.getElementById("areaEscolhaModo");
             const areaPrev = document.getElementById("areaPreviewScanner");
@@ -1658,10 +1710,10 @@
             if (txtQtd) txtQtd.innerText = `${arrayPaginasEscaneadas.length} páginas`;
 
             arrayPaginasEscaneadas.forEach((pagData, index) => {
-                let imgUrl = pagData.finalDataUrl;
+                let imgUrl = typeof pagData === 'string' ? pagData : pagData.finalDataUrl;
                 let nomePacSugerido = pagData.paciente || "";
 
-                // Dropdown aprimorado: texto mais curto para caber na tela do celular
+                // Dropdown aprimorado
                 let optionsHTML = `<option value="">(Mesmo da Pág. Anterior)</option>`;
                 listaPacientesCadastrados.forEach(pac => {
                     let selected = (nomePacSugerido === pac.nome) ? "selected" : "";
@@ -1670,10 +1722,11 @@
 
                 const div = document.createElement("div");
                 div.className = "relative border border-gray-700 rounded-lg overflow-hidden h-36 bg-gray-900 flex flex-col group shadow-lg"; 
+                // Imagem agora tem onclick para o Zoom e cursor indicativo
                 div.innerHTML = `
                     <div class="flex-1 relative overflow-hidden">
-                        <img src="${imgUrl}" class="w-full h-full object-cover opacity-80">
-                        <div class="absolute bottom-0 left-0 right-0 bg-black/80 text-[9px] text-center py-0.5 font-bold shadow-inner z-10">Pág ${index + 1}</div>
+                        <img src="${imgUrl}" onclick="window.abrirZoomPagina(${index})" class="w-full h-full object-cover opacity-80 cursor-zoom-in hover:opacity-100 transition">
+                        <div class="absolute bottom-0 left-0 right-0 bg-black/80 text-[9px] text-center py-0.5 font-bold shadow-inner z-10 pointer-events-none">Pág ${index + 1}</div>
                         
                         <div class="absolute top-1 right-1 flex gap-1 z-20">
                             <button onclick="window.removerPaginaScanner(${index})" title="Remover Página" class="bg-red-600 hover:bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow"><i class="fas fa-times text-[9px]"></i></button>
