@@ -376,7 +376,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE UPLOAD (MÚLTIPLOS MÉTODOS E REVISÃO INTELIGENTE) -->
+    <!-- MODAL DE UPLOAD DE ARQUIVOS (COM REVISÃO INTELIGENTE) -->
     <div id="modalUpload" class="fixed inset-0 bg-black/80 popup-blur hidden items-center justify-center p-4 z-50 overflow-y-auto">
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 w-full max-w-md shadow-2xl flex flex-col gap-4 transform transition-all scale-95 opacity-0 my-auto" id="modalUploadContent">
             
@@ -412,7 +412,7 @@
                         <span class="text-xs font-bold text-red-400"><i class="fas fa-file-pdf"></i> Revisão de Documentos</span>
                         <span id="txtQtdPaginas" class="text-[10px] text-gray-400 bg-gray-800 px-2 py-1 rounded border border-gray-700">0 páginas</span>
                     </div>
-                    <p class="text-[10px] text-yellow-500 mb-1 leading-tight"><i class="fas fa-info-circle"></i> A IA escolheu o nome. Caso ela falhe devido à letra cursiva, basta selecionar manualmente na caixinha de cada foto.</p>
+                    <p class="text-[10px] text-yellow-500 mb-1 leading-tight"><i class="fas fa-info-circle"></i> A IA selecionou o nome pelo Banco de Pacientes. Se falhar ou estiver em branco, selecione você mesmo na caixinha da foto.</p>
                     
                     <div id="gridPaginasScanner" class="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto custom-scrollbar p-1"></div>
                     
@@ -610,24 +610,6 @@
         </div>
     </div>
 
-    <!-- MODAL 3: POP-UP DE ASSINATURA -->
-    <div id="modalAssinatura" class="fixed inset-0 bg-black/90 popup-blur hidden items-center justify-center p-4 z-[80]">
-        <div class="bg-gray-900 rounded-xl border border-gray-800 p-5 w-full max-w-md shadow-2xl flex flex-col gap-4">
-            <div class="flex justify-between items-center border-b border-gray-800 pb-2">
-                <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fas fa-pen-nib text-indigo-400"></i> Assinatura Digital</h3>
-                <button onclick="window.fecharModalAssinatura()" class="text-gray-500 hover:text-white"><i class="fas fa-times text-lg"></i></button>
-            </div>
-            <p class="text-xs text-gray-400">Desenhe sua assinatura no quadro abaixo:</p>
-            <div class="w-full h-40 bg-white rounded-lg overflow-hidden relative touch-none border border-gray-700">
-                <canvas id="canvasAssinatura" class="w-full h-full cursor-crosshair"></canvas>
-            </div>
-            <div class="flex gap-2">
-                <button onclick="window.limparAssinaturaPad()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2.5 rounded-lg text-xs font-bold border border-gray-700 transition"><i class="fas fa-eraser"></i> Limpar</button>
-                <button onclick="window.salvarAssinaturaParaCanvas()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2.5 px-4 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2"><i class="fas fa-check"></i> Inserir Assinatura</button>
-            </div>
-        </div>
-    </div>
-
     <!-- SCRIPT PRINCIPAL E FIREBASE COM PROTEÇÃO CONTRA NULL -->
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -725,7 +707,6 @@
             let nome = inNome ? inNome.value.trim() : "";
             if (!nome) return;
             
-            // Title case perfeito para o banco
             const nomePadronizado = nome.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
 
             push(dbRef(db, 'pacientes_cadastrados'), { nome: nomePadronizado }).then(() => {
@@ -739,30 +720,32 @@
             }
         };
 
-        // CARREGA A LISTA DE PACIENTES (PARA O FUZZY MATCH E PRO MODAL)
-        onValue(dbRef(db, 'pacientes_cadastrados'), (snapshot) => {
-            listaPacientesCadastrados = [];
-            const container = document.getElementById("listaPacientesBanco");
-            if(container) container.innerHTML = "";
-            
-            if (snapshot.exists()) {
-                snapshot.forEach(child => { 
-                    const p = { id: child.key, nome: child.val().nome };
-                    listaPacientesCadastrados.push(p);
-                    
-                    if(container) {
-                        container.innerHTML += `
-                        <div class="flex justify-between items-center bg-gray-800 p-2.5 rounded-lg border border-gray-700 text-xs">
-                            <span class="text-white font-bold truncate flex-1">${p.nome}</span>
-                            <button onclick="window.removerPacienteFirebase('${p.id}', '${p.nome.replace(/'/g, "\\'")}')" class="text-red-400 hover:text-red-300 p-1.5 ml-2"><i class="fas fa-trash"></i></button>
-                        </div>`;
-                    }
-                });
-                listaPacientesCadastrados.sort((a,b) => a.nome.localeCompare(b.nome));
-            } else {
-                if(container) container.innerHTML = `<div class="text-center text-gray-500 text-xs py-4">Nenhum paciente cadastrado.</div>`;
-            }
-        });
+        // Função carregada APÓS o login para evitar erro de permissão do Firebase
+        function carregarPacientesBanco() {
+            onValue(dbRef(db, 'pacientes_cadastrados'), (snapshot) => {
+                listaPacientesCadastrados = [];
+                const container = document.getElementById("listaPacientesBanco");
+                if(container) container.innerHTML = "";
+                
+                if (snapshot.exists()) {
+                    snapshot.forEach(child => { 
+                        const p = { id: child.key, nome: child.val().nome };
+                        listaPacientesCadastrados.push(p);
+                        
+                        if(container) {
+                            container.innerHTML += `
+                            <div class="flex justify-between items-center bg-gray-800 p-2.5 rounded-lg border border-gray-700 text-xs">
+                                <span class="text-white font-bold truncate flex-1">${p.nome}</span>
+                                <button onclick="window.removerPacienteFirebase('${p.id}', '${p.nome.replace(/'/g, "\\'")}')" class="text-red-400 hover:text-red-300 p-1.5 ml-2"><i class="fas fa-trash"></i></button>
+                            </div>`;
+                        }
+                    });
+                    listaPacientesCadastrados.sort((a,b) => a.nome.localeCompare(b.nome));
+                } else {
+                    if(container) container.innerHTML = `<div class="text-center text-gray-500 text-xs py-4">Nenhum paciente cadastrado.</div>`;
+                }
+            });
+        }
 
         // --- SISTEMA DE LEITURA OCR INTELIGENTE (FUZZY MATCH) ---
         function encontrarPacienteNoBanco(textoRaw) {
@@ -775,7 +758,7 @@
             if (cleanText.includes("paciente")) {
                 nomeLimpo = cleanText.split("paciente")[1].trim();
             } else {
-                nomeLimpo = cleanText; // Tenta usar tudo se o OCR comeu a palavra paciente
+                nomeLimpo = cleanText; 
             }
 
             // Normaliza removendo acentos e divide em blocos (tokens)
@@ -1191,10 +1174,8 @@
                 if (lblL) lblL.innerText = caixasTexto[indiceCaixaTextoAtiva].larguraCaixa + "px";
             }
 
-            // 1. Imagem Base
             ctxLive.putImageData(canvasOriginalContextData, 0, 0);
             
-            // 2. Filtros
             if (window.filtroAtivo !== 'original' || valBrilho !== 0 || valContraste !== 0) {
                 const imgData = ctxLive.getImageData(0, 0, larguraCrop, alturaCrop);
                 const data = imgData.data;
@@ -1234,7 +1215,6 @@
                 ctxLive.putImageData(imgData, 0, 0);
             }
 
-            // 3. Renderiza Caixas de Texto
             caixasTexto.forEach((caixa, index) => {
                 if (caixa.texto.trim() !== "") {
                     caixa.dimensaoCalculada = desenharTextoEstiloDocumentoAutoAjustavel(
@@ -1252,7 +1232,6 @@
                 }
             });
 
-            // 4. Renderiza Assinatura
             if (imgAssinaturaElemento) {
                 const slEsc = document.getElementById("sliderEscalaAssinatura");
                 let escala = slEsc ? parseInt(slEsc.value) / 100 : 0.5;
@@ -1406,19 +1385,18 @@
             if (pAss) { pAss.classList.add("hidden"); pAss.classList.remove("flex"); }
             
             const txtBtnAss = document.getElementById("txtBtnAssinatura");
-            if (txtBtnAss) txtBtnAss.innerText = "Adicionar Assinatura";
+            if (txtBtnAss) txtBtnAss.innerText = "Assinar";
             
             window.renderizarFiltroAtual(true);
         };
 
-        // SALVAR PÁGINA (VAI PARA O CARRINHO)
+        // SALVAR PÁGINA (VAI PARA O CARRINHO) E NÃO SALVA DIRETO NO BANCO
         window.confirmarSalvarPaginaScanner = function() {
             window.renderizarFiltroAtual(false);
             const canvasLive = document.getElementById("canvasLivePreview");
             if (!canvasLive) return;
             const imgSalvaDataUrl = canvasLive.toDataURL('image/jpeg', 0.85); 
 
-            // Carga o Preview com "Desconhecido" ate processarmos o OCR depois na revisão
             arrayPaginasEscaneadas.push({ finalDataUrl: imgSalvaDataUrl, paciente: "" });
             
             modoUploadAtual = 'scanner';
@@ -1506,7 +1484,7 @@
             if (input.files && input.files.length > 0) {
                 const file = input.files[0];
                 
-                // NOVO FLUXO: Se o usuário subir um PDF genérico, fatiamos e jogamos no Carrinho de Revisão!
+                // NOVO FLUXO: Se subir um PDF genérico, fatiamos e jogamos no Carrinho de Revisão!
                 if (file.type === 'application/pdf') {
                     modoUploadAtual = 'scanner'; 
                     const areaEscolha = document.getElementById("areaEscolhaModo"); if (areaEscolha) areaEscolha.classList.add("hidden");
@@ -1533,12 +1511,11 @@
                             
                             const imgDataUrl = canvas.toDataURL('image/jpeg', 0.85);
                             
-                            // A IA tenta ler a página atual
+                            // A IA tenta ler a página atual e cruzar com o banco
                             let nomeSugerido = "";
                             try {
                                 const imgBw = await preProcessarImagemParaOCR(imgDataUrl);
                                 const ret = await worker.recognize(imgBw);
-                                // O cruzamento Fuzzy
                                 let nomeVisto = encontrarPacienteNoBanco(ret.data.text);
                                 if (nomeVisto !== "Desconhecido") nomeSugerido = nomeVisto;
                             } catch(e) {}
@@ -1546,7 +1523,7 @@
                             arrayPaginasEscaneadas.push({
                                 finalDataUrl: imgDataUrl,
                                 paciente: nomeSugerido,
-                                arquivoOriginalParaRelatorioGeral: file // Guarda o original pra upar depois
+                                arquivoOriginalParaRelatorioGeral: file
                             });
                         }
                         await worker.terminate();
@@ -1560,7 +1537,6 @@
                     return;
                 }
 
-                // Fila normal de imagens
                 modoUploadAtual = tipo; 
                 for (let i = 0; i < input.files.length; i++) { arquivosFilaEnvio.push(input.files[i]); }
                 
@@ -1584,8 +1560,8 @@
                 let isImg = file.type.startsWith('image/');
                 let iconeLateral = isImg ? `<i class="fas fa-image text-blue-400 mr-2 text-sm"></i>` : `<i class="fas fa-file-alt text-purple-400 mr-2 text-sm"></i>`;
                 const div = document.createElement("div");
-                div.className = "flex justify-between items-center bg-gray-800 p-2.5 rounded-lg border border-gray-700 text-xs";
-                div.innerHTML = `<div class="truncate flex-1 text-gray-300 pr-2 flex items-center">${iconeLateral} ${file.name}</div><button onclick="window.removerArquivoFila(${index})" class="text-gray-500 hover:text-red-400 p-1.5 transition rounded-full"><i class="fas fa-times"></i></button>`;
+                div.className = "flex justify-between items-center bg-gray-800 p-2.5 rounded-lg border border-gray-700 text-xs hover:border-gray-600 transition";
+                div.innerHTML = `<div class="truncate flex-1 text-gray-300 pr-2 flex items-center font-medium">${iconeLateral} ${file.name}</div><button onclick="window.removerArquivoFila(${index})" class="text-gray-500 hover:text-red-400 p-1.5 transition rounded-full hover:bg-gray-700/50"><i class="fas fa-times"></i></button>`;
                 container.appendChild(div);
             });
             if (arquivosFilaEnvio.length === 0) window.limparModosUpload();
@@ -1596,7 +1572,7 @@
             window.renderizarListaFilaEnvio();
         };
 
-        // LÓGICA DE UPLOAD DEFINITIVA BASEADA NO PREVIEW
+        // LÓGICA FINAL DE UPLOAD BASEADO NAS REVISÕES DO USUÁRIO
         window.iniciarUploadStorage = async function() {
             const inNome = document.getElementById("nomeArquivoManual");
             let nomeDigitado = inNome ? inNome.value.trim() : "";
@@ -1614,7 +1590,7 @@
                 const dataAtual = new Date();
                 const pastaData = `${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, '0')}-${String(dataAtual.getDate()).padStart(2, '0')}`;
                 
-                // 1. GERA E SALVA O RELATÓRIO GERAL
+                // 1. GERA E SALVA O RELATÓRIO GERAL (Completo)
                 if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Salvando Relatório Geral...`;
                 
                 let arquivoGeralUpload = null;
@@ -1652,7 +1628,7 @@
                     statusExclusao: "ativo"
                 });
 
-                // 2. AGRUPA PELAS REVISÕES DA TELA
+                // 2. AGRUPA E SEPARA PELOS NOMES DO DROPDOWN
                 if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Separando por Paciente...`;
                 
                 let mapaPacientes = {};
@@ -1665,7 +1641,6 @@
                     let elCaixinha = document.getElementById(`selectNomePac_${i}`);
                     let nomeSelecionadoNaTela = elCaixinha ? elCaixinha.value : "";
 
-                    // Se escolheu um paciente no dropdown, atualiza a lembrança
                     if (nomeSelecionadoNaTela !== "") {
                         nomeAnteriorLembrado = nomeSelecionadoNaTela;
                     }
@@ -1687,7 +1662,6 @@
                     const nomePac = nomesPacientes[idx];
                     const imgsPac = mapaPacientes[nomePac];
 
-                    // Impede o upload se acabou não selecionando nenhum paciente na tela inteira
                     if (nomePac === "Desconhecido") continue; 
 
                     if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Salvando: ${nomePac}...`;
@@ -1770,8 +1744,24 @@
             }
         };
 
+        function obterNomePastaInteligente(timestamp) {
+            const dataObj = new Date(timestamp);
+            const hoje = new Date();
+            if (dataObj.getMonth() === hoje.getMonth() && dataObj.getFullYear() === hoje.getFullYear()) {
+                return dataObj.toLocaleDateString('pt-BR');
+            } else {
+                const mes = String(dataObj.getMonth() + 1).padStart(2, '0');
+                return `${mes}/${dataObj.getFullYear()}`;
+            }
+        }
+
         // RENDERIZAÇÃO DA GALERIA
         function carregarGaleriaDeAnexos() {
+            const container = document.getElementById("listaAnexos");
+            if (container && todosAnexosNaMemoria.length === 0) {
+                container.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center py-10"><i class="fas fa-circle-notch fa-spin text-4xl text-blue-500 mb-3"></i><p class="text-gray-400 text-sm animate-pulse">Sincronizando base de dados...</p></div>`;
+            }
+
             onValue(dbRef(db, 'arquivos_anexos'), (snapshot) => {
                 todosAnexosNaMemoria = [];
                 const selectUsuario = document.getElementById("filtroUsuario");
@@ -1919,12 +1909,13 @@
             }
         };
 
+        // RENDERIZAÇÃO DOS CARDS DE PASTAS
         function renderizarCardPasta(container, nomePasta, subtitulo, onclickAction, isPaciente = false) {
             const iconClass = isPaciente ? "fa-user-injured text-indigo-400" : "fa-folder-open text-blue-500";
             const bgClass = isPaciente ? "bg-indigo-900/20 border-indigo-800/40" : "bg-blue-900/20 border-blue-800/40";
             
             const card = document.createElement("div");
-            card.className = "bg-gray-800 border border-gray-700 p-3 rounded-xl shadow-sm flex items-center gap-3 hover:border-blue-500/50 hover:bg-gray-700/50 transition cursor-pointer active:scale-95";
+            card.className = "bg-gray-800 border border-gray-700 p-3 rounded-lg shadow-sm flex items-center gap-3 hover:border-blue-500/50 hover:bg-gray-700/50 transition cursor-pointer active:scale-95";
             card.setAttribute("onclick", onclickAction);
             card.innerHTML = `
                 <div class="w-12 h-12 ${bgClass} rounded-lg flex items-center justify-center border flex-shrink-0">
@@ -1939,6 +1930,7 @@
             container.appendChild(card);
         }
 
+        // RENDERIZAÇÃO DOS CARDS DE ARQUIVOS (PDF E FOTOS)
         function renderizarArquivosFinais(lista, container) {
             if (lista.length === 0) { container.innerHTML = `<div class="col-span-full py-8 text-center text-gray-500 text-xs">Nenhum documento encontrado.</div>`; return; }
             lista.forEach(arq => {
@@ -2129,16 +2121,15 @@
                     if (perfilUsuario === "administrador") {
                         if (areaSino) areaSino.classList.remove("hidden");
                         if (espacador) espacador.classList.add("hidden");
-                        if (btnBancoPacientes) btnBancoPacientes.classList.remove("hidden");
-                        if (btnBancoPacientes) btnBancoPacientes.classList.add("flex");
-                        if (typeof window.inicializarNotificacoes === 'function') {
-                            window.inicializarNotificacoes(dadosUser, "containerNotificacoes", "badgeNotificacoes");
-                        }
+                        if (btnBancoPacientes) { btnBancoPacientes.classList.remove("hidden"); btnBancoPacientes.classList.add("flex"); }
                     } else {
                         if (areaSino) areaSino.classList.add("hidden");
                         if (espacador) espacador.classList.remove("hidden");
                         if (btnBancoPacientes) { btnBancoPacientes.classList.add("hidden"); btnBancoPacientes.classList.remove("flex"); }
                     }
+                    
+                    // CARREGA PACIENTES E A GALERIA APÓS LOGIN
+                    carregarPacientesBanco();
                     carregarGaleriaDeAnexos();
                 });
             } else {
