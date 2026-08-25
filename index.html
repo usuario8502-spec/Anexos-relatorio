@@ -333,7 +333,7 @@
 
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button onclick="window.abrirEdicaoNome()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-xs sm:text-sm shadow-md"><i class="fas fa-pen text-blue-500"></i> Editar</button>
-                <button onclick="window.compartilharAnexoAtivo()" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-xs sm:text-sm shadow-md"><i class="fas fa-share-nodes"></i> Compartilhar</button>
+                <button onclick="window.compartilharAnexoAtivo()" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-xs sm:text-sm shadow-md"><i class="fas fa-share-nodes"></i> Enviar</button>
                 <button id="btnBaixarAnexo" onclick="window.baixarAnexoAtivo()" class="bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-xs sm:text-sm shadow-md"><i class="fas fa-download"></i> Baixar</button>
                 <button id="btnExcluirDisfarce" onclick="window.executarExclusaoDisfarçada()" class="bg-red-950/60 hover:bg-red-900/80 text-red-400 border border-red-800/60 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-xs sm:text-sm shadow-md"><i class="fas fa-trash-alt"></i> Excluir</button>
             </div>
@@ -356,7 +356,7 @@
                     <button onclick="document.getElementById('inputArquivoCamera').click()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition"><i class="fas fa-camera text-blue-400"></i><span class="text-[11px] font-bold">Câmera</span></button>
                     <button onclick="document.getElementById('inputArquivoGaleria').click()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition"><i class="fas fa-images text-blue-400"></i><span class="text-[11px] font-bold">Múltiplas Fotos</span></button>
                     <button onclick="window.abrirModalOrigemScanner()" class="col-span-2 sm:col-span-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition relative overflow-hidden"><div class="absolute inset-0 bg-red-500/10 opacity-50"></div><i class="fas fa-file-pdf text-red-500"></i><span class="text-[11px] font-bold">Escanear Documento</span></button>
-                    <button onclick="document.getElementById('inputArquivoGenerico').click()" class="col-span-2 sm:col-span-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition"><i class="fas fa-file-upload text-purple-400"></i><span class="text-[11px] font-bold">PDF / Outros Arquivos</span></button>
+                    <button onclick="document.getElementById('inputArquivoGenerico').click()" class="col-span-2 sm:col-span-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition"><i class="fas fa-file-upload text-purple-400"></i><span class="text-[11px] font-bold">PDF / Outros</span></button>
                 </div>
 
                 <input type="file" id="inputArquivoCamera" accept="image/*" capture="environment" class="hidden" onchange="window.processarArquivosLote(this, 'camera')">
@@ -606,7 +606,7 @@
         </div>
     </div>
 
-    <!-- SCRIPT PRINCIPAL E FIREBASE COM SUPORTE AO FATIAMENTO E LEITURA DE PDFS -->
+    <!-- SCRIPT PRINCIPAL E FIREBASE COM OTIMIZAÇÕES DE COMPARTILHAMENTO E LEITURA -->
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, setPersistence, browserSessionPersistence, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -1759,13 +1759,14 @@
         // FUNÇÃO DE LIMPEZA E PADRONIZAÇÃO DO NOME DO PACIENTE
         function padronizarNomePaciente(nomeRaw) {
             if (!nomeRaw) return "Desconhecido";
-            // Remove pontuações, números, caracteres especiais e espaços extras
-            let nomeLimpo = nomeRaw.replace(/[^a-zA-ZÀ-ÿ\s]/g, '').replace(/\s+/g, ' ').trim();
-            // Transforma em Title Case (Primeira letra Maiúscula) para padronizar
+            // Remove lixos e quebras de linha que o OCR pode captar
+            let nomeLimpo = nomeRaw.split('\n')[0].replace(/[^a-zA-ZÀ-ÿ\s]/g, '').replace(/\s+/g, ' ').trim();
+            if (nomeLimpo.length < 3) return "Desconhecido";
+            // Retorna a 1ª letra de cada palavra maiúscula (ex: Joao Silva)
             return nomeLimpo.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
         }
 
-        // FATIAMENTO E PROCESSAMENTO OCR CLIENT-SIDE (CRIANDO PASTAS INTELIGENTES)
+        // LÓGICA PRINCIPAL DE UPLOAD, FATIAMENTO E OCR
         window.iniciarUploadStorage = async function() {
             const inNome = document.getElementById("nomeArquivoManual");
             let nomeDigitado = inNome ? inNome.value.trim() : "";
@@ -1800,7 +1801,7 @@
 
                 const pdfBlobGeral = doc.output('blob');
                 
-                // 1. Salva o PDF completo na pasta da Data Atual (Agora chamado Relatório Geral)
+                // 1. Salva o PDF completo de segurança na nuvem
                 const dataAtual = new Date();
                 const pastaData = `${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, '0')}-${String(dataAtual.getDate()).padStart(2, '0')}`;
                 const refRemessa = storageRef(storage, `Relatorio_Geral/${pastaData}/${Date.now()}_${nomeDigitado}.pdf`);
@@ -1818,26 +1819,31 @@
                     statusExclusao: "ativo"
                 });
 
-                // 2. Fatiamento por Paciente via OCR no Navegador
+                // 2. OCR para fatiar por nome de paciente
                 if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Identificando Pacientes...`;
                 
                 let pacienteAtual = "Desconhecido";
                 let mapaPacientes = {};
+                
+                // Inicializa o Worker do Tesseract apenas 1 vez (Muito mais rápido)
+                const worker = await Tesseract.createWorker('por');
 
                 for (let i = 0; i < arrayPaginasEscaneadas.length; i++) {
                     let pagData = arrayPaginasEscaneadas[i];
                     let imgBase64 = typeof pagData === 'string' ? pagData : pagData.finalDataUrl;
 
                     try {
-                        const worker = await Tesseract.createWorker('por');
                         const ret = await worker.recognize(imgBase64);
-                        await worker.terminate();
-
                         const texto = ret.data.text;
-                        const match = texto.match(/Nome\s+do\s+paciente\s*[:\-\.]*\s*([A-Za-zÀ-ÿ\s]+)/i);
+                        
+                        // Busca flexível para pegar possíveis erros do scanner como 'Mome' ou 'Noma'
+                        const match = texto.match(/(?:Nome|Noma|Mome)\s+do\s+paciente[:\-\.]*\s*([^\r\n]+)/i);
 
-                        if (match && match[1] && match[1].trim().length > 2) {
-                            pacienteAtual = padronizarNomePaciente(match[1]);
+                        if (match && match[1]) {
+                            let possivelNome = padronizarNomePaciente(match[1]);
+                            if (possivelNome !== "Desconhecido") {
+                                pacienteAtual = possivelNome;
+                            }
                         }
                     } catch (err) {
                         console.warn("Erro ao ler OCR na página " + (i + 1), err);
@@ -1848,8 +1854,10 @@
                     }
                     mapaPacientes[pacienteAtual].push(imgBase64);
                 }
+                
+                await worker.terminate(); // Libera memória
 
-                // 3. Salva o PDF individual de cada paciente na respectiva pasta
+                // 3. Salva arquivos fatiados individualmente nas pastas
                 const nomesPacientes = Object.keys(mapaPacientes);
                 for (let idx = 0; idx < nomesPacientes.length; idx++) {
                     const nomePac = nomesPacientes[idx];
@@ -1892,10 +1900,9 @@
                 for (let i = 0; i < totalArquivos; i++) {
                     const file = arquivosFilaEnvio[i];
                     
-                    // SE FOR PDF E ESTIVER NOS ARQUIVOS GENÉRICOS, ACIONA O FATIAMENTO
+                    // Se enviou um PDF em "Outros Arquivos", ele precisa ser transformado em imagem para ler texto
                     if (file.type === 'application/pdf') {
-                        if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Analisando PDF ${i+1}/${totalArquivos}...`;
-                        await processarUploadPdfDireto(file, nomeDigitado);
+                        await processarUploadPdfDireto(file, nomeDigitado, i, totalArquivos, btnSalvar, barraProgresso);
                         concluidos++; if (barraProgresso) barraProgresso.style.width = ((concluidos / totalArquivos) * 100) + '%';
                         continue;
                     }
@@ -1913,12 +1920,13 @@
                 window.fecharModalUpload(); resetarBotaoAposErro();
             }
 
-            // FUNÇÃO PARA TRATAR PDFs ENVIADOS PELO "OUTROS ARQUIVOS"
-            async function processarUploadPdfDireto(file, nomeBase) {
+            // FUNÇÃO PARA TRATAR PDFs ENVIADOS PELO "OUTROS ARQUIVOS" E LER COMO O SCANNER (CRIANDO IMAGENS DE FUNDO)
+            async function processarUploadPdfDireto(file, nomeBase, numAtual, totalArq, btnSalvar, barraProgresso) {
                 const dataAtual = new Date();
                 const pastaData = `${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, '0')}-${String(dataAtual.getDate()).padStart(2, '0')}`;
 
-                // 1. Salvar o PDF Original como Backup em Relatório Geral
+                if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Salvando Geral ${numAtual+1}/${totalArq}...`;
+
                 const refRemessa = storageRef(storage, `Relatorio_Geral/${pastaData}/${Date.now()}_${file.name}`);
                 await uploadBytesResumable(refRemessa, file, { contentType: 'application/pdf' });
                 const urlGeral = await getDownloadURL(refRemessa);
@@ -1932,32 +1940,43 @@
                     statusExclusao: "ativo"
                 });
 
-                // 2. Extrair Texto e Descobrir Nomes
                 const arrayBuffer = await file.arrayBuffer();
-                const pdfDocLib = await window.PDFLib.PDFDocument.load(arrayBuffer); // Para cortar
-                const pdfDocJs = await window.pdfjsLib.getDocument({data: arrayBuffer}).promise; // Para ler texto
+                const pdfDocLib = await window.PDFLib.PDFDocument.load(arrayBuffer); 
+                const pdfDocJs = await window.pdfjsLib.getDocument({data: arrayBuffer}).promise; 
 
                 let pacienteAtual = "Desconhecido";
                 let paginasPorPaciente = {}; 
+                const worker = await Tesseract.createWorker('por');
 
                 for (let pageNum = 1; pageNum <= pdfDocJs.numPages; pageNum++) {
+                    if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Lendo PDF (${pageNum}/${pdfDocJs.numPages})...`;
                     try {
                         const page = await pdfDocJs.getPage(pageNum);
-                        const textContent = await page.getTextContent();
-                        const textoPagina = textContent.items.map(item => item.str).join(' ');
+                        
+                        // Transforma a página do PDF do usuário em imagem Canvas temporária
+                        const viewport = page.getViewport({ scale: 1.5 });
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
 
-                        const match = textoPagina.match(/Nome\s+do\s+paciente\s*[:\-\.]*\s*([A-Za-zÀ-ÿ\s]+)/i);
-                        if (match && match[1] && match[1].trim().length > 2) {
-                            pacienteAtual = padronizarNomePaciente(match[1]);
+                        await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                        const imgDataUrl = canvas.toDataURL('image/jpeg');
+
+                        // Lê o texto gerado na imagem com a Inteligência
+                        const ret = await worker.recognize(imgDataUrl);
+                        const match = ret.data.text.match(/(?:Nome|Noma|Mome)\s+do\s+paciente[:\-\.]*\s*([^\r\n]+)/i);
+                        if (match && match[1]) {
+                            let possivelNome = padronizarNomePaciente(match[1]);
+                            if (possivelNome !== "Desconhecido") pacienteAtual = possivelNome;
                         }
                     } catch(e) {}
 
                     if (!paginasPorPaciente[pacienteAtual]) paginasPorPaciente[pacienteAtual] = [];
-                    // PDF-lib usa índice 0 para páginas
-                    paginasPorPaciente[pacienteAtual].push(pageNum - 1);
+                    paginasPorPaciente[pacienteAtual].push(pageNum - 1); // o pdfLib exige começar em 0
                 }
+                await worker.terminate();
 
-                // 3. Cortar o PDF usando PDF-Lib e salvar individualmente
                 const nomesPacientes = Object.keys(paginasPorPaciente);
                 for (let idx = 0; idx < nomesPacientes.length; idx++) {
                     const nomePac = nomesPacientes[idx];
@@ -2202,7 +2221,6 @@
 
         function renderizarVisualArquivo(tp, url) {
             if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'imagem'].includes(tp)) { 
-                // ANIMAÇÃO DE CARREGAMENTO PARA AS IMAGENS (SKELETON FADE-IN)
                 return `<div class="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-700 bg-gray-800 flex-shrink-0"><div class="absolute inset-0 flex items-center justify-center"><i class="fas fa-spinner fa-spin text-gray-500"></i></div><img src="${url}" loading="lazy" class="absolute inset-0 w-full h-full object-cover z-10 transition-opacity duration-500 opacity-0" onload="this.classList.remove('opacity-0')"></div>`; 
             } 
             else if (tp === 'pdf') { return `<div class="w-16 h-16 rounded-lg border border-red-900/50 bg-red-950/30 flex items-center justify-center shadow-inner flex-shrink-0"><i class="fas fa-file-pdf text-3xl text-red-500"></i></div>`; } 
@@ -2262,30 +2280,27 @@
             }
         };
 
-        // LÓGICA DE COMPARTILHAMENTO NATIVO (WEB SHARE API)
+        // LÓGICA DE COMPARTILHAMENTO CORRIGIDA: Usa Link/Texto e ignora Bloqueios de Binários no Celular
         window.compartilharAnexoAtivo = async function() {
+            const tCard = document.getElementById("tituloImagemCard");
+            let nomeLimpo = tCard ? tCard.innerText : "Documento do Sistema";
+            
             if (navigator.share) {
                 try {
-                    const resposta = await fetch(window.urlImagemAtiva);
-                    const blob = await resposta.blob();
-                    const tp = window.tipoAnexoAtivo.toLowerCase(); 
-                    let extensao = `.${tp}`; 
-                    if (tp === 'imagem') extensao = '.jpg';
-                    const tCard = document.getElementById("tituloImagemCard");
-                    let nomeLimpo = tCard ? tCard.innerText.replace(/[^a-zA-Z0-9.\- ()]/g, "") : "arquivo";
-                    
-                    const arquivoParaCompartilhar = new File([blob], nomeLimpo + extensao, { type: blob.type });
-
                     await navigator.share({
                         title: nomeLimpo,
-                        text: 'Confira este documento do sistema:',
-                        files: [arquivoParaCompartilhar]
+                        text: `Confira este documento: ${nomeLimpo}`,
+                        url: window.urlImagemAtiva
                     });
                 } catch (err) {
-                    console.log("Compartilhamento cancelado ou não suportado para este tipo de arquivo.", err);
+                    console.log("Compartilhamento nativo não concluído:", err);
                 }
             } else {
-                alert("Seu navegador ou dispositivo não suporta a função de compartilhamento direto. Utilize o botão de baixar.");
+                navigator.clipboard.writeText(window.urlImagemAtiva).then(() => {
+                    alert("🔗 Link copiado para a área de transferência!");
+                }).catch(() => {
+                    alert("Seu navegador não suporta compartilhamento automático.");
+                });
             }
         };
 
