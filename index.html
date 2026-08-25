@@ -49,7 +49,9 @@
                     const swCode = "self.addEventListener('fetch', function(e) {});";
                     const swBlob = new Blob([swCode], {type: 'application/javascript'});
                     const swUrl = URL.createObjectURL(swBlob);
-                    navigator.serviceWorker.register(swUrl).catch(function(err) {});
+                    navigator.serviceWorker.register(swUrl).catch(function(err) {
+                        console.log('Falha ao registrar ServiceWorker: ', err);
+                    });
                 });
             }
         })();
@@ -79,10 +81,60 @@
         
         .cropper-view-box { outline: 3px solid rgba(59, 130, 246, 0.9) !important; border-radius: 4px; }
         .cropper-line { background-color: transparent !important; }
-        
-        input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; background: transparent; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; height: 18px; width: 18px; border-radius: 50%; background: #3b82f6; cursor: pointer; margin-top: -7px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #475569; border-radius: 2px; }
+        .cropper-line.line-e { width: 40px !important; right: -20px !important; }
+        .cropper-line.line-w { width: 40px !important; left: -20px !important; }
+        .cropper-line.line-n { height: 40px !important; top: -20px !important; }
+        .cropper-line.line-s { height: 40px !important; bottom: -20px !important; }
+
+        .cropper-point {
+            width: 44px !important;
+            height: 44px !important;
+            background-color: transparent !important;
+            opacity: 1 !important;
+        }
+        .cropper-point::before {
+            content: '';
+            position: absolute;
+            width: 16px; height: 16px;
+            background-color: #3b82f6;
+            border-radius: 50%;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 5px rgba(0,0,0,0.8);
+        }
+        .cropper-point.point-nw { top: -22px !important; left: -22px !important; }
+        .cropper-point.point-ne { top: -22px !important; right: -22px !important; }
+        .cropper-point.point-sw { bottom: -22px !important; left: -22px !important; }
+        .cropper-point.point-se { bottom: -22px !important; right: -22px !important; }
+        .cropper-point.point-n { top: -22px !important; margin-left: -22px !important; }
+        .cropper-point.point-s { bottom: -22px !important; margin-left: -22px !important; }
+        .cropper-point.point-e { right: -22px !important; margin-top: -22px !important; }
+        .cropper-point.point-w { left: -22px !important; margin-top: -22px !important; }
+
+        .filtro-ativo { border-color: #3b82f6 !important; background-color: #1e3a8a !important; color: #60a5fa !important; }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none; 
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none; 
+            height: 18px; width: 18px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            margin-top: -7px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px;
+            cursor: pointer;
+            background: #475569;
+            border-radius: 2px;
+        }
     </style>
 </head>
 <body class="bg-gray-950 text-gray-100 font-sans min-h-screen flex flex-col relative pb-24">
@@ -208,26 +260,17 @@
                 <i class="fas fa-bars"></i>
             </button> 
             <h1 class="text-xl sm:text-2xl font-bold text-blue-500 tracking-wide text-center flex-1">Anexos</h1>
-            
-            <div id="areaSinoAdmin" class="hidden relative">
-                <button onclick="window.abrirModalNotificacoes()" class="text-gray-300 hover:text-white text-xl p-2 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-700 focus:outline-none w-10 h-10 flex items-center justify-center relative transition">
-                    <i class="fas fa-bell"></i>
-                    <span id="badgeNotificacoes" class="hidden absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-gray-900 shadow-md">0</span>
-                </button>
-            </div>
-            <div id="espacadorHeader" class="w-10"></div>
+            <div class="w-10"></div>
         </div>
     </header>
 
     <main class="flex-1 max-w-5xl w-full mx-auto p-4 flex flex-col gap-6">
-        
         <!-- Barra de Filtros -->
         <section class="bg-gray-900 border border-gray-800 p-4 rounded-xl shadow-lg flex flex-col gap-3">
             <div class="relative w-full">
                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500"></i>
-                <input type="text" id="inputBuscaAnexo" placeholder="Buscar por paciente, data ou mês..." class="w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-blue-500 focus:outline-none text-sm transition-all">
+                <input type="text" id="inputBuscaAnexo" placeholder="Buscar por paciente, relatórios ou mês..." class="w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-blue-500 focus:outline-none text-sm transition-all">
             </div>
-            
             <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
                 <div class="flex flex-col gap-1">
                     <label class="text-[10px] text-gray-400 font-bold uppercase">Data Início</label>
@@ -246,7 +289,7 @@
             </div>
         </section>
 
-        <!-- Galeria Principal Dinâmica -->
+        <!-- Galeria Principal -->
         <section class="flex flex-col gap-3">
             <div class="flex justify-between items-center text-sm text-gray-400 px-1 border-b border-gray-800 pb-2" id="areaBreadcrumb"></div>
             <div class="flex justify-between items-center text-xs text-gray-500 px-1 pt-1">
@@ -262,25 +305,9 @@
         <i class="fas fa-plus"></i>
     </button>
 
-    <!-- MODAL DO SINO: CENTRAL DE NOTIFICAÇÕES -->
-    <div id="modalNotificacoes" class="fixed inset-0 bg-black/80 popup-blur hidden items-center justify-center p-4 z-50">
-        <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 w-full max-w-lg shadow-2xl flex flex-col gap-4 transform transition-all scale-95 opacity-0" id="modalNotificacoesContent">
-            <div class="flex justify-between items-center border-b border-gray-800 pb-3">
-                <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                    <i class="fas fa-bell text-yellow-400"></i> Solicitações de Exclusão
-                </h3>
-                <button onclick="window.fecharModalNotificacoes()" class="text-gray-500 hover:text-white transition text-xl"><i class="fas fa-times"></i></button>
-            </div>
-            <div id="containerNotificacoes" class="flex flex-col gap-3 max-h-80 overflow-y-auto custom-scrollbar">
-                <div class="p-6 text-center text-gray-600 text-xs">Carregando solicitações...</div>
-            </div>
-        </div>
-    </div>
-
     <!-- MODAL DE VISUALIZAÇÃO E EDIÇÃO DO ANEXO -->
     <div id="modalVisualizacao" class="fixed inset-0 bg-black/90 popup-blur hidden items-center justify-center p-4 z-50">
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 w-full max-w-lg shadow-2xl flex flex-col gap-4 transform transition-all scale-95 opacity-0" id="modalVisualizacaoContent">
-            
             <div class="flex justify-between items-start border-b border-gray-800 pb-3 gap-3">
                 <h3 class="text-lg font-bold text-white flex-1 leading-tight break-words" id="tituloImagemCard">Carregando...</h3>
                 <button onclick="window.fecharModalVisualizacao()" class="text-gray-500 hover:text-white transition text-2xl p-1 leading-none"><i class="fas fa-times"></i></button>
@@ -298,7 +325,6 @@
             <div class="w-full h-64 sm:h-80 bg-gray-950 rounded-lg border border-gray-800 flex items-center justify-center overflow-hidden relative shadow-inner">
                 <img id="imagemEmDestaque" src="" class="max-w-full max-h-full object-contain hidden">
                 <iframe id="iframePreview" src="" class="w-full h-full hidden bg-white rounded-lg"></iframe>
-
                 <div id="iconeDestaque" class="hidden flex-col items-center justify-center gap-3 text-gray-500">
                     <i id="iconeDestaqueFa" class="fas fa-file text-6xl"></i>
                     <span id="txtDestaqueExt" class="text-sm font-bold uppercase">Arquivo</span>
@@ -306,43 +332,48 @@
             </div>
 
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <button onclick="window.abrirEdicaoNome()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-pen text-blue-500"></i> Editar</button>
-                <button onclick="window.compartilharAnexoAtivo()" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-share-nodes"></i> Compartilhar</button>
-                <button id="btnBaixarAnexo" onclick="window.baixarAnexoAtivo()" class="bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-download"></i> Baixar</button>
-                <button id="btnExcluirDisfarce" onclick="window.executarExclusaoDisfarçada()" class="bg-red-950/60 hover:bg-red-900/80 text-red-400 border border-red-800/60 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-trash-alt"></i> Excluir</button>
+                <button onclick="window.abrirEdicaoNome()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-xs sm:text-sm shadow-md"><i class="fas fa-pen text-blue-500"></i> Editar</button>
+                <button onclick="window.compartilharAnexoAtivo()" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-xs sm:text-sm shadow-md"><i class="fas fa-share-nodes"></i> Compartilhar</button>
+                <button id="btnBaixarAnexo" onclick="window.baixarAnexoAtivo()" class="bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-xs sm:text-sm shadow-md"><i class="fas fa-download"></i> Baixar</button>
+                <button id="btnExcluirDisfarce" onclick="window.executarExclusaoDisfarçada()" class="bg-red-950/60 hover:bg-red-900/80 text-red-400 border border-red-800/60 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-xs sm:text-sm shadow-md"><i class="fas fa-trash-alt"></i> Excluir</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DE UPLOAD (MÚLTIPLOS MÉTODOS E LOTES) -->
+    <!-- MODAL DE UPLOAD DE ARQUIVOS -->
     <div id="modalUpload" class="fixed inset-0 bg-black/80 popup-blur hidden items-center justify-center p-4 z-50 overflow-y-auto">
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 w-full max-w-md shadow-2xl flex flex-col gap-4 transform transition-all scale-95 opacity-0 my-auto" id="modalUploadContent">
-            
             <div class="flex justify-between items-center border-b border-gray-800 pb-3">
                 <h3 class="text-lg font-bold text-white"><i class="fas fa-cloud-upload-alt text-blue-500"></i> Enviar Arquivos</h3>
                 <button onclick="window.fecharModalUpload()" class="text-gray-500 hover:text-white transition text-xl"><i class="fas fa-times"></i></button>
             </div>
 
             <div class="flex flex-col gap-3">
-                <label class="text-xs text-gray-400">Nome ou Descrição do Arquivo Base:</label>
+                <label class="text-xs text-gray-400">Nome ou Descrição do Arquivo:</label>
                 <input type="text" id="nomeArquivoManual" placeholder="Ex: Relatório Evoluções..." class="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-blue-500">
                 
                 <div id="areaEscolhaModo" class="grid grid-cols-2 gap-2 mt-2">
                     <button onclick="document.getElementById('inputArquivoCamera').click()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition"><i class="fas fa-camera text-blue-400"></i><span class="text-[11px] font-bold">Câmera</span></button>
                     <button onclick="document.getElementById('inputArquivoGaleria').click()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition"><i class="fas fa-images text-blue-400"></i><span class="text-[11px] font-bold">Múltiplas Fotos</span></button>
-                    
                     <button onclick="window.abrirModalOrigemScanner()" class="col-span-2 sm:col-span-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition relative overflow-hidden"><div class="absolute inset-0 bg-red-500/10 opacity-50"></div><i class="fas fa-file-pdf text-red-500"></i><span class="text-[11px] font-bold">Escanear Documento</span></button>
-                    
-                    <button onclick="document.getElementById('inputArquivoGenerico').click()" class="col-span-2 sm:col-span-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition"><i class="fas fa-file-upload text-purple-400"></i><span class="text-[11px] font-bold">PDF / Outros</span></button>
+                    <button onclick="document.getElementById('inputArquivoGenerico').click()" class="col-span-2 sm:col-span-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition"><i class="fas fa-file-upload text-purple-400"></i><span class="text-[11px] font-bold">PDF / Outros Arquivos</span></button>
                 </div>
 
                 <input type="file" id="inputArquivoCamera" accept="image/*" capture="environment" class="hidden" onchange="window.processarArquivosLote(this, 'camera')">
                 <input type="file" id="inputArquivoGaleria" accept="image/*" multiple class="hidden" onchange="window.processarArquivosLote(this, 'galeria')">
-                
                 <input type="file" id="inputArquivoScannerCamera" accept="image/*" capture="environment" class="hidden" onchange="window.abrirModoScanner(this)">
                 <input type="file" id="inputArquivoScannerGaleria" accept="image/*" class="hidden" onchange="window.abrirModoScanner(this)">
-                
                 <input type="file" id="inputArquivoGenerico" class="hidden" accept="*/*" multiple onchange="window.processarArquivosLote(this, 'generico')">
+
+                <!-- PREVIEW DIVERSOS -->
+                <div id="areaPreviewArquivos" class="hidden flex-col gap-3 mt-2">
+                    <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                        <span class="text-xs font-bold text-blue-400"><i class="fas fa-layer-group"></i> Fila de Envio</span>
+                        <span id="txtQtdFila" class="text-[10px] text-gray-400 bg-gray-800 px-2 py-1 rounded border border-gray-700">0 itens</span>
+                    </div>
+                    <div id="listaArquivosFila" class="flex flex-col gap-2 max-h-40 overflow-y-auto custom-scrollbar pr-1"></div>
+                    <button onclick="window.acionarMaisItens()" class="w-full bg-gray-800 hover:bg-gray-700 border border-dashed border-gray-600 text-gray-300 py-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition"><i class="fas fa-plus"></i> Adicionar Mais Itens</button>
+                </div>
 
                 <!-- PREVIEW SCANNER -->
                 <div id="areaPreviewScanner" class="hidden flex-col gap-3 mt-2">
@@ -355,16 +386,6 @@
                         <button onclick="window.limparModosUpload()" class="bg-red-950/50 hover:bg-red-900/60 border border-red-900/50 text-red-400 py-2.5 rounded-lg text-xs font-bold transition">Cancelar</button>
                         <button onclick="window.abrirModalOrigemScanner()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition"><i class="fas fa-plus"></i> Add Pág.</button>
                     </div>
-                </div>
-
-                <!-- PREVIEW DIVERSOS -->
-                <div id="areaPreviewArquivos" class="hidden flex-col gap-3 mt-2">
-                    <div class="flex justify-between items-center border-b border-gray-800 pb-2">
-                        <span class="text-xs font-bold text-blue-400"><i class="fas fa-layer-group"></i> Fila de Envio</span>
-                        <span id="txtQtdFila" class="text-[10px] text-gray-400 bg-gray-800 px-2 py-1 rounded border border-gray-700">0 itens</span>
-                    </div>
-                    <div id="listaArquivosFila" class="flex flex-col gap-2 max-h-40 overflow-y-auto custom-scrollbar pr-1"></div>
-                    <button onclick="window.acionarMaisItens()" class="w-full bg-gray-800 hover:bg-gray-700 border border-dashed border-gray-600 text-gray-300 py-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition"><i class="fas fa-plus"></i> Adicionar Mais Itens</button>
                 </div>
             </div>
 
@@ -585,13 +606,14 @@
         </div>
     </div>
 
-    <!-- SCRIPT PRINCIPAL E FIREBASE COM SUPORTE AO FATIAMENTO E LEITURA DE PDFS -->
+    <!-- SCRIPT PRINCIPAL E FIREBASE COM PROTEÇÃO CONTRA NULL -->
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, setPersistence, browserSessionPersistence, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getDatabase, ref as dbRef, push, onValue, update, remove, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
+        // CREDENCIAIS ATUALIZADAS (PROJETO: anexos-relatorio)
         const firebaseConfig = {
             apiKey: "AIzaSyCfzVSlcB2BU1TTqn_kyo_Gq-EtDps8yys",
             authDomain: "anexos-relatorio.firebaseapp.com",
@@ -1735,7 +1757,7 @@
             window.renderizarListaFilaEnvio();
         };
 
-        // LÓGICA DE EXTRAÇÃO DE NOME LINHA POR LINHA PARA O OCR
+        // LÓGICA DE EXTRAÇÃO DE NOME LINHA POR LINHA PARA OCR
         function extrairNomePacienteOCR(textoRaw) {
             const linhas = textoRaw.split('\n');
             let nomeEncontrado = null;
@@ -1745,14 +1767,10 @@
                 let idxPaciente = linha.toLowerCase().indexOf("paciente");
                 
                 if (idxPaciente !== -1) {
-                    // Pega tudo após a palavra 'paciente' (pula aprox. 8 caracteres da palavra)
                     let resto = linha.substring(idxPaciente + 8).replace(/[:\-\._]/g, '').trim();
-                    
-                    // Se o resto for muito curto (só um espaço ou linha vazia), tenta a próxima linha
                     if (resto.length < 3 && j + 1 < linhas.length) {
                         resto = linhas[j+1].replace(/[:\-\._]/g, '').trim();
                     }
-                    
                     if (resto.length >= 3) {
                         nomeEncontrado = resto;
                         break;
@@ -1804,7 +1822,6 @@
 
                 const pdfBlobGeral = doc.output('blob');
                 
-                // Salva o PDF completo original
                 const dataAtual = new Date();
                 const pastaData = `${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, '0')}-${String(dataAtual.getDate()).padStart(2, '0')}`;
                 const refRemessa = storageRef(storage, `Relatorio_Geral/${pastaData}/${Date.now()}_${nomeDigitado}.pdf`);
@@ -1822,7 +1839,6 @@
                     statusExclusao: "ativo"
                 });
 
-                // Fatiamento por Paciente via Tesseract (OCR) no Scanner
                 if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Identificando Pacientes...`;
                 let pacienteAtual = "Desconhecido";
                 let mapaPacientes = {};
@@ -1889,7 +1905,6 @@
                 for (let i = 0; i < totalArquivos; i++) {
                     const file = arquivosFilaEnvio[i];
                     
-                    // SE FOR PDF E ESTIVER NOS ARQUIVOS GENÉRICOS, ACIONA O FATIAMENTO
                     if (file.type === 'application/pdf') {
                         if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Analisando PDF ${i+1}/${totalArquivos}...`;
                         await processarUploadPdfDireto(file, nomeDigitado);
@@ -1910,12 +1925,10 @@
                 window.fecharModalUpload(); resetarBotaoAposErro();
             }
 
-            // FUNÇÃO PARA TRATAR PDFs ENVIADOS PELO "OUTROS ARQUIVOS"
             async function processarUploadPdfDireto(file, nomeBase) {
                 const dataAtual = new Date();
                 const pastaData = `${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, '0')}-${String(dataAtual.getDate()).padStart(2, '0')}`;
 
-                // 1. Salvar o PDF Original como Backup
                 const refRemessa = storageRef(storage, `Relatorio_Geral/${pastaData}/${Date.now()}_${file.name}`);
                 await uploadBytesResumable(refRemessa, file, { contentType: 'application/pdf' });
                 const urlGeral = await getDownloadURL(refRemessa);
@@ -1929,7 +1942,6 @@
                     statusExclusao: "ativo"
                 });
 
-                // 2. Extrair Texto e Descobrir Nomes
                 const arrayBuffer = await file.arrayBuffer();
                 const pdfDocLib = await window.PDFLib.PDFDocument.load(arrayBuffer); 
                 const pdfDocJs = await window.pdfjsLib.getDocument({data: arrayBuffer}).promise; 
@@ -1939,6 +1951,7 @@
                 const worker = await Tesseract.createWorker('por');
 
                 for (let pageNum = 1; pageNum <= pdfDocJs.numPages; pageNum++) {
+                    if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Lendo Pág. ${pageNum}...`;
                     try {
                         const page = await pdfDocJs.getPage(pageNum);
                         const textContent = await page.getTextContent();
@@ -1947,7 +1960,6 @@
                         let possivelNome = extrairNomePacienteOCR(texto);
                         
                         if (possivelNome === "Desconhecido") {
-                            // Se texto invisivel nao ajudou, forca OCR da imagem
                             const viewport = page.getViewport({ scale: 2.0 });
                             const canvas = document.createElement('canvas');
                             const ctx = canvas.getContext('2d');
@@ -1966,13 +1978,11 @@
                     } catch(e) {}
 
                     if (!paginasPorPaciente[pacienteAtual]) paginasPorPaciente[pacienteAtual] = [];
-                    // PDF-lib usa índice 0 para páginas
                     paginasPorPaciente[pacienteAtual].push(pageNum - 1);
                 }
                 
                 await worker.terminate();
 
-                // 3. Cortar o PDF usando PDF-Lib e salvar individualmente
                 const nomesPacientes = Object.keys(paginasPorPaciente);
                 for (let idx = 0; idx < nomesPacientes.length; idx++) {
                     const nomePac = nomesPacientes[idx];
@@ -2033,18 +2043,7 @@
             }
         };
 
-        function obterNomePastaInteligente(timestamp) {
-            const dataObj = new Date(timestamp);
-            const hoje = new Date();
-            if (dataObj.getMonth() === hoje.getMonth() && dataObj.getFullYear() === hoje.getFullYear()) {
-                return dataObj.toLocaleDateString('pt-BR');
-            } else {
-                const mes = String(dataObj.getMonth() + 1).padStart(2, '0');
-                return `${mes}/${dataObj.getFullYear()}`;
-            }
-        }
-
-        // RENDERIZAÇÃO DA GALERIA COM LAYOUT DE CARDS RESTAURADO
+        // RENDERIZAÇÃO DA INTERFACE (MANTIDO LAYOUT DE PASTAS ORIGINAL SEM EMOJIS)
         function carregarGaleriaDeAnexos() {
             const container = document.getElementById("listaAnexos");
             if (container && todosAnexosNaMemoria.length === 0) {
@@ -2105,27 +2104,21 @@
             if (!container) return;
             container.innerHTML = "";
             
-            let anexosFiltrados = todosAnexosNaMemoria;
-            
-            anexosFiltrados = anexosFiltrados.filter(arq => {
+            let anexosFiltrados = todosAnexosNaMemoria.filter(arq => {
                 const dataObj = new Date(arq.dataEnvio);
                 const dataFormatadaDia = dataObj.toLocaleDateString('pt-BR'); 
                 const mesAnoFormatado = String(dataObj.getMonth() + 1).padStart(2, '0') + '/' + dataObj.getFullYear();
                 
-                let passaTexto = true;
-                if (termoBusca.length > 0) {
-                    passaTexto = arq.nome.toLowerCase().includes(termoBusca) || 
-                                 dataFormatadaDia.includes(termoBusca) || 
-                                 mesAnoFormatado.includes(termoBusca) ||
-                                 (arq.pastaPaciente && arq.pastaPaciente.toLowerCase().includes(termoBusca));
-                }
-
+                const passaTexto = arq.nome.toLowerCase().includes(termoBusca) || 
+                                   dataFormatadaDia.includes(termoBusca) || 
+                                   mesAnoFormatado.includes(termoBusca) ||
+                                   (arq.pastaPaciente && arq.pastaPaciente.toLowerCase().includes(termoBusca));
+                
                 const passaUsuario = usuarioFiltro === "todos" || arq.enviadoPor === usuarioFiltro;
                 let passaData = true;
                 dataObj.setHours(0,0,0,0);
                 if (dataInicio) { const dataIni = new Date(dataInicio + "T00:00:00"); if (dataObj < dataIni) passaData = false; }
                 if (dataFim) { const dataF = new Date(dataFim + "T23:59:59"); if (dataObj > dataF) passaData = false; }
-                
                 return passaTexto && passaUsuario && passaData;
             });
 
@@ -2134,22 +2127,40 @@
             const txtInfo = document.getElementById("txtInfoVista");
             const txtCount = document.getElementById("txtContadorArquivos");
 
-            // NIVEL 0: RAIZ - Apenas Relatório Geral e Pacientes
+            // NIVEL 0: RAIZ - Relatório Geral e Pacientes
             if (window.pastaAbertaAtual === null && !isBuscaAtiva) {
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<span class="text-gray-300 font-bold">Pastas do Sistema</span>`;
                 if (txtInfo) txtInfo.innerText = "Navegando nas Pastas";
 
-                const arqsGeral = anexosFiltrados.filter(a => a.pasta && a.pasta.startsWith("Relatorio_Geral"));
-                const arqsPacientes = anexosFiltrados.filter(a => a.pastaPaciente);
+                const agrupamentoPastas = {};
+                anexosFiltrados.forEach(arq => {
+                    let nomePasta = "";
+                    if (arq.pastaPaciente) {
+                        nomePasta = `Paciente: ${arq.pastaPaciente}`;
+                    } else if (arq.pasta && arq.pasta.startsWith("Relatorio_Geral")) {
+                        nomePasta = `Relatório Geral`;
+                    } else {
+                        nomePasta = `${obterNomePastaInteligente(arq.dataEnvio)}`;
+                    }
 
-                // Reintroduz a função renderizarCardPasta original com ícones e sem os emojis
-                renderizarCardPasta(container, "Relatório Geral", `${arqsGeral.length} itens salvos`, "window.abrirPasta('relatorio_geral')", false);
-                renderizarCardPasta(container, "Pacientes", `${arqsPacientes.length} evoluções`, "window.abrirPasta('pacientes_root')", true);
+                    if(!agrupamentoPastas[nomePasta]) { agrupamentoPastas[nomePasta] = { arquivos: [], ultimoTimestamp: 0 }; }
+                    agrupamentoPastas[nomePasta].arquivos.push(arq);
+                    if (arq.dataEnvio > agrupamentoPastas[nomePasta].ultimoTimestamp) { agrupamentoPastas[nomePasta].ultimoTimestamp = arq.dataEnvio; }
+                });
 
-                if (txtCount) txtCount.innerText = `2 pastas`;
+                const pastasOrdenadas = Object.keys(agrupamentoPastas).sort((a, b) => { return agrupamentoPastas[b].ultimoTimestamp - agrupamentoPastas[a].ultimoTimestamp; });
+
+                if (pastasOrdenadas.length === 0) { container.innerHTML = `<div class="col-span-full p-8 text-center text-gray-600">Nenhuma pasta gerada ainda.</div>`; }
+
+                pastasOrdenadas.forEach(nomePasta => { 
+                    const isPac = nomePasta.includes("Paciente:");
+                    const clickRoute = isPac ? "window.abrirPasta('pacientes_root')" : "window.abrirPasta('relatorio_geral')";
+                    renderizarCardPasta(container, nomePasta, `${agrupamentoPastas[nomePasta].arquivos.length} itens`, clickRoute, isPac); 
+                });
+                if (txtCount) txtCount.innerText = `${pastasOrdenadas.length} pastas`;
 
             } 
-            // NIVEL 1: DENTRO DE PACIENTES - Subpastas por Nomes Limpos
+            // NIVEL 1: DENTRO DE PACIENTES - Subpastas por Nomes
             else if (window.pastaAbertaAtual === 'pacientes_root' && !isBuscaAtiva) {
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold">Pacientes</span>`;
                 if (txtInfo) txtInfo.innerText = "Selecione o Paciente";
@@ -2166,9 +2177,8 @@
                 if(pacientesNomes.length === 0) container.innerHTML = `<div class="col-span-full text-center text-gray-500 py-4 text-sm">Nenhum paciente ainda.</div>`;
 
                 pacientesNomes.forEach(nome => {
-                    const arqsDeste = agrupamentoPacientes[nome];
-                    // Chama com true para o ícone de paciente do FontAwesome
-                    renderizarCardPasta(container, nome, `${arqsDeste.length} evoluções`, `window.abrirPasta('paciente:${nome}')`, true);
+                    const qtd = agrupamentoPacientes[nome].length;
+                    renderizarCardPasta(container, nome, `${qtd} evoluções`, `window.abrirPasta('paciente:${nome}')`, true);
                 });
                 if (txtCount) txtCount.innerText = `${pacientesNomes.length} pacientes`;
             }
@@ -2193,14 +2203,19 @@
             }
             // BUSCA GLOBAL
             else {
-                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="document.getElementById('inputBuscaAnexo').value=''; window.aplicarFiltrosNaGaleria();" class="text-gray-400 hover:text-white transition flex items-center gap-2"><i class="fas fa-arrow-left"></i> Limpar Busca</button><span class="text-gray-600 mx-2">/</span><span class="text-blue-400 font-bold">Resultados</span>`;
+                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="document.getElementById('inputBuscaAnexo').value=''; window.aplicarFiltrosNaGaleria();" class="text-gray-400 hover:text-white transition flex items-center gap-2"><i class="fas fa-arrow-left"></i> Limpar</button><span class="text-gray-600 mx-2">/</span><span class="text-blue-400 font-bold">Resultados</span>`;
                 if (txtInfo) txtInfo.innerText = "Resultados da Pesquisa";
                 renderizarArquivosFinais(anexosFiltrados, container);
                 if (txtCount) txtCount.innerText = `${anexosFiltrados.length} encontrados`;
             }
         };
 
-        // FUNÇÃO DE RENDERIZAR PASTA COM LAYOUT DE CARDS (ARQUIVO ORIGINAL REVERTIDO SEM EMOJIS DE TEXTO)
+        function obterNomePastaInteligente(timestamp) {
+            const dataObj = new Date(timestamp);
+            return dataObj.toLocaleDateString('pt-BR');
+        }
+
+        // RENDERIZAÇÃO DOS CARDS DE PASTAS
         function renderizarCardPasta(container, nomePasta, subtitulo, onclickAction, isPaciente = false) {
             const iconClass = isPaciente ? "fa-user-injured text-indigo-400" : "fa-folder-open text-blue-500";
             const bgClass = isPaciente ? "bg-indigo-900/20 border-indigo-800/40" : "bg-blue-900/20 border-blue-800/40";
@@ -2223,7 +2238,7 @@
 
         // RENDERIZAÇÃO DOS CARDS DE ARQUIVOS (PDF E FOTOS)
         function renderizarArquivosFinais(lista, container) {
-            if (lista.length === 0) { container.innerHTML = `<div class="col-span-full py-8 text-center text-gray-500 text-sm">Nenhum documento encontrado.</div>`; return; }
+            if (lista.length === 0) { container.innerHTML = `<div class="col-span-full py-8 text-center text-gray-500 text-xs">Nenhum documento encontrado.</div>`; return; }
             lista.forEach(arq => {
                 const dataObj = new Date(arq.dataEnvio);
                 const dataStr = dataObj.toLocaleDateString('pt-BR');
@@ -2303,14 +2318,10 @@
                         text: `Confira este documento: ${nomeLimpo}`,
                         url: window.urlImagemAtiva
                     });
-                } catch (err) {
-                    console.log("Compartilhamento nativo não concluído:", err);
-                }
+                } catch (err) {}
             } else {
                 navigator.clipboard.writeText(window.urlImagemAtiva).then(() => {
                     alert("🔗 Link copiado para a área de transferência!");
-                }).catch(() => {
-                    alert("Seu navegador não suporta compartilhamento automático.");
                 });
             }
         };
