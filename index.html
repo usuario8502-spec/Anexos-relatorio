@@ -16,12 +16,10 @@
     <link rel="icon" type="image/png" href="./icon.png">
     <link rel="apple-touch-icon" href="./icon.png">
 
-    <!-- MANIFEST E SERVICE WORKER DINÂMICOS PARA PWA (INSTALAÇÃO DE APP) -->
+    <!-- MANIFEST DINÂMICO PARA PWA (Sem o bloqueio de Blob do GitHub) -->
     <script>
         (function() {
-            // Captura a URL base real do projeto no GitHub Pages
             const baseUrl = window.location.href.split('?')[0].replace(/\/[^\/]*$/, '/');
-            
             const manifest = {
                 name: "Sistema de Anexos",
                 short_name: "Anexos",
@@ -43,17 +41,6 @@
             link.rel = 'manifest';
             link.href = manifestUrl;
             document.head.appendChild(link);
-
-            if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                    const swCode = "self.addEventListener('fetch', function(e) {});";
-                    const swBlob = new Blob([swCode], {type: 'application/javascript'});
-                    const swUrl = URL.createObjectURL(swBlob);
-                    navigator.serviceWorker.register(swUrl).catch(function(err) {
-                        console.log('Falha ao registrar ServiceWorker: ', err);
-                    });
-                });
-            }
         })();
     </script>
 
@@ -277,7 +264,7 @@
         <section class="bg-gray-900 border border-gray-800 p-4 rounded-xl shadow-lg flex flex-col gap-3">
             <div class="relative w-full">
                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500"></i>
-                <input type="text" id="inputBuscaAnexo" placeholder="Buscar por paciente, data ou mês..." class="w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-blue-500 focus:outline-none text-sm transition-all">
+                <input type="text" id="inputBuscaAnexo" placeholder="Buscar por paciente, relatórios ou data..." class="w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-blue-500 focus:outline-none text-sm transition-all">
             </div>
             
             <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -366,9 +353,10 @@
         </div>
     </div>
 
-    <!-- MODAL DE UPLOAD DE ARQUIVOS -->
+    <!-- MODAL DE UPLOAD (MÚLTIPLOS MÉTODOS E LOTES) -->
     <div id="modalUpload" class="fixed inset-0 bg-black/80 popup-blur hidden items-center justify-center p-4 z-50 overflow-y-auto">
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 w-full max-w-md shadow-2xl flex flex-col gap-4 transform transition-all scale-95 opacity-0 my-auto" id="modalUploadContent">
+            
             <div class="flex justify-between items-center border-b border-gray-800 pb-3">
                 <h3 class="text-lg font-bold text-white"><i class="fas fa-cloud-upload-alt text-blue-500"></i> Enviar Arquivos</h3>
                 <button onclick="window.fecharModalUpload()" class="text-gray-500 hover:text-white transition text-xl"><i class="fas fa-times"></i></button>
@@ -381,25 +369,19 @@
                 <div id="areaEscolhaModo" class="grid grid-cols-2 gap-2 mt-2">
                     <button onclick="document.getElementById('inputArquivoCamera').click()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition"><i class="fas fa-camera text-blue-400"></i><span class="text-[11px] font-bold">Câmera</span></button>
                     <button onclick="document.getElementById('inputArquivoGaleria').click()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition"><i class="fas fa-images text-blue-400"></i><span class="text-[11px] font-bold">Múltiplas Fotos</span></button>
+                    
                     <button onclick="window.abrirModalOrigemScanner()" class="col-span-2 sm:col-span-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition relative overflow-hidden"><div class="absolute inset-0 bg-red-500/10 opacity-50"></div><i class="fas fa-file-pdf text-red-500"></i><span class="text-[11px] font-bold">Escanear Documento</span></button>
+                    
                     <button onclick="document.getElementById('inputArquivoGenerico').click()" class="col-span-2 sm:col-span-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition"><i class="fas fa-file-upload text-purple-400"></i><span class="text-[11px] font-bold">PDF / Outros</span></button>
                 </div>
 
                 <input type="file" id="inputArquivoCamera" accept="image/*" capture="environment" class="hidden" onchange="window.processarArquivosLote(this, 'camera')">
                 <input type="file" id="inputArquivoGaleria" accept="image/*" multiple class="hidden" onchange="window.processarArquivosLote(this, 'galeria')">
+                
                 <input type="file" id="inputArquivoScannerCamera" accept="image/*" capture="environment" class="hidden" onchange="window.abrirModoScanner(this)">
                 <input type="file" id="inputArquivoScannerGaleria" accept="image/*" class="hidden" onchange="window.abrirModoScanner(this)">
+                
                 <input type="file" id="inputArquivoGenerico" class="hidden" accept="*/*" multiple onchange="window.processarArquivosLote(this, 'generico')">
-
-                <!-- PREVIEW DIVERSOS -->
-                <div id="areaPreviewArquivos" class="hidden flex-col gap-3 mt-2">
-                    <div class="flex justify-between items-center border-b border-gray-800 pb-2">
-                        <span class="text-xs font-bold text-blue-400"><i class="fas fa-layer-group"></i> Fila de Envio</span>
-                        <span id="txtQtdFila" class="text-[10px] text-gray-400 bg-gray-800 px-2 py-1 rounded border border-gray-700">0 itens</span>
-                    </div>
-                    <div id="listaArquivosFila" class="flex flex-col gap-2 max-h-40 overflow-y-auto custom-scrollbar pr-1"></div>
-                    <button onclick="window.acionarMaisItens()" class="w-full bg-gray-800 hover:bg-gray-700 border border-dashed border-gray-600 text-gray-300 py-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition"><i class="fas fa-plus"></i> Adicionar Mais Itens</button>
-                </div>
 
                 <!-- PREVIEW SCANNER -->
                 <div id="areaPreviewScanner" class="hidden flex-col gap-3 mt-2">
@@ -412,6 +394,16 @@
                         <button onclick="window.limparModosUpload()" class="bg-red-950/50 hover:bg-red-900/60 border border-red-900/50 text-red-400 py-2.5 rounded-lg text-xs font-bold transition">Cancelar</button>
                         <button onclick="window.abrirModalOrigemScanner()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition"><i class="fas fa-plus"></i> Add Pág.</button>
                     </div>
+                </div>
+
+                <!-- PREVIEW DIVERSOS -->
+                <div id="areaPreviewArquivos" class="hidden flex-col gap-3 mt-2">
+                    <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                        <span class="text-xs font-bold text-blue-400"><i class="fas fa-layer-group"></i> Fila de Envio</span>
+                        <span id="txtQtdFila" class="text-[10px] text-gray-400 bg-gray-800 px-2 py-1 rounded border border-gray-700">0 itens</span>
+                    </div>
+                    <div id="listaArquivosFila" class="flex flex-col gap-2 max-h-40 overflow-y-auto custom-scrollbar pr-1"></div>
+                    <button onclick="window.acionarMaisItens()" class="w-full bg-gray-800 hover:bg-gray-700 border border-dashed border-gray-600 text-gray-300 py-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition"><i class="fas fa-plus"></i> Adicionar Mais Itens</button>
                 </div>
             </div>
 
@@ -476,7 +468,7 @@
         </div>
     </div>
 
-    <!-- MODAL 2: APLICADOR DE FILTROS E MÚLTIPLAS CAIXAS -->
+    <!-- MODAL 2: APLICADOR DE FILTROS E CAIXAS/CARIMBO -->
     <div id="modalFiltrosScanner" class="fixed inset-0 bg-gray-950 z-[70] hidden flex-col overflow-y-auto">
         <div class="flex justify-between items-center bg-gray-900 border-b border-gray-800 p-4 shadow-md">
             <button onclick="window.voltarParaCropper()" class="text-gray-400 hover:text-white"><i class="fas fa-arrow-left text-xl"></i></button>
@@ -528,7 +520,7 @@
                 </button>
             </div>
 
-            <!-- CONTROLE DE CAIXAS DE TEXTO -->
+            <!-- CONTROLE DE CAIXAS DE TEXTO MÚLTIPLAS COM BOTÃO NEGRITO -->
             <div class="px-4 mt-2">
                 <div class="bg-gray-800/60 p-3 rounded-xl border border-gray-700/60 flex flex-col gap-3">
                     <div class="flex justify-between items-center">
@@ -541,6 +533,7 @@
                     <div id="painelEdicaoCaixaAtiva" class="flex flex-col gap-3">
                         <div class="flex gap-2 items-center">
                             <textarea id="inputTextoCanvas" rows="2" placeholder="Digite seu texto..." oninput="window.atualizarTextoCaixaAtiva()" class="w-full p-2.5 rounded-lg bg-gray-900 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500 resize-none custom-scrollbar"></textarea>
+                            <button id="btnNegritoTexto" onclick="window.alternarNegritoCaixaAtiva()" title="Negrito" class="bg-gray-900 hover:bg-gray-700 border border-gray-700 text-gray-300 font-black px-3 py-2.5 rounded-lg transition"><i class="fas fa-bold"></i></button>
                             <button onclick="window.removerCaixaTextoAtiva()" title="Excluir Caixa Selecionada" class="bg-red-950/60 hover:bg-red-900 border border-red-800/60 text-red-400 p-2.5 rounded-lg transition"><i class="fas fa-trash-alt text-xs"></i></button>
                         </div>
                         
@@ -551,8 +544,8 @@
                             </div>
                             <div class="flex items-center gap-2">
                                 <label class="text-[10px] text-gray-400 font-bold uppercase whitespace-nowrap">Tamanho:</label>
-                                <input type="range" id="sliderTamanhoFonte" min="12" max="72" value="24" oninput="window.atualizarTamanhoCaixaAtiva()">
-                                <span id="lblTamanhoFonte" class="text-xs font-bold text-white w-8">24px</span>
+                                <input type="range" id="sliderTamanhoFonte" min="12" max="100" value="36" oninput="window.atualizarTamanhoCaixaAtiva()">
+                                <span id="lblTamanhoFonte" class="text-xs font-bold text-white w-8">36px</span>
                             </div>
                         </div>
 
@@ -575,62 +568,103 @@
                     <span class="text-xs font-bold text-indigo-400 flex items-center gap-1.5"><i class="fas fa-pen-nib"></i> Ajustar Assinatura (Arraste no canvas)</span>
                     <div class="flex items-center gap-3">
                         <label class="text-[10px] text-gray-400 font-bold uppercase whitespace-nowrap">Tamanho/Escala:</label>
-                        <input type="range" id="sliderEscalaAssinatura" min="20" max="100" value="50" oninput="window.renderizarFiltroAtual(true)">
-                        <button onclick="window.removerAssinaturaCanvas()" class="text-red-400 hover:text-red-300 text-xs p-1"><i class="fas fa-trash-alt"></i></button>
+                        <input type="range" id="sliderEscalaAssinatura" min="30" max="300" value="120" oninput="window.renderizarFiltroAtual(true)">
+                        <button onclick="window.removerAssinaturaCanvas()" class="text-red-400 hover:text-red-300 text-xs p-1" title="Remover Assinatura"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTROLES DO CARIMBO DA EMPRESA COM ORDEM DE CAMADAS -->
+            <div id="painelControleCarimbo" class="hidden px-4 mt-2">
+                <div class="bg-red-950/40 p-3 rounded-xl border border-red-800/60 flex flex-col gap-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-red-400 flex items-center gap-1.5"><i class="fas fa-stamp"></i> Ajustar Carimbo</span>
+                        <div class="flex gap-1.5">
+                            <button onclick="window.alterarOrdemCarimbo('tras')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-[10px] font-bold px-2 py-1 rounded shadow" title="Enviar para Trás"><i class="fas fa-layer-group text-blue-400"></i> Para Trás</button>
+                            <button onclick="window.alterarOrdemCarimbo('frente')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-[10px] font-bold px-2 py-1 rounded shadow" title="Trazer para Frente"><i class="fas fa-layer-group text-green-400"></i> Para Frente</button>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 mt-1">
+                        <label class="text-[10px] text-gray-400 font-bold uppercase whitespace-nowrap">Tamanho/Escala:</label>
+                        <input type="range" id="sliderEscalaCarimbo" min="20" max="250" value="85" oninput="window.renderizarFiltroAtual(true)">
+                        <button onclick="window.removerCarimboCanvas()" class="text-red-400 hover:text-red-300 text-xs p-1" title="Remover Carimbo"><i class="fas fa-trash-alt"></i></button>
                     </div>
                 </div>
             </div>
 
             <div class="px-4 mt-2 flex gap-2">
+                <button onclick="window.adicionarCarimboEmpresa()" class="bg-red-600 hover:bg-red-500 text-white py-3.5 rounded-xl font-bold text-xs sm:text-sm flex-1 flex items-center justify-center gap-2 transition shadow-lg">
+                    <i class="fas fa-stamp"></i> <span id="txtBtnCarimbo">Carimbar</span>
+                </button>
                 <button onclick="window.abrirModalAssinatura()" class="bg-indigo-600 hover:bg-indigo-500 text-white py-3.5 rounded-xl font-bold text-xs sm:text-sm flex-1 flex items-center justify-center gap-2 transition shadow-lg">
-                    <i class="fas fa-signature"></i> <span id="txtBtnAssinatura">Adicionar Assinatura</span>
+                    <i class="fas fa-signature"></i> <span id="txtBtnAssinatura">Assinar</span>
                 </button>
                 <button onclick="window.confirmarSalvarPaginaScanner()" class="bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-xl font-bold text-xs sm:text-sm flex-1 flex items-center justify-center gap-2 shadow-lg">
-                    <i class="fas fa-check"></i> Aplicar e Salvar Página
+                    <i class="fas fa-check"></i> Salvar
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL 3: POP-UP DE ASSINATURA -->
-    <div id="modalAssinatura" class="fixed inset-0 bg-black/90 popup-blur hidden items-center justify-center p-4 z-[80]">
-        <div class="bg-gray-900 rounded-xl border border-gray-800 p-5 w-full max-w-md shadow-2xl flex flex-col gap-4">
-            <div class="flex justify-between items-center border-b border-gray-800 pb-2">
-                <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fas fa-pen-nib text-indigo-400"></i> Assinatura Digital</h3>
-                <button onclick="window.fecharModalAssinatura()" class="text-gray-500 hover:text-white"><i class="fas fa-times text-lg"></i></button>
+    <!-- MODAL 3: POP-UP DE ASSINATURA EXPANDIDO E EM ALTA DEFINIÇÃO -->
+    <div id="modalAssinatura" class="fixed inset-0 bg-black/95 popup-blur hidden items-center justify-center p-4 z-[80]">
+        <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 w-full max-w-lg shadow-2xl flex flex-col gap-4">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fas fa-pen-nib text-indigo-400"></i> Assinatura Digital (HD)</h3>
+                <button onclick="window.fecharModalAssinatura()" class="text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
             </div>
-            <p class="text-xs text-gray-400">Desenhe sua assinatura no quadro abaixo:</p>
-            <div class="w-full h-40 bg-white rounded-lg overflow-hidden relative touch-none border border-gray-700">
+            <p class="text-xs text-gray-400">Desenhe sua assinatura com alta precisão abaixo:</p>
+            <div class="w-full h-56 bg-white rounded-xl overflow-hidden relative touch-none border-2 border-gray-700 shadow-inner">
                 <canvas id="canvasAssinatura" class="w-full h-full cursor-crosshair"></canvas>
             </div>
-            <div class="flex gap-2">
-                <button onclick="window.limparAssinaturaPad()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2.5 rounded-lg text-xs font-bold border border-gray-700 transition"><i class="fas fa-eraser"></i> Limpar</button>
-                <button onclick="window.salvarAssinaturaParaCanvas()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2.5 px-4 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2"><i class="fas fa-check"></i> Inserir Assinatura</button>
+            <div class="flex gap-3 mt-1">
+                <button onclick="window.limparAssinaturaPad()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-xl text-xs font-bold border border-gray-700 transition flex items-center justify-center gap-2"><i class="fas fa-eraser"></i> Limpar</button>
+                <button onclick="window.salvarAssinaturaParaCanvas()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-3 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg"><i class="fas fa-check"></i> Inserir Assinatura</button>
             </div>
         </div>
     </div>
 
-    <!-- SCRIPT PRINCIPAL E FIREBASE COM PROTEÇÃO CONTRA NULL -->
+    <!-- SCRIPT PRINCIPAL E FIREBASE COM SUPORTE AO FATIAMENTO, OCR E AUTENTICAÇÃO RESTAURADA -->
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref as dbRef, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getAuth, setPersistence, browserSessionPersistence, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref as dbRef, push, onValue, update, remove, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
+        // CREDENCIAIS ATUALIZADAS (PROJETO: anexos-relatorio)
         const firebaseConfig = {
-            apiKey: "AIzaSyCQ8--X39oK3BnwNES7zDklKnWP0_4hEas",
-            authDomain: "anexos-2.firebaseapp.com",
-            databaseURL: "https://anexos-2-default-rtdb.firebaseio.com",
-            projectId: "anexos-2",
-            storageBucket: "anexos-2.firebasestorage.app",
-            messagingSenderId: "233223560502",
-            appId: "1:233223560502:web:87a7b0be7d7587b8b3a797"
+            apiKey: "AIzaSyCfzVSlcB2BU1TTqn_kyo_Gq-EtDps8yys",
+            authDomain: "anexos-relatorio.firebaseapp.com",
+            databaseURL: "https://anexos-relatorio-default-rtdb.firebaseio.com",
+            projectId: "anexos-relatorio",
+            storageBucket: "anexos-relatorio.firebasestorage.app",
+            messagingSenderId: "334917539541",
+            appId: "1:334917539541:web:b00a572569d45bb0e2b45c"
         };
 
         const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
         const auth = getAuth(app);
         const db = getDatabase(app);
         const storage = getStorage(app);
+
+        setPersistence(auth, browserSessionPersistence).catch(err => console.warn(err));
+
+        let timerInatividade = null;
+        const TEMPO_INATIVIDADE_MS = 8 * 60 * 1000;
+
+        function resetarTimerInatividade() {
+            if (timerInatividade) clearTimeout(timerInatividade);
+            if (auth.currentUser) {
+                timerInatividade = setTimeout(() => {
+                    alert("⏰ Sessão expirada devido a 8 minutos de inatividade.");
+                    window.fazerLogout();
+                }, TEMPO_INATIVIDADE_MS);
+            }
+        }
+
+        ['mousemove', 'mousedown', 'keypress', 'touchstart', 'scroll', 'click'].forEach(evt => {
+            window.addEventListener(evt, resetarTimerInatividade, true);
+        });
 
         let usuarioLogado = "Operador";
         let perfilUsuario = "operador";
@@ -659,17 +693,223 @@
 
         let posicaoAssinatura = { x: 50, y: 150 };
         let imgAssinaturaElemento = null;
+
+        let imgCarimboElemento = null;
+        let posicaoCarimbo = { x: 50, y: 50 };
+        let ordemCamadas = ['imagem', 'texto', 'assinatura', 'carimbo'];
+
         let elementoSendoArrastado = null;
         let offsetArrasto = { x: 0, y: 0 };
 
         let assinandoPad = false;
         let ctxAssinaturaPad = null;
+        let pontosTraçoAssinatura = [];
 
-        // HELPER PARA ESCUTAR EVENTOS SEM ERRO DE NULL
         function escutarEventoSeguro(idElemento, evento, callback) {
             const el = document.getElementById(idElemento);
             if (el) el.addEventListener(evento, callback);
         }
+
+        window.alterarOrdemCarimbo = function(direcao) {
+            ordemCamadas = ordemCamadas.filter(c => c !== 'carimbo');
+            if (direcao === 'tras') {
+                ordemCamadas.unshift('carimbo');
+            } else {
+                ordemCamadas.push('carimbo');
+            }
+            window.renderizarFiltroAtual(true);
+        };
+
+        function criarImagemCarimboVetor() {
+            const canvasC = document.createElement('canvas');
+            canvasC.width = 460;
+            canvasC.height = 160;
+            const ctxC = canvasC.getContext('2d');
+
+            ctxC.clearRect(0, 0, canvasC.width, canvasC.height);
+
+            const corCarimbo = "#1e3a8a"; 
+            ctxC.strokeStyle = corCarimbo;
+            ctxC.fillStyle = corCarimbo;
+
+            ctxC.lineWidth = 5;
+            ctxC.strokeRect(10, 10, canvasC.width - 20, canvasC.height - 20);
+            ctxC.lineWidth = 2;
+            ctxC.strokeRect(16, 16, canvasC.width - 32, canvasC.height - 32);
+
+            ctxC.textAlign = "center";
+            ctxC.textBaseline = "middle";
+
+            ctxC.font = "bold 20px 'Courier New', Courier, monospace";
+            ctxC.fillText("CNPJ: 47.960.950/1716-001", canvasC.width / 2, 42);
+
+            ctxC.font = "black 22px 'Arial Black', Arial, sans-serif";
+            ctxC.fillText("MAGAZINE LUIZA S/A", canvasC.width / 2, 75);
+
+            ctxC.font = "bold 14px Arial, sans-serif";
+            ctxC.fillText("Rua Doutor Feliciano Sodré, 218 - Centro", canvasC.width / 2, 110);
+            ctxC.fillText("CEP 24.440-440 - São Gonçalo/RJ", canvasC.width / 2, 132);
+
+            const img = new Image();
+            img.src = canvasC.toDataURL("image/png");
+            return img;
+        }
+
+        window.adicionarCarimboEmpresa = function() {
+            imgCarimboElemento = criarImagemCarimboVetor();
+            imgCarimboElemento.onload = function() {
+                posicaoCarimbo = { x: (larguraCrop - 380) / 2, y: (alturaCrop / 2) - 80 };
+                const pCar = document.getElementById("painelControleCarimbo");
+                if (pCar) { pCar.classList.remove("hidden"); pCar.classList.add("flex"); }
+                const txtB = document.getElementById("txtBtnCarimbo");
+                if (txtB) txtB.innerText = "Reaplicar Carimbo";
+                window.renderizarFiltroAtual(true);
+            };
+        };
+
+        window.removerCarimboCanvas = function() {
+            imgCarimboElemento = null;
+            const pCar = document.getElementById("painelControleCarimbo");
+            if (pCar) { pCar.classList.add("hidden"); pCar.classList.remove("flex"); }
+            const txtB = document.getElementById("txtBtnCarimbo");
+            if (txtB) txtB.innerText = "Carimbar";
+            window.renderizarFiltroAtual(true);
+        };
+
+        window.executarLoginFirebase = async function(e) {
+            e.preventDefault();
+            const usernameDigitado = document.getElementById("loginUsuario")?.value.trim();
+            const senha = document.getElementById("loginSenha")?.value.trim();
+            const btn = document.getElementById("btnEntrarLogin");
+
+            if (!usernameDigitado || !senha) return alert("⚠️ Digite seu usuário e senha.");
+            if (btn) btn.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Entrando...`;
+
+            let emailVinculado = null;
+
+            try {
+                const dbSnap = await get(dbRef(db, 'usuarios_sistema'));
+                if (dbSnap.exists()) {
+                    const lista = dbSnap.val();
+                    for (let key in lista) {
+                        if (lista[key].username && lista[key].username.toLowerCase() === usernameDigitado.toLowerCase()) {
+                            if (lista[key].email) {
+                                emailVinculado = lista[key].email;
+                                break;
+                            }
+                        }
+                    }
+                }
+            } catch (err) {
+                console.warn("Aviso de leitura:", err);
+            }
+
+            if (!emailVinculado) {
+                emailVinculado = usernameDigitado.includes("@") ? usernameDigitado : `${usernameDigitado}@anexos.com`;
+            }
+
+            signInWithEmailAndPassword(auth, emailVinculado, senha)
+                .then(() => {
+                    const modalLogin = document.getElementById("modalLoginApp");
+                    if (modalLogin) modalLogin.classList.add("hidden");
+                    resetarTimerInatividade();
+                })
+                .catch((error) => {
+                    alert("❌ Usuário ou senha incorretos.");
+                    if (btn) btn.innerText = "Entrar";
+                });
+        };
+
+        window.abrirModalRecuperarSenha = function() {
+            const modal = document.getElementById("modalRecuperarSenha");
+            if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
+        };
+
+        window.fecharModalRecuperarSenha = function() {
+            const modal = document.getElementById("modalRecuperarSenha");
+            if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
+        };
+
+        window.confirmarRecuperacaoSenha = async function(e) {
+            if (e) e.preventDefault();
+            const usernameInput = document.getElementById("recUsuario")?.value.trim();
+            if (!usernameInput) return alert("⚠️ Digite o seu nome de usuário.");
+
+            const btn = document.getElementById("btnEnviarRecuperacao");
+            if (btn) btn.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Buscando...`;
+
+            let emailEncontrado = usernameInput.includes("@") ? usernameInput : null;
+            if (!emailEncontrado) {
+                try {
+                    const dbSnap = await get(dbRef(db, 'usuarios_sistema'));
+                    if (dbSnap.exists()) {
+                        const lista = dbSnap.val();
+                        for (let key in lista) {
+                            if (lista[key].username && lista[key].username.toLowerCase() === usernameInput.toLowerCase()) {
+                                emailEncontrado = lista[key].email;
+                                break;
+                            }
+                        }
+                    }
+                } catch (err) {}
+            }
+
+            if (!emailEncontrado) emailEncontrado = `${usernameInput}@anexos.com`;
+
+            sendPasswordResetEmail(auth, emailEncontrado)
+                .then(() => {
+                    alert(`📧 O link de redefinição foi enviado para o e-mail cadastrado do usuário "${usernameInput}".`);
+                    window.fecharModalRecuperarSenha();
+                    if (btn) btn.innerText = "Enviar Link";
+                })
+                .catch((error) => {
+                    alert("Erro ao enviar e-mail: " + error.message);
+                    if (btn) btn.innerText = "Enviar Link";
+                });
+        };
+
+        window.abrirModalCadastroUsuario = function() {
+            const modal = document.getElementById("modalCadastroUsuario");
+            if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
+        };
+
+        window.fecharModalCadastroUsuario = function() {
+            const modal = document.getElementById("modalCadastroUsuario");
+            if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
+        };
+
+        window.executarCadastroFirebase = function(e) {
+            if (e) e.preventDefault();
+            const username = document.getElementById("cadUsuario")?.value.trim();
+            const email = document.getElementById("cadEmail")?.value.trim();
+            const senha = document.getElementById("cadSenha")?.value.trim();
+            const perfil = document.getElementById("cadPerfil")?.value;
+
+            if (!username || !email || !senha || !perfil) {
+                return alert("⚠️ Preencha todos os campos.");
+            }
+
+            const btn = document.getElementById("btnSalvarCadastro");
+            if (btn) btn.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Cadastrando...`;
+
+            createUserWithEmailAndPassword(auth, email, senha)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    set(dbRef(db, 'usuarios_sistema/' + user.uid), {
+                        username: username,
+                        email: email,
+                        perfil: perfil
+                    }).then(() => {
+                        alert(`✅ Usuário @${username} cadastrado com sucesso!`);
+                        window.fecharModalCadastroUsuario();
+                        if (btn) btn.innerText = "Salvar Cadastro";
+                    });
+                })
+                .catch((error) => {
+                    alert("Erro ao cadastrar: " + error.message);
+                    if (btn) btn.innerText = "Salvar Cadastro";
+                });
+        };
 
         window.toggleSidebar = function(abrir) {
             const sidebar = document.getElementById("sidebar");
@@ -686,85 +926,12 @@
         };
 
         window.fazerLogout = function() {
-            signOut(auth).then(() => alert("Logout realizado!"));
-        };
-
-        // FUNÇÃO DE LIMPEZA E PADRONIZAÇÃO DO NOME DO PACIENTE
-        function padronizarNomePaciente(nomeRaw) {
-            if (!nomeRaw) return "Desconhecido";
-            // Remove números e meses/termos de formulário
-            let nomeLimpo = nomeRaw.replace(/[0-9]/g, '');
-            nomeLimpo = nomeLimpo.replace(/\b(Setembro|Outubro|Novembro|Dezembro|Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Atendimento|Primure|Sessao|Relatorio|Evolucao|OK|Ok)\b/ig, '');
-            // Remove pontuações, caracteres especiais e espaços extras
-            nomeLimpo = nomeLimpo.replace(/[^a-zA-ZÀ-ÿ\s]/g, '').replace(/\s+/g, ' ').trim();
-            
-            let palavras = nomeLimpo.split(' ');
-            if (palavras.length < 2) return "Desconhecido"; // Exige nome e sobrenome
-            
-            // Transforma em Title Case e limita a 5 palavras para evitar lixo
-            return palavras.slice(0, 5).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-        }
-
-        // LÓGICA DE EXTRAÇÃO DE NOME LINHA POR LINHA PARA OCR
-        function extrairNomePacienteOCR(textoRaw) {
-            if (!textoRaw) return "Desconhecido";
-            
-            // Transforma quebras de linha em espaço para capturar nomes que foram empurrados para baixo
-            const cleanText = textoRaw.replace(/[:\-\._]/g, ' ').replace(/\n/g, ' ').replace(/\s+/g, ' ');
-            
-            // Busca a tag "paciente" e captura as próximas palavras
-            const regex = /(?:paci[a-z]nte|nome\s+d[oa]\s+paci[a-z]nte)\s+([A-Za-zÀ-ÿ]{3,}(?:\s+[A-Za-zÀ-ÿ]{2,}){1,5})/i;
-            const match = cleanText.match(regex);
-            
-            if (match && match[1]) {
-                let possivel = padronizarNomePaciente(match[1]);
-                if (possivel !== "Desconhecido") return possivel;
-            }
-
-            // Fallback (Linha a Linha): Caso o OCR tenha feito uma bagunça muito grande
-            const linhas = textoRaw.split('\n');
-            for (let j = 0; j < linhas.length; j++) {
-                let linha = linhas[j].toLowerCase();
-                if (linha.includes("paciente")) {
-                    let resto = linha.split("paciente")[1].replace(/[^a-z\s]/g, '').trim();
-                    if (resto.split(' ').length >= 2) return padronizarNomePaciente(resto);
-                    
-                    // Olha a linha de baixo
-                    if (j + 1 < linhas.length) {
-                        let linhaAbaixo = linhas[j+1].replace(/[^a-zA-ZÀ-ÿ\s]/g, '').trim();
-                        if (linhaAbaixo.split(' ').length >= 2) return padronizarNomePaciente(linhaAbaixo);
-                    }
-                }
-            }
-
-            return "Desconhecido";
-        }
-
-        // PROCESSAMENTO DE IMAGEM PARA LETRA CURSIVA
-        async function preProcessarImagemParaOCR(imgBase64) {
-            return new Promise((resolve) => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const scale = 2.0; 
-                    canvas.width = img.width * scale;
-                    canvas.height = img.height * scale;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    
-                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                    const data = imageData.data;
-                    for (let i = 0; i < data.length; i += 4) {
-                        let avg = (data[i] + data[i+1] + data[i+2]) / 3;
-                        let val = avg > 150 ? 255 : 0; 
-                        data[i] = data[i+1] = data[i+2] = val;
-                    }
-                    ctx.putImageData(imageData, 0, 0);
-                    resolve(canvas.toDataURL('image/jpeg'));
-                };
-                img.src = imgBase64;
+            if (timerInatividade) clearTimeout(timerInatividade);
+            signOut(auth).then(() => {
+                const modalLogin = document.getElementById("modalLoginApp");
+                if (modalLogin) modalLogin.classList.remove("hidden");
             });
-        }
+        };
 
         window.abrirModalUpload = function() {
             const modal = document.getElementById("modalUpload");
@@ -789,8 +956,8 @@
                     modal.classList.remove("flex");
                     modal.classList.add("hidden");
                     window.limparModosUpload();
-                    const elNome = document.getElementById("nomeArquivoManual");
-                    if (elNome) elNome.value = "";
+                    const inNome = document.getElementById("nomeArquivoManual");
+                    if (inNome) inNome.value = "";
                 }, 200);
             }
         };
@@ -893,33 +1060,38 @@
             const ctxBruto = canvasCortado.getContext('2d');
             canvasOriginalContextData = ctxBruto.getImageData(0, 0, larguraCrop, alturaCrop);
 
+            let larguraCaixaPadrao = Math.min(500, larguraCrop * 0.7);
             caixasTexto = [{
                 id: Date.now(),
                 texto: "",
-                posicao: { x: 40, y: alturaCrop - 150 },
+                posicao: { x: (larguraCrop - larguraCaixaPadrao) / 2, y: (alturaCrop / 2) - 50 },
                 cor: "#000000",
-                tamanhoFonte: 24,
-                larguraCaixa: Math.min(400, larguraCrop - 80),
-                dimensaoCalculada: { w: 400, h: 40 }
+                tamanhoFonte: 36,
+                negrito: false,
+                larguraCaixa: larguraCaixaPadrao,
+                dimensaoCalculada: { w: larguraCaixaPadrao, h: 50 }
             }];
             indiceCaixaTextoAtiva = 0;
 
-            posicaoAssinatura = { x: larguraCrop - 220, y: alturaCrop - 150 };
+            let larguraAssPadrao = larguraCrop * 0.65;
+            posicaoAssinatura = { x: (larguraCrop - larguraAssPadrao) / 2, y: (alturaCrop / 2) + 50 };
             imgAssinaturaElemento = null;
+            imgCarimboElemento = null;
             
             const slB = document.getElementById("sliderBrilho"); if (slB) slB.value = 0;
             const slC = document.getElementById("sliderContraste"); if (slC) slC.value = 0;
+            const slAss = document.getElementById("sliderEscalaAssinatura"); if (slAss) slAss.value = 120;
             
-            const pAss = document.getElementById("painelControleAssinatura");
-            if (pAss) { pAss.classList.add("hidden"); pAss.classList.remove("flex"); }
+            const pAss = document.getElementById("painelControleAssinatura"); if (pAss) { pAss.classList.add("hidden"); pAss.classList.remove("flex"); }
+            const pCar = document.getElementById("painelControleCarimbo"); if (pCar) { pCar.classList.add("hidden"); pCar.classList.remove("flex"); }
             
-            const txtBtnAss = document.getElementById("txtBtnAssinatura");
-            if (txtBtnAss) txtBtnAss.innerText = "Adicionar Assinatura";
+            const txtBtnAss = document.getElementById("txtBtnAssinatura"); if (txtBtnAss) txtBtnAss.innerText = "Assinar";
+            const txtBtnCar = document.getElementById("txtBtnCarimbo"); if (txtBtnCar) txtBtnCar.innerText = "Carimbar";
 
             const slLarg = document.getElementById("sliderLarguraCaixaTexto");
             if (slLarg) {
                 slLarg.max = larguraCrop;
-                slLarg.value = Math.min(400, larguraCrop - 80);
+                slLarg.value = larguraCaixaPadrao;
             }
 
             const modalCrop = document.getElementById("modalCropperScanner");
@@ -970,14 +1142,16 @@
         };
 
         window.adicionarNovaCaixaTexto = function() {
+            let larguraCaixaPadrao = Math.min(400, larguraCrop * 0.7);
             const novaCaixa = {
                 id: Date.now(),
                 texto: "Novo Texto",
-                posicao: { x: 40, y: 60 + (caixasTexto.length * 30) },
+                posicao: { x: (larguraCrop - larguraCaixaPadrao) / 2, y: 100 + (caixasTexto.length * 40) },
                 cor: "#000000",
-                tamanhoFonte: 24,
-                larguraCaixa: Math.min(300, larguraCrop - 80),
-                dimensaoCalculada: { w: 300, h: 40 }
+                tamanhoFonte: 36,
+                negrito: false,
+                larguraCaixa: larguraCaixaPadrao,
+                dimensaoCalculada: { w: larguraCaixaPadrao, h: 50 }
             };
             caixasTexto.push(novaCaixa);
             indiceCaixaTextoAtiva = caixasTexto.length - 1;
@@ -994,9 +1168,18 @@
             }
         };
 
+        window.alternarNegritoCaixaAtiva = function() {
+            if (indiceCaixaTextoAtiva !== null && caixasTexto[indiceCaixaTextoAtiva]) {
+                caixasTexto[indiceCaixaTextoAtiva].negrito = !caixasTexto[indiceCaixaTextoAtiva].negrito;
+                sincronizarPainelComCaixaAtiva();
+                window.renderizarFiltroAtual(true);
+            }
+        };
+
         function sincronizarPainelComCaixaAtiva() {
             const painel = document.getElementById("painelEdicaoCaixaAtiva");
             const msg = document.getElementById("msgSemCaixaTexto");
+            const btnN = document.getElementById("btnNegritoTexto");
 
             if (indiceCaixaTextoAtiva !== null && caixasTexto[indiceCaixaTextoAtiva]) {
                 const caixa = caixasTexto[indiceCaixaTextoAtiva];
@@ -1008,6 +1191,16 @@
                 const slFonte = document.getElementById("sliderTamanhoFonte"); if (slFonte) slFonte.value = caixa.tamanhoFonte;
                 const slLarg = document.getElementById("sliderLarguraCaixaTexto"); 
                 if (slLarg) { slLarg.max = larguraCrop; slLarg.value = caixa.larguraCaixa; }
+
+                if (btnN) {
+                    if (caixa.negrito) {
+                        btnN.classList.replace("bg-gray-900", "bg-blue-600");
+                        btnN.classList.replace("text-gray-300", "text-white");
+                    } else {
+                        btnN.classList.replace("bg-blue-600", "bg-gray-900");
+                        btnN.classList.replace("text-white", "text-gray-300");
+                    }
+                }
             } else {
                 if (painel) { painel.classList.add("hidden"); painel.classList.remove("flex"); }
                 if (msg) msg.classList.remove("hidden");
@@ -1046,19 +1239,20 @@
             }
         };
 
-        function desenharTextoEstiloDocumentoAutoAjustavel(ctx, texto, x, y, larguraCaixaMax, tamanhoFonteDesejado, cor) {
-            ctx.fillStyle = cor;
+        function desenharTextoEstiloDocumentoAutoAjustavel(ctx, caixa, x, y) {
+            ctx.fillStyle = caixa.cor;
             ctx.textBaseline = "top";
             
-            let tamanhoFonteFinal = tamanhoFonteDesejado;
+            let tamanhoFonteFinal = caixa.tamanhoFonte;
             let linhasFinais = [];
             let alturaLinha = tamanhoFonteFinal * 1.25;
+            let estiloFonte = caixa.negrito ? "bold " : "";
 
             while (tamanhoFonteFinal > 8) {
-                ctx.font = `${tamanhoFonteFinal}px Arial`;
+                ctx.font = `${estiloFonte}${tamanhoFonteFinal}px Arial`;
                 alturaLinha = tamanhoFonteFinal * 1.25;
                 
-                let linhasBrutas = texto.split('\n');
+                let linhasBrutas = caixa.texto.split('\n');
                 linhasFinais = [];
                 let palavraExcedeLargura = false;
 
@@ -1068,7 +1262,7 @@
 
                     for (let n = 0; n < palavras.length; n++) {
                         let larguraPalavraUnica = ctx.measureText(palavras[n]).width;
-                        if (larguraPalavraUnica > larguraCaixaMax) {
+                        if (larguraPalavraUnica > caixa.larguraCaixa) {
                             palavraExcedeLargura = true;
                             break;
                         }
@@ -1076,7 +1270,7 @@
                         let linhaTeste = linhaAtual + palavras[n] + ' ';
                         let larguraTeste = ctx.measureText(linhaTeste).width;
 
-                        if (larguraTeste > larguraCaixaMax && n > 0) {
+                        if (larguraTeste > caixa.larguraCaixa && n > 0) {
                             linhasFinais.push(linhaAtual);
                             linhaAtual = palavras[n] + ' ';
                         } else {
@@ -1096,7 +1290,7 @@
             }
 
             return {
-                w: larguraCaixaMax,
+                w: caixa.larguraCaixa,
                 h: Math.max(alturaLinha, linhasFinais.length * alturaLinha)
             };
         }
@@ -1159,30 +1353,46 @@
                 ctxLive.putImageData(imgData, 0, 0);
             }
 
-            caixasTexto.forEach((caixa, index) => {
-                if (caixa.texto.trim() !== "") {
-                    caixa.dimensaoCalculada = desenharTextoEstiloDocumentoAutoAjustavel(
-                        ctxLive, caixa.texto, caixa.posicao.x, caixa.posicao.y, caixa.larguraCaixa, caixa.tamanhoFonte, caixa.cor
-                    );
+            ordemCamadas.forEach(camada => {
+                if (camada === 'texto') {
+                    caixasTexto.forEach((caixa, index) => {
+                        if (caixa.texto.trim() !== "") {
+                            caixa.dimensaoCalculada = desenharTextoEstiloDocumentoAutoAjustavel(
+                                ctxLive, caixa, caixa.posicao.x, caixa.posicao.y
+                            );
+
+                            if (mostrarGuias) {
+                                let eSelecionada = (index === indiceCaixaTextoAtiva);
+                                ctxLive.strokeStyle = eSelecionada ? "rgba(59, 130, 246, 0.9)" : "rgba(156, 163, 175, 0.4)";
+                                ctxLive.lineWidth = eSelecionada ? 2 : 1;
+                                ctxLive.setLineDash([4, 4]);
+                                ctxLive.strokeRect(caixa.posicao.x - 4, caixa.posicao.y - 4, caixa.dimensaoCalculada.w + 8, caixa.dimensaoCalculada.h + 8);
+                                ctxLive.setLineDash([]);
+                            }
+                        }
+                    });
+                } else if (camada === 'assinatura' && imgAssinaturaElemento) {
+                    const slEsc = document.getElementById("sliderEscalaAssinatura");
+                    let escala = slEsc ? parseInt(slEsc.value) / 100 : 1.2;
+                    let larguraAss = (larguraCrop * 0.45) * escala;
+                    let alturaAss = (imgAssinaturaElemento.height * larguraAss) / imgAssinaturaElemento.width;
+                    ctxLive.drawImage(imgAssinaturaElemento, posicaoAssinatura.x, posicaoAssinatura.y, larguraAss, alturaAss);
+                } else if (camada === 'carimbo' && imgCarimboElemento) {
+                    const slCar = document.getElementById("sliderEscalaCarimbo");
+                    let escalaC = slCar ? parseInt(slCar.value) / 100 : 0.85;
+                    let larguraCar = 380 * escalaC;
+                    let alturaCar = (imgCarimboElemento.height * larguraCar) / imgCarimboElemento.width;
+                    ctxLive.drawImage(imgCarimboElemento, posicaoCarimbo.x, posicaoCarimbo.y, larguraCar, alturaCar);
 
                     if (mostrarGuias) {
-                        let eSelecionada = (index === indiceCaixaTextoAtiva);
-                        ctxLive.strokeStyle = eSelecionada ? "rgba(59, 130, 246, 0.9)" : "rgba(156, 163, 175, 0.4)";
-                        ctxLive.lineWidth = eSelecionada ? 2 : 1;
+                        ctxLive.strokeStyle = "rgba(220, 38, 38, 0.8)";
+                        ctxLive.lineWidth = 2;
                         ctxLive.setLineDash([4, 4]);
-                        ctxLive.strokeRect(caixa.posicao.x - 4, caixa.posicao.y - 4, caixa.dimensaoCalculada.w + 8, caixa.dimensaoCalculada.h + 8);
+                        ctxLive.strokeRect(posicaoCarimbo.x - 4, posicaoCarimbo.y - 4, larguraCar + 8, alturaCar + 8);
                         ctxLive.setLineDash([]);
                     }
                 }
             });
-
-            if (imgAssinaturaElemento) {
-                const slEsc = document.getElementById("sliderEscalaAssinatura");
-                let escala = slEsc ? parseInt(slEsc.value) / 100 : 0.5;
-                let larguraAss = (larguraCrop * 0.35) * escala;
-                let alturaAss = (imgAssinaturaElemento.height * larguraAss) / imgAssinaturaElemento.width;
-                ctxLive.drawImage(imgAssinaturaElemento, posicaoAssinatura.x, posicaoAssinatura.y, larguraAss, alturaAss);
-            }
         };
 
         function configurarEventosArrastoCanvas(canvas) {
@@ -1200,11 +1410,25 @@
 
             const iniciarArrasto = (e) => {
                 const pos = obterPosicaoRealCanvas(e);
+
+                if (imgCarimboElemento) {
+                    const slCar = document.getElementById("sliderEscalaCarimbo");
+                    let escalaC = slCar ? parseInt(slCar.value) / 100 : 0.85;
+                    let larguraCar = 380 * escalaC;
+                    let alturaCar = (imgCarimboElemento.height * larguraCar) / imgCarimboElemento.width;
+
+                    if (pos.x >= posicaoCarimbo.x && pos.x <= posicaoCarimbo.x + larguraCar &&
+                        pos.y >= posicaoCarimbo.y && pos.y <= posicaoCarimbo.y + alturaCar) {
+                        elementoSendoArrastado = 'carimbo';
+                        offsetArrasto = { x: pos.x - posicaoCarimbo.x, y: pos.y - posicaoCarimbo.y };
+                        return;
+                    }
+                }
                 
                 if (imgAssinaturaElemento) {
                     const slEsc = document.getElementById("sliderEscalaAssinatura");
-                    let escala = slEsc ? parseInt(slEsc.value) / 100 : 0.5;
-                    let larguraAss = (larguraCrop * 0.35) * escala;
+                    let escala = slEsc ? parseInt(slEsc.value) / 100 : 1.2;
+                    let larguraAss = (larguraCrop * 0.45) * escala;
                     let alturaAss = (imgAssinaturaElemento.height * larguraAss) / imgAssinaturaElemento.width;
                     
                     if (pos.x >= posicaoAssinatura.x && pos.x <= posicaoAssinatura.x + larguraAss &&
@@ -1247,6 +1471,9 @@
                 } else if (elementoSendoArrastado === 'assinatura') {
                     posicaoAssinatura.x = pos.x - offsetArrasto.x;
                     posicaoAssinatura.y = pos.y - offsetArrasto.y;
+                } else if (elementoSendoArrastado === 'carimbo') {
+                    posicaoCarimbo.x = pos.x - offsetArrasto.x;
+                    posicaoCarimbo.y = pos.y - offsetArrasto.y;
                 }
                 window.renderizarFiltroAtual(true);
             };
@@ -1268,13 +1495,22 @@
             
             const canvasAss = document.getElementById("canvasAssinatura");
             if (!canvasAss) return;
-            canvasAss.width = canvasAss.offsetWidth;
-            canvasAss.height = canvasAss.offsetHeight;
+
+            const ratio = window.devicePixelRatio || 1;
+            const width = canvasAss.offsetWidth;
+            const height = canvasAss.offsetHeight;
+
+            canvasAss.width = width * ratio;
+            canvasAss.height = height * ratio;
             
             ctxAssinaturaPad = canvasAss.getContext("2d");
+            ctxAssinaturaPad.scale(ratio, ratio);
             ctxAssinaturaPad.strokeStyle = "#000000";
-            ctxAssinaturaPad.lineWidth = 2.5;
+            ctxAssinaturaPad.lineWidth = 3;
             ctxAssinaturaPad.lineCap = "round";
+            ctxAssinaturaPad.lineJoin = "round";
+
+            pontosTraçoAssinatura = [];
 
             const getPosPad = (e) => {
                 const rect = canvasAss.getBoundingClientRect();
@@ -1283,8 +1519,29 @@
                 return { x: clientX - rect.left, y: clientY - rect.top };
             };
 
-            const iniciar = (e) => { assinandoPad = true; const p = getPosPad(e); ctxAssinaturaPad.beginPath(); ctxAssinaturaPad.moveTo(p.x, p.y); };
-            const desenhar = (e) => { if (!assinandoPad) return; const p = getPosPad(e); ctxAssinaturaPad.lineTo(p.x, p.y); ctxAssinaturaPad.stroke(); };
+            const iniciar = (e) => { 
+                assinandoPad = true; 
+                const p = getPosPad(e); 
+                pontosTraçoAssinatura = [p];
+                ctxAssinaturaPad.beginPath(); 
+                ctxAssinaturaPad.moveTo(p.x, p.y); 
+            };
+
+            const desenhar = (e) => { 
+                if (!assinandoPad) return; 
+                e.preventDefault();
+                const p = getPosPad(e); 
+                pontosTraçoAssinatura.push(p);
+
+                if (pontosTraçoAssinatura.length > 2) {
+                    const len = pontosTraçoAssinatura.length;
+                    const xc = (pontosTraçoAssinatura[len - 1].x + pontosTraçoAssinatura[len - 2].x) / 2;
+                    const yc = (pontosTraçoAssinatura[len - 1].y + pontosTraçoAssinatura[len - 2].y) / 2;
+                    ctxAssinaturaPad.quadraticCurveTo(pontosTraçoAssinatura[len - 2].x, pontosTraçoAssinatura[len - 2].y, xc, yc);
+                    ctxAssinaturaPad.stroke();
+                }
+            };
+
             const parar = () => { assinandoPad = false; };
 
             canvasAss.onmousedown = iniciar; canvasAss.onmousemove = desenhar; canvasAss.onmouseup = parar;
@@ -1294,7 +1551,9 @@
         window.limparAssinaturaPad = function() {
             const canvasAss = document.getElementById("canvasAssinatura");
             if (ctxAssinaturaPad && canvasAss) {
-                ctxAssinaturaPad.clearRect(0, 0, canvasAss.width, canvasAss.height);
+                const ratio = window.devicePixelRatio || 1;
+                ctxAssinaturaPad.clearRect(0, 0, canvasAss.width / ratio, canvasAss.height / ratio);
+                pontosTraçoAssinatura = [];
             }
         };
 
@@ -1329,7 +1588,7 @@
             if (pAss) { pAss.classList.add("hidden"); pAss.classList.remove("flex"); }
             
             const txtBtnAss = document.getElementById("txtBtnAssinatura");
-            if (txtBtnAss) txtBtnAss.innerText = "Adicionar Assinatura";
+            if (txtBtnAss) txtBtnAss.innerText = "Assinar";
             
             window.renderizarFiltroAtual(true);
         };
@@ -1340,7 +1599,29 @@
             if (!canvasLive) return;
             const imgSalvaDataUrl = canvasLive.toDataURL('image/jpeg', 0.85); 
 
-            arrayPaginasEscaneadas.push(imgSalvaDataUrl);
+            const estadoPagina = {
+                imagemBaseContextData: canvasOriginalContextData,
+                larguraCrop: larguraCrop,
+                alturaCrop: alturaCrop,
+                caixasTexto: JSON.parse(JSON.stringify(caixasTexto)),
+                indiceCaixaTextoAtiva: indiceCaixaTextoAtiva,
+                posicaoAssinatura: { ...posicaoAssinatura },
+                imgAssinaturaElemento: imgAssinaturaElemento,
+                imgCarimboElemento: imgCarimboElemento,
+                posicaoCarimbo: { ...posicaoCarimbo },
+                escalaCarimbo: document.getElementById("sliderEscalaCarimbo") ? document.getElementById("sliderEscalaCarimbo").value : 85,
+                escalaAssinatura: document.getElementById("sliderEscalaAssinatura") ? document.getElementById("sliderEscalaAssinatura").value : 120,
+                brilho: document.getElementById("sliderBrilho") ? document.getElementById("sliderBrilho").value : 0,
+                contraste: document.getElementById("sliderContraste") ? document.getElementById("sliderContraste").value : 0,
+                finalDataUrl: imgSalvaDataUrl
+            };
+
+            if (indicePaginaSendoEditada !== null) {
+                arrayPaginasEscaneadas[indicePaginaSendoEditada] = estadoPagina;
+            } else {
+                arrayPaginasEscaneadas.push(estadoPagina);
+            }
+
             modoUploadAtual = 'scanner';
 
             const modalFiltros = document.getElementById("modalFiltrosScanner");
@@ -1371,13 +1652,66 @@
                 div.innerHTML = `
                     <img src="${imgUrl}" class="w-full h-full object-cover opacity-80">
                     <div class="absolute bottom-0 left-0 right-0 bg-black/80 text-[9px] text-center py-1 font-bold shadow-inner">Pág ${index + 1}</div>
+                    
                     <div class="absolute top-1 right-1 flex gap-1">
-                        <button onclick="window.removerPaginaScanner(${index})" class="bg-red-600 hover:bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-lg"><i class="fas fa-times text-[9px]"></i></button>
+                        <button onclick="window.reabrirEdicaoPagina(${index})" title="Editar Página" class="bg-blue-600 hover:bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-lg"><i class="fas fa-pen text-[9px]"></i></button>
+                        <button onclick="window.removerPaginaScanner(${index})" title="Remover Página" class="bg-red-600 hover:bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-lg"><i class="fas fa-times text-[9px]"></i></button>
                     </div>
                 `;
                 if (grid) grid.appendChild(div);
             });
             if (arrayPaginasEscaneadas.length === 0) window.limparModosUpload();
+        };
+
+        window.reabrirEdicaoPagina = function(index) {
+            indicePaginaSendoEditada = index;
+            const pag = arrayPaginasEscaneadas[index];
+
+            if (typeof pag === 'string') return;
+
+            canvasOriginalContextData = pag.imagemBaseContextData;
+            larguraCrop = pag.larguraCrop;
+            alturaCrop = pag.alturaCrop;
+            caixasTexto = JSON.parse(JSON.stringify(pag.caixasTexto));
+            indiceCaixaTextoAtiva = pag.indiceCaixaTextoAtiva;
+            posicaoAssinatura = { ...pag.posicaoAssinatura };
+            imgAssinaturaElemento = pag.imgAssinaturaElemento;
+            imgCarimboElemento = pag.imgCarimboElemento;
+            posicaoCarimbo = { ...pag.posicaoCarimbo };
+
+            const slEsc = document.getElementById("sliderEscalaAssinatura"); if (slEsc) slEsc.value = pag.escalaAssinatura || 120;
+            const slCar = document.getElementById("sliderEscalaCarimbo"); if (slCar) slCar.value = pag.escalaCarimbo || 85;
+            const slB = document.getElementById("sliderBrilho"); if (slB) slB.value = pag.brilho;
+            const slC = document.getElementById("sliderContraste"); if (slC) slC.value = pag.contraste;
+
+            if (imgAssinaturaElemento) {
+                const pAss = document.getElementById("painelControleAssinatura"); if (pAss) { pAss.classList.remove("hidden"); pAss.classList.add("flex"); }
+                const txtBtn = document.getElementById("txtBtnAssinatura"); if (txtBtn) txtBtn.innerText = "Refazer Assinatura";
+            } else {
+                const pAss = document.getElementById("painelControleAssinatura"); if (pAss) { pAss.classList.add("hidden"); pAss.classList.remove("flex"); }
+                const txtBtn = document.getElementById("txtBtnAssinatura"); if (txtBtn) txtBtn.innerText = "Assinar";
+            }
+
+            if (imgCarimboElemento) {
+                const pCar = document.getElementById("painelControleCarimbo"); if (pCar) { pCar.classList.remove("hidden"); pCar.classList.add("flex"); }
+                const txtB = document.getElementById("txtBtnCarimbo"); if (txtB) txtB.innerText = "Reaplicar Carimbo";
+            } else {
+                const pCar = document.getElementById("painelControleCarimbo"); if (pCar) { pCar.classList.add("hidden"); pCar.classList.remove("flex"); }
+                const txtB = document.getElementById("txtBtnCarimbo"); if (txtB) txtB.innerText = "Carimbar";
+            }
+
+            const modalFiltros = document.getElementById("modalFiltrosScanner");
+            if (modalFiltros) { modalFiltros.classList.remove("hidden"); modalFiltros.classList.add("flex"); }
+
+            const canvasLive = document.getElementById("canvasLivePreview");
+            if (canvasLive) {
+                canvasLive.width = larguraCrop;
+                canvasLive.height = alturaCrop;
+                configurarEventosArrastoCanvas(canvasLive);
+            }
+
+            sincronizarPainelComCaixaAtiva();
+            window.renderizarFiltroAtual(true);
         };
 
         window.removerPaginaScanner = function(index) {
@@ -1389,6 +1723,7 @@
             modoUploadAtual = null;
             arquivosFilaEnvio = [];
             arrayPaginasEscaneadas = [];
+            indicePaginaSendoEditada = null;
             
             const inCam = document.getElementById("inputArquivoCamera"); if (inCam) inCam.value = "";
             const inGal = document.getElementById("inputArquivoGaleria"); if (inGal) inGal.value = "";
@@ -1420,6 +1755,7 @@
             const container = document.getElementById("listaArquivosFila");
             if (!container) return;
             container.innerHTML = "";
+            
             const txtQtd = document.getElementById("txtQtdFila");
             if (txtQtd) txtQtd.innerText = `${arquivosFilaEnvio.length} itens`;
             
@@ -1439,6 +1775,7 @@
             window.renderizarListaFilaEnvio();
         };
 
+        // LÓGICA PRINCIPAL DE UPLOAD COM OCR APRIMORADO E FATIAMENTO
         window.iniciarUploadStorage = async function() {
             const inNome = document.getElementById("nomeArquivoManual");
             let nomeDigitado = inNome ? inNome.value.trim() : "";
@@ -1452,14 +1789,115 @@
             if (containerProgresso) containerProgresso.classList.remove("hidden");
             if (barraProgresso) barraProgresso.style.width = '0%';
 
-            if (modoUploadAtual === 'generico' || modoUploadAtual === 'galeria' || modoUploadAtual === 'camera') {
+            if (modoUploadAtual === 'scanner') {
+                if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Gerando Relatório Geral...`;
+                
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
+                const pdfWidth = doc.internal.pageSize.getWidth();
+                const pdfHeight = doc.internal.pageSize.getHeight();
+
+                arrayPaginasEscaneadas.forEach((pagData, i) => {
+                    let imgBase64 = typeof pagData === 'string' ? pagData : pagData.finalDataUrl;
+                    if (i > 0) doc.addPage();
+                    const imgProps = doc.getImageProperties(imgBase64);
+                    let imgWidth = pdfWidth;
+                    let imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                    if (imgHeight > pdfHeight) { imgHeight = pdfHeight; imgWidth = (imgProps.width * pdfHeight) / imgProps.height; }
+                    const x = (pdfWidth - imgWidth) / 2; const y = (pdfHeight - imgHeight) / 2;
+                    doc.addImage(imgBase64, 'JPEG', x, y, imgWidth, imgHeight);
+                });
+
+                const pdfBlobGeral = doc.output('blob');
+                
+                const dataAtual = new Date();
+                const pastaData = `${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, '0')}-${String(dataAtual.getDate()).padStart(2, '0')}`;
+                const refRemessa = storageRef(storage, `Relatorio_Geral/${pastaData}/${Date.now()}_${nomeDigitado}.pdf`);
+                
+                await uploadBytesResumable(refRemessa, pdfBlobGeral, { contentType: 'application/pdf' });
+                const urlGeral = await getDownloadURL(refRemessa);
+
+                await push(dbRef(db, 'arquivos_anexos'), {
+                    nome: `${nomeDigitado} (Completo)`,
+                    url: urlGeral,
+                    tipo: 'pdf',
+                    enviadoPor: usuarioLogado,
+                    dataEnvio: Date.now(),
+                    pasta: `Relatorio_Geral/${pastaData}`,
+                    statusExclusao: "ativo"
+                });
+
+                if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Identificando Pacientes...`;
+                let pacienteAtual = "Desconhecido";
+                let mapaPacientes = {};
+                
+                const worker = await Tesseract.createWorker('por');
+
+                for (let i = 0; i < arrayPaginasEscaneadas.length; i++) {
+                    let pagData = arrayPaginasEscaneadas[i];
+                    let imgBase64 = typeof pagData === 'string' ? pagData : pagData.finalDataUrl;
+
+                    try {
+                        const imgBw = await preProcessarImagemParaOCR(imgBase64);
+                        const ret = await worker.recognize(imgBw);
+                        let possivelNome = extrairNomePacienteOCR(ret.data.text);
+                        if (possivelNome !== "Desconhecido") {
+                            pacienteAtual = possivelNome;
+                        }
+                    } catch (err) {}
+
+                    if (!mapaPacientes[pacienteAtual]) {
+                        mapaPacientes[pacienteAtual] = [];
+                    }
+                    mapaPacientes[pacienteAtual].push(imgBase64);
+                }
+                
+                await worker.terminate();
+
+                const nomesPacientes = Object.keys(mapaPacientes);
+                for (let idx = 0; idx < nomesPacientes.length; idx++) {
+                    const nomePac = nomesPacientes[idx];
+                    const imgsPac = mapaPacientes[nomePac];
+
+                    if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Salvando: ${nomePac}...`;
+
+                    const docPac = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
+                    imgsPac.forEach((imgB64, pIdx) => {
+                        if (pIdx > 0) docPac.addPage();
+                        const imgProps = docPac.getImageProperties(imgB64);
+                        let imgWidth = pdfWidth;
+                        let imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                        if (imgHeight > pdfHeight) { imgHeight = pdfHeight; imgWidth = (imgProps.width * pdfHeight) / imgProps.height; }
+                        const x = (pdfWidth - imgWidth) / 2; const y = (pdfHeight - imgHeight) / 2;
+                        docPac.addImage(imgB64, 'JPEG', x, y, imgWidth, imgHeight);
+                    });
+
+                    const blobPac = docPac.output('blob');
+                    const refPac = storageRef(storage, `Pacientes/${nomePac}/Evolucao_${pastaData}_${Date.now()}.pdf`);
+                    await uploadBytesResumable(refPac, blobPac, { contentType: 'application/pdf' });
+                    const urlPac = await getDownloadURL(refPac);
+
+                    await push(dbRef(db, 'arquivos_anexos'), {
+                        nome: `Evolução - ${nomePac}`,
+                        url: urlPac,
+                        tipo: 'pdf',
+                        enviadoPor: usuarioLogado,
+                        dataEnvio: Date.now(),
+                        pastaPaciente: nomePac,
+                        statusExclusao: "ativo"
+                    });
+                }
+                window.fecharModalUpload();
+                resetarBotaoAposErro();
+
+            } else if (modoUploadAtual === 'camera' || modoUploadAtual === 'galeria' || modoUploadAtual === 'generico') {
                 let concluidos = 0; let totalArquivos = arquivosFilaEnvio.length;
                 for (let i = 0; i < totalArquivos; i++) {
                     const file = arquivosFilaEnvio[i];
                     
                     if (file.type === 'application/pdf') {
-                        if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Lendo PDF ${i+1}/${totalArquivos}...`;
-                        await processarUploadPdfCompleto(file, nomeDigitado, btnSalvar);
+                        if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Analisando PDF ${i+1}/${totalArquivos}...`;
+                        await processarUploadPdfDireto(file, nomeDigitado, btnSalvar);
                         concluidos++; if (barraProgresso) barraProgresso.style.width = ((concluidos / totalArquivos) * 100) + '%';
                         continue;
                     }
@@ -1477,7 +1915,7 @@
                 window.fecharModalUpload(); resetarBotaoAposErro();
             }
 
-            async function processarUploadPdfCompleto(file, nomeBase, btnSalvar) {
+            async function processarUploadPdfDireto(file, nomeBase, btnSalvar) {
                 const dataAtual = new Date();
                 const pastaData = `${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, '0')}-${String(dataAtual.getDate()).padStart(2, '0')}`;
 
@@ -1507,9 +1945,11 @@
                     try {
                         const page = await pdfDocJs.getPage(pageNum);
                         const textContent = await page.getTextContent();
-                        let texto = textContent.items.map(item => item.str).join('\n'); // <-- Alterado para \n para capturar linha a linha
+                        let texto = textContent.items.map(item => item.str).join('\n');
 
-                        if (!texto.toLowerCase().includes("paciente")) {
+                        let possivelNome = extrairNomePacienteOCR(texto);
+                        
+                        if (possivelNome === "Desconhecido") {
                             const viewport = page.getViewport({ scale: 2.0 });
                             const canvas = document.createElement('canvas');
                             const ctx = canvas.getContext('2d');
@@ -1519,16 +1959,18 @@
                             
                             const imgBw = await preProcessarImagemParaOCR(canvas.toDataURL('image/jpeg'));
                             const ret = await worker.recognize(imgBw);
-                            texto = ret.data.text;
+                            possivelNome = extrairNomePacienteOCR(ret.data.text);
                         }
-                        
-                        let possivelNome = extrairNomePacienteOCR(texto);
-                        if (possivelNome !== "Desconhecido") pacienteAtual = possivelNome;
+
+                        if (possivelNome !== "Desconhecido") {
+                            pacienteAtual = possivelNome;
+                        }
                     } catch(e) {}
 
                     if (!paginasPorPaciente[pacienteAtual]) paginasPorPaciente[pacienteAtual] = [];
                     paginasPorPaciente[pacienteAtual].push(pageNum - 1);
                 }
+                
                 await worker.terminate();
 
                 const nomesPacientes = Object.keys(paginasPorPaciente);
@@ -1536,7 +1978,7 @@
                     const nomePac = nomesPacientes[idx];
                     const indices = paginasPorPaciente[nomePac];
 
-                    if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Salvando: ${nomePac}...`;
+                    if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Separando: ${nomePac}...`;
 
                     const novoPdf = await window.PDFLib.PDFDocument.create();
                     const paginasCopiadas = await novoPdf.copyPages(pdfDocLib, indices);
@@ -1591,27 +2033,7 @@
             }
         };
 
-        // RENDERIZAÇÃO DE PASTAS
-        function renderizarCardPasta(container, nomePasta, subtitulo, onclickAction, isPaciente = false) {
-            const iconClass = isPaciente ? "fa-user-injured text-indigo-400" : "fa-folder-open text-blue-500";
-            const bgClass = isPaciente ? "bg-indigo-900/20 border-indigo-800/40" : "bg-blue-900/20 border-blue-800/40";
-            
-            const card = document.createElement("div");
-            card.className = "bg-gray-800 border border-gray-700 p-4 rounded-xl shadow-md flex items-center gap-4 hover:border-blue-500/50 hover:bg-gray-700/50 transition cursor-pointer active:scale-95";
-            card.setAttribute("onclick", onclickAction);
-            card.innerHTML = `
-                <div class="w-14 h-14 ${bgClass} rounded-lg flex items-center justify-center border flex-shrink-0">
-                    <i class="fas ${iconClass} text-3xl"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <h4 class="font-bold text-white text-base truncate flex items-center">${nomePasta}</h4>
-                    <p class="text-xs text-gray-400 mt-0.5">${subtitulo}</p>
-                </div>
-                <i class="fas fa-chevron-right text-gray-600"></i>
-            `;
-            container.appendChild(card);
-        }
-
+        // RENDERIZAÇÃO DA GALERIA COM LAYOUT DE CARDS RESTAURADO
         function carregarGaleriaDeAnexos() {
             const container = document.getElementById("listaAnexos");
             if (container && todosAnexosNaMemoria.length === 0) {
@@ -1701,6 +2123,7 @@
             const txtInfo = document.getElementById("txtInfoVista");
             const txtCount = document.getElementById("txtContadorArquivos");
 
+            // NIVEL 0: RAIZ - Apenas Relatório Geral e Pacientes
             if (window.pastaAbertaAtual === null && !isBuscaAtiva) {
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<span class="text-gray-300 font-bold text-xs">Pastas do Sistema</span>`;
                 if (txtInfo) txtInfo.innerText = "Navegando nas Pastas";
@@ -1714,6 +2137,7 @@
                 if (txtCount) txtCount.innerText = `2 pastas`;
 
             } 
+            // NIVEL 1: DENTRO DE PACIENTES - Subpastas por Nomes Limpos
             else if (window.pastaAbertaAtual === 'pacientes_root' && !isBuscaAtiva) {
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs">Pacientes</span>`;
                 if (txtInfo) txtInfo.innerText = "Selecione o Paciente";
@@ -1735,6 +2159,7 @@
                 });
                 if (txtCount) txtCount.innerText = `${pacientesNomes.length} pacientes`;
             }
+            // NIVEL 1: DENTRO DO RELATÓRIO GERAL
             else if (window.pastaAbertaAtual === 'relatorio_geral' && !isBuscaAtiva) {
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs">Relatório Geral</span>`;
                 if (txtInfo) txtInfo.innerText = "Arquivos Gerais";
@@ -1743,6 +2168,7 @@
                 renderizarArquivosFinais(arqs, container);
                 if (txtCount) txtCount.innerText = `${arqs.length} relatórios`;
             }
+            // NIVEL 2: DENTRO DO NOME DO PACIENTE
             else if (window.pastaAbertaAtual && window.pastaAbertaAtual.startsWith('paciente:') && !isBuscaAtiva) {
                 const nomePac = window.pastaAbertaAtual.split('paciente:')[1];
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.abrirPasta('pacientes_root')" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs truncate max-w-[150px]">${nomePac}</span>`;
@@ -1752,6 +2178,7 @@
                 renderizarArquivosFinais(arqs, container);
                 if (txtCount) txtCount.innerText = `${arqs.length} evoluções`;
             }
+            // BUSCA GLOBAL
             else {
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="document.getElementById('inputBuscaAnexo').value=''; window.aplicarFiltrosNaGaleria();" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Limpar Busca</button><span class="text-gray-600 mx-2">/</span><span class="text-blue-400 font-bold text-xs">Resultados</span>`;
                 if (txtInfo) txtInfo.innerText = "Resultados da Pesquisa";
@@ -1760,21 +2187,43 @@
             }
         };
 
+        // RENDERIZAÇÃO DOS CARDS DE PASTAS
+        function renderizarCardPasta(container, nomePasta, subtitulo, onclickAction, isPaciente = false) {
+            const iconClass = isPaciente ? "fa-user-injured text-indigo-400" : "fa-folder-open text-blue-500";
+            const bgClass = isPaciente ? "bg-indigo-900/20 border-indigo-800/40" : "bg-blue-900/20 border-blue-800/40";
+            
+            const card = document.createElement("div");
+            card.className = "bg-gray-800 border border-gray-700 p-4 rounded-xl shadow-md flex items-center gap-4 hover:border-blue-500/50 hover:bg-gray-700/50 transition cursor-pointer active:scale-95";
+            card.setAttribute("onclick", onclickAction);
+            card.innerHTML = `
+                <div class="w-14 h-14 ${bgClass} rounded-lg flex items-center justify-center border flex-shrink-0">
+                    <i class="fas ${iconClass} text-3xl"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h4 class="font-bold text-white text-base truncate flex items-center">${nomePasta}</h4>
+                    <p class="text-xs text-gray-400 mt-0.5">${subtitulo}</p>
+                </div>
+                <i class="fas fa-chevron-right text-gray-600"></i>
+            `;
+            container.appendChild(card);
+        }
+
+        // RENDERIZAÇÃO DOS CARDS DE ARQUIVOS (PDF E FOTOS)
         function renderizarArquivosFinais(lista, container) {
-            if (lista.length === 0) { container.innerHTML = `<div class="col-span-full py-8 text-center text-gray-500 text-xs">Nenhum documento encontrado.</div>`; return; }
+            if (lista.length === 0) { container.innerHTML = `<div class="col-span-full py-8 text-center text-gray-500 text-sm">Nenhum documento encontrado.</div>`; return; }
             lista.forEach(arq => {
                 const dataObj = new Date(arq.dataEnvio);
                 const dataStr = dataObj.toLocaleDateString('pt-BR');
                 const horaStr = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
                 const nomeSeguro = arq.nome.replace(/'/g, "\\'").replace(/"/g, "&quot;");
 
-                let icone = `<div class="w-12 h-12 rounded bg-gray-800 border border-gray-700 flex items-center justify-center flex-shrink-0"><i class="fas fa-file-pdf text-xl text-red-500"></i></div>`;
-                if(arq.tipo === 'imagem') icone = `<div class="relative w-12 h-12 rounded bg-gray-800 border border-gray-700 overflow-hidden flex-shrink-0"><img src="${arq.url}" loading="lazy" class="w-full h-full object-cover"></div>`;
+                let icone = `<div class="w-16 h-16 rounded-lg bg-red-950/30 border border-red-900/50 flex items-center justify-center shadow-inner flex-shrink-0"><i class="fas fa-file-pdf text-3xl text-red-500"></i></div>`;
+                if(arq.tipo === 'imagem') icone = `<div class="relative w-16 h-16 rounded-lg border border-gray-700 overflow-hidden shadow-inner flex-shrink-0"><img src="${arq.url}" loading="lazy" class="absolute inset-0 w-full h-full object-cover"></div>`;
 
                 const card = document.createElement("div");
-                card.className = "bg-gray-900 border border-gray-800 p-2.5 rounded-lg shadow flex gap-3 items-center hover:border-blue-500/30 transition cursor-pointer active:scale-95";
+                card.className = "bg-gray-900 border border-gray-800 p-3 rounded-xl shadow flex gap-3 items-center hover:border-blue-500/30 transition cursor-pointer active:scale-95";
                 card.setAttribute("onclick", `window.abrirModalVisualizacao('${arq.id}', '${arq.url}', '${nomeSeguro}', '${arq.tipo}')`);
-                card.innerHTML = `${icone}<div class="flex-1 min-w-0"><h4 class="font-bold text-white text-[11px] truncate uppercase">${arq.nome}</h4><p class="text-[9px] text-gray-500 mt-1"><i class="far fa-clock"></i> ${dataStr} às ${horaStr}</p></div>`;
+                card.innerHTML = `${icone}<div class="flex-1 min-w-0"><h4 class="font-bold text-white text-sm truncate uppercase">${arq.nome}</h4><p class="text-[10px] text-gray-400 mt-0.5"><i class="fas fa-user text-blue-500"></i> @${arq.enviadoPor}</p><p class="text-[10px] text-gray-500"><i class="far fa-clock"></i> ${dataStr} às ${horaStr}</p></div>`;
                 container.appendChild(card);
             });
         }
@@ -1841,10 +2290,14 @@
                         text: `Confira este documento: ${nomeLimpo}`,
                         url: window.urlImagemAtiva
                     });
-                } catch (err) {}
+                } catch (err) {
+                    console.log("Compartilhamento nativo não concluído:", err);
+                }
             } else {
                 navigator.clipboard.writeText(window.urlImagemAtiva).then(() => {
                     alert("🔗 Link copiado para a área de transferência!");
+                }).catch(() => {
+                    alert("Seu navegador não suporta compartilhamento automático.");
                 });
             }
         };
@@ -1871,12 +2324,12 @@
             if (!confirm(`⚠️ Tem certeza de que deseja excluir o anexo "${nomeArquivo}"?`)) return;
             
             if (perfilUsuario === "administrador") {
-                remove(dbRef(db, 'arquivos_anexos/' + window.idImagemAtiva)).then(() => { window.fecharModalVisualizacao(); });
+                remove(dbRef(db, 'arquivos_anexos/' + window.idImagemAtiva)).then(() => { window.fecharModalVisualizacao(); }).catch(err => alert("Erro ao excluir: " + err.message));
             } else {
                 update(dbRef(db, 'arquivos_anexos/' + window.idImagemAtiva), { statusExclusao: "pendente_aprovacao", solicitadoPor: usuarioLogado }).then(() => {
                     push(dbRef(db, 'notificacoes_sistema'), { titulo: "Exclusão Solicitada", mensagem: `@${usuarioLogado} pediu para excluir "${nomeArquivo}".`, tipo: "alerta", timestamp: Date.now() });
                     window.fecharModalVisualizacao();
-                });
+                }).catch(err => alert("Erro ao processar: " + err.message));
             }
         };
 
@@ -1895,9 +2348,16 @@
             const novoNome = inEd ? inEd.value.trim() : "";
             if (!novoNome) return alert("⚠️ Digite um nome válido!");
             
+            const btnSalvar = document.getElementById("btnSalvarEdicao"); 
+            if (btnSalvar) { btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Salvando...`; btnSalvar.disabled = true; }
+            
             update(dbRef(db, 'arquivos_anexos/' + window.idImagemAtiva), { nome: novoNome }).then(() => { 
                 const tCard = document.getElementById("tituloImagemCard"); if (tCard) tCard.innerText = novoNome; 
                 window.cancelarEdicaoNome(); 
+                if (btnSalvar) { btnSalvar.innerHTML = `<i class="fas fa-save"></i> Salvar`; btnSalvar.disabled = false; }
+            }).catch(erro => { 
+                alert("Erro ao salvar o nome: " + erro.message); 
+                if (btnSalvar) { btnSalvar.innerHTML = `<i class="fas fa-save"></i> Salvar`; btnSalvar.disabled = false; }
             });
         };
 
