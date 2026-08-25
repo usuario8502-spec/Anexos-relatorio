@@ -277,7 +277,7 @@
         <section class="bg-gray-900 border border-gray-800 p-4 rounded-xl shadow-lg flex flex-col gap-3">
             <div class="relative w-full">
                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500"></i>
-                <input type="text" id="inputBuscaAnexo" placeholder="Buscar por paciente, relatórios ou data..." class="w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-blue-500 focus:outline-none text-sm transition-all">
+                <input type="text" id="inputBuscaAnexo" placeholder="Buscar por nome, data (DD/MM) ou mês (MM/AAAA)..." class="w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-blue-500 focus:outline-none text-sm transition-all">
             </div>
             
             <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -290,7 +290,7 @@
                     <input type="date" id="dataFimFiltro" class="w-full p-2 rounded-lg bg-gray-800 border border-gray-700 text-sm focus:border-blue-500 focus:outline-none text-gray-300">
                 </div>
                 <div class="flex flex-col gap-1 col-span-2 md:col-span-1">
-                    <label class="text-[10px] text-gray-400 font-bold uppercase">Enviado por</label>
+                    <label class="text-[10px] text-gray-400 font-bold uppercase">Usuário</label>
                     <select id="filtroUsuario" class="w-full p-2 rounded-lg bg-gray-800 border border-gray-700 text-sm focus:border-blue-500 focus:outline-none text-gray-300">
                         <option value="todos">Todos os Usuários</option>
                     </select>
@@ -298,11 +298,11 @@
             </div>
         </section>
 
-        <!-- Galeria Principal Dinâmica -->
+        <!-- Galeria Principal -->
         <section class="flex flex-col gap-3">
             <div class="flex justify-between items-center text-sm text-gray-400 px-1 border-b border-gray-800 pb-2" id="areaBreadcrumb"></div>
             <div class="flex justify-between items-center text-xs text-gray-500 px-1 pt-1">
-                <span id="txtInfoVista">Visualizando Pastas</span>
+                <span id="txtInfoVista">Visualizando</span>
                 <span id="txtContadorArquivos">0 itens</span>
             </div>
             <div id="listaAnexos" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 custom-scrollbar"></div>
@@ -376,8 +376,8 @@
             </div>
 
             <div class="flex flex-col gap-3">
-                <label class="text-xs text-gray-400">Nome ou Descrição do Arquivo Base:</label>
-                <input type="text" id="nomeArquivoManual" placeholder="Ex: Relatório Evoluções..." class="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-blue-500">
+                <label class="text-xs text-gray-400">Nome ou Descrição do Arquivo:</label>
+                <input type="text" id="nomeArquivoManual" placeholder="Ex: Planilha de Custos..." class="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-blue-500">
                 
                 <div id="areaEscolhaModo" class="grid grid-cols-2 gap-2 mt-2">
                     <button onclick="document.getElementById('inputArquivoCamera').click()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition"><i class="fas fa-camera text-blue-400"></i><span class="text-[11px] font-bold">Câmera</span></button>
@@ -385,7 +385,7 @@
                     
                     <button onclick="window.abrirModalOrigemScanner()" class="col-span-2 sm:col-span-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition relative overflow-hidden"><div class="absolute inset-0 bg-red-500/10 opacity-50"></div><i class="fas fa-file-pdf text-red-500"></i><span class="text-[11px] font-bold">Escanear Documento</span></button>
                     
-                    <button onclick="document.getElementById('inputArquivoGenerico').click()" class="col-span-2 sm:col-span-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition"><i class="fas fa-file-upload text-purple-400"></i><span class="text-[11px] font-bold">PDF / Outros</span></button>
+                    <button onclick="document.getElementById('inputArquivoGenerico').click()" class="col-span-2 sm:col-span-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition"><i class="fas fa-file-upload text-purple-400"></i><span class="text-[11px] font-bold">PDF / Outros Arquivos</span></button>
                 </div>
 
                 <input type="file" id="inputArquivoCamera" accept="image/*" capture="environment" class="hidden" onchange="window.processarArquivosLote(this, 'camera')">
@@ -622,15 +622,14 @@
         import { getDatabase, ref as dbRef, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
-        // CREDENCIAIS ATUALIZADAS (PROJETO: anexos-2)
         const firebaseConfig = {
-            apiKey: "AIzaSyCQ8--X39oK3BnwNES7zDklKnWP0_4hEas",
-            authDomain: "anexos-2.firebaseapp.com",
-            databaseURL: "https://anexos-2-default-rtdb.firebaseio.com",
-            projectId: "anexos-2",
-            storageBucket: "anexos-2.firebasestorage.app",
-            messagingSenderId: "233223560502",
-            appId: "1:233223560502:web:87a7b0be7d7587b8b3a797"
+            apiKey: "AIzaSyCfzVSlcB2BU1TTqn_kyo_Gq-EtDps8yys",
+            authDomain: "anexos-relatorio.firebaseapp.com",
+            databaseURL: "https://anexos-relatorio-default-rtdb.firebaseio.com",
+            projectId: "anexos-relatorio",
+            storageBucket: "anexos-relatorio.firebasestorage.app",
+            messagingSenderId: "334917539541",
+            appId: "1:334917539541:web:b00a572569d45bb0e2b45c"
         };
 
         const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
@@ -695,6 +694,43 @@
             signOut(auth).then(() => alert("Logout realizado!"));
         };
 
+        // PROCESSAMENTO DE IMAGEM PARA LETRA CURSIVA
+        async function preProcessarImagemParaOCR(imgBase64) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const scale = 2.0; 
+                    canvas.width = img.width * scale;
+                    canvas.height = img.height * scale;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const data = imageData.data;
+                    for (let i = 0; i < data.length; i += 4) {
+                        let avg = (data[i] + data[i+1] + data[i+2]) / 3;
+                        let val = avg > 150 ? 255 : 0; 
+                        data[i] = data[i+1] = data[i+2] = val;
+                    }
+                    ctx.putImageData(imageData, 0, 0);
+                    resolve(canvas.toDataURL('image/jpeg'));
+                };
+                img.src = imgBase64;
+            });
+        }
+
+        // FUNÇÃO REFINADA PARA CAPTURAR APENAS NOMES VÁLIDOS
+        function padronizarNomePaciente(nomeRaw) {
+            if (!nomeRaw) return "Desconhecido";
+            let nomeLimpo = nomeRaw.split('\n')[0];
+            nomeLimpo = nomeLimpo.replace(/[^a-zA-ZÀ-ÿ\s]/g, '').replace(/\s+/g, ' ').trim();
+            // Ignora leituras lixo (curtas demais ou apenas 1 palavra solta)
+            if (nomeLimpo.length < 4 || nomeLimpo.split(' ').length < 2) return "Desconhecido";
+            return nomeLimpo.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+        }
+
+        // LÓGICA DE UPLOADS E FILA
         window.abrirModalUpload = function() {
             const modal = document.getElementById("modalUpload");
             const content = document.getElementById("modalUploadContent");
@@ -724,616 +760,13 @@
             }
         };
 
-        window.abrirModalOrigemScanner = function() {
-            const modal = document.getElementById("modalOrigemScanner");
-            if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
-        };
-
-        window.fecharModalOrigemScanner = function() {
-            const modal = document.getElementById("modalOrigemScanner");
-            if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
-        };
-
-        window.escolherOrigemScanner = function(origem) {
-            window.fecharModalOrigemScanner();
-            indicePaginaSendoEditada = null; 
-            if (origem === 'camera') {
-                document.getElementById('inputArquivoScannerCamera')?.click();
-            } else {
-                document.getElementById('inputArquivoScannerGaleria')?.click();
-            }
-        };
-
-        window.abrirModoScanner = function(input) {
-            if (input.files && input.files[0]) {
-                const file = input.files[0];
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = document.getElementById("imgParaCortar");
-                    if (!img) return;
-                    img.src = e.target.result;
-                    
-                    const modalCrop = document.getElementById("modalCropperScanner");
-                    if (modalCrop) { modalCrop.classList.remove("hidden"); modalCrop.classList.add("flex"); }
-                    
-                    window.rotacaoBase = 90; 
-                    const slNiv = document.getElementById("sliderNivelamento");
-                    const lblNiv = document.getElementById("lblNivelamento");
-                    if (slNiv) slNiv.value = 0;
-                    if (lblNiv) lblNiv.innerText = "0°";
-
-                    if (cropperInstancia) cropperInstancia.destroy();
-                    
-                    cropperInstancia = new Cropper(img, {
-                        viewMode: 1, dragMode: 'move', autoCropArea: 0.75, restore: false, guides: true,
-                        center: true, highlight: false, cropBoxMovable: true, cropBoxResizable: true, toggleDragModeOnDblclick: false,
-                        ready: function() {
-                            this.cropper.rotateTo(window.rotacaoBase);
-                        }
-                    });
-                };
-                reader.readAsDataURL(file);
-                input.value = ""; 
-            }
-        };
-
-        window.girarCropper = function() {
-            if (cropperInstancia) {
-                window.rotacaoBase = (window.rotacaoBase + 90) % 360;
-                let slNiv = document.getElementById("sliderNivelamento");
-                let ajusteFino = slNiv ? parseFloat(slNiv.value) : 0;
-                cropperInstancia.rotateTo(window.rotacaoBase + ajusteFino);
-            }
-        };
-
-        window.nivelarCropper = function(graus) {
-            const lbl = document.getElementById("lblNivelamento");
-            if (lbl) lbl.innerText = graus + "°";
-            let ajusteFino = parseFloat(graus);
-            if (cropperInstancia) {
-                cropperInstancia.rotateTo(window.rotacaoBase + ajusteFino);
-            }
-        };
-
-        window.ajustarNivelamento = function(delta) {
-            let slider = document.getElementById("sliderNivelamento");
-            if (slider) {
-                let novoValor = parseInt(slider.value) + delta;
-                if (novoValor >= -180 && novoValor <= 180) {
-                    slider.value = novoValor;
-                    window.nivelarCropper(novoValor);
-                }
-            }
-        };
-
-        window.cancelarScannerTotal = function() {
-            const modalCrop = document.getElementById("modalCropperScanner");
-            if (modalCrop) { modalCrop.classList.add("hidden"); modalCrop.classList.remove("flex"); }
-            if (cropperInstancia) cropperInstancia.destroy();
-            if (arrayPaginasEscaneadas.length === 0) window.limparModosUpload();
-        };
-
-        window.avancarParaFiltros = function() {
-            if (!cropperInstancia) return;
-            const canvasCortado = cropperInstancia.getCroppedCanvas({ fillColor: '#fff' });
-            larguraCrop = canvasCortado.width;
-            alturaCrop = canvasCortado.height;
-            
-            const ctxBruto = canvasCortado.getContext('2d');
-            canvasOriginalContextData = ctxBruto.getImageData(0, 0, larguraCrop, alturaCrop);
-
-            caixasTexto = [{
-                id: Date.now(),
-                texto: "",
-                posicao: { x: 40, y: alturaCrop - 150 },
-                cor: "#000000",
-                tamanhoFonte: 24,
-                larguraCaixa: Math.min(400, larguraCrop - 80),
-                dimensaoCalculada: { w: 400, h: 40 }
-            }];
-            indiceCaixaTextoAtiva = 0;
-
-            posicaoAssinatura = { x: larguraCrop - 220, y: alturaCrop - 150 };
-            imgAssinaturaElemento = null;
-            
-            const slB = document.getElementById("sliderBrilho"); if (slB) slB.value = 0;
-            const slC = document.getElementById("sliderContraste"); if (slC) slC.value = 0;
-            
-            const pAss = document.getElementById("painelControleAssinatura");
-            if (pAss) { pAss.classList.add("hidden"); pAss.classList.remove("flex"); }
-            
-            const txtBtnAss = document.getElementById("txtBtnAssinatura");
-            if (txtBtnAss) txtBtnAss.innerText = "Adicionar Assinatura";
-
-            const slLarg = document.getElementById("sliderLarguraCaixaTexto");
-            if (slLarg) {
-                slLarg.max = larguraCrop;
-                slLarg.value = Math.min(400, larguraCrop - 80);
-            }
-
-            const modalCrop = document.getElementById("modalCropperScanner");
-            if (modalCrop) { modalCrop.classList.add("hidden"); modalCrop.classList.remove("flex"); }
-            
-            const modalFiltros = document.getElementById("modalFiltrosScanner");
-            if (modalFiltros) { modalFiltros.classList.remove("hidden"); modalFiltros.classList.add("flex"); }
-
-            const canvasLive = document.getElementById("canvasLivePreview");
-            if (canvasLive) {
-                canvasLive.width = larguraCrop;
-                canvasLive.height = alturaCrop;
-                configurarEventosArrastoCanvas(canvasLive);
-            }
-            
-            sincronizarPainelComCaixaAtiva();
-            window.aplicarFiltroBase('pb'); 
-        };
-
-        window.voltarParaCropper = function() {
-            const modalFiltros = document.getElementById("modalFiltrosScanner");
-            if (modalFiltros) { modalFiltros.classList.add("hidden"); modalFiltros.classList.remove("flex"); }
-            
-            const modalCrop = document.getElementById("modalCropperScanner");
-            if (modalCrop) { modalCrop.classList.remove("hidden"); modalCrop.classList.add("flex"); }
-        };
-
-        window.aplicarFiltroBase = function(tipo) {
-            window.filtroAtivo = tipo;
-            const filtros = ['original', 'auto', 'cor', 'cinza', 'pb'];
-            filtros.forEach(f => {
-                const icon = document.getElementById('iconFiltro_' + f);
-                const txt = document.getElementById('txtFiltro_' + f);
-                if (icon && txt) {
-                    if (f === tipo) {
-                        icon.classList.add('filtro-ativo');
-                        txt.classList.replace('text-gray-400', 'text-blue-400');
-                    } else {
-                        icon.classList.remove('filtro-ativo');
-                        txt.classList.replace('text-blue-400', 'text-gray-400');
-                    }
-                }
-            });
-
-            const slB = document.getElementById("sliderBrilho"); if (slB) slB.value = 0;
-            const slC = document.getElementById("sliderContraste"); if (slC) slC.value = (tipo === 'pb') ? 20 : 0; 
-            window.renderizarFiltroAtual(true);
-        };
-
-        window.adicionarNovaCaixaTexto = function() {
-            const novaCaixa = {
-                id: Date.now(),
-                texto: "Novo Texto",
-                posicao: { x: 40, y: 60 + (caixasTexto.length * 30) },
-                cor: "#000000",
-                tamanhoFonte: 24,
-                larguraCaixa: Math.min(300, larguraCrop - 80),
-                dimensaoCalculada: { w: 300, h: 40 }
-            };
-            caixasTexto.push(novaCaixa);
-            indiceCaixaTextoAtiva = caixasTexto.length - 1;
-            sincronizarPainelComCaixaAtiva();
-            window.renderizarFiltroAtual(true);
-        };
-
-        window.removerCaixaTextoAtiva = function() {
-            if (indiceCaixaTextoAtiva !== null && caixasTexto.length > 0) {
-                caixasTexto.splice(indiceCaixaTextoAtiva, 1);
-                indiceCaixaTextoAtiva = caixasTexto.length > 0 ? caixasTexto.length - 1 : null;
-                sincronizarPainelComCaixaAtiva();
-                window.renderizarFiltroAtual(true);
-            }
-        };
-
-        function sincronizarPainelComCaixaAtiva() {
-            const painel = document.getElementById("painelEdicaoCaixaAtiva");
-            const msg = document.getElementById("msgSemCaixaTexto");
-
-            if (indiceCaixaTextoAtiva !== null && caixasTexto[indiceCaixaTextoAtiva]) {
-                const caixa = caixasTexto[indiceCaixaTextoAtiva];
-                if (painel) { painel.classList.remove("hidden"); painel.classList.add("flex"); }
-                if (msg) msg.classList.add("hidden");
-
-                const inTxt = document.getElementById("inputTextoCanvas"); if (inTxt) inTxt.value = caixa.texto;
-                const corTxt = document.getElementById("corTextoCanvas"); if (corTxt) corTxt.value = caixa.cor;
-                const slFonte = document.getElementById("sliderTamanhoFonte"); if (slFonte) slFonte.value = caixa.tamanhoFonte;
-                const slLarg = document.getElementById("sliderLarguraCaixaTexto"); 
-                if (slLarg) { slLarg.max = larguraCrop; slLarg.value = caixa.larguraCaixa; }
-            } else {
-                if (painel) { painel.classList.add("hidden"); painel.classList.remove("flex"); }
-                if (msg) msg.classList.remove("hidden");
-            }
-        }
-
-        window.atualizarTextoCaixaAtiva = function() {
-            if (indiceCaixaTextoAtiva !== null && caixasTexto[indiceCaixaTextoAtiva]) {
-                const el = document.getElementById("inputTextoCanvas");
-                if (el) caixasTexto[indiceCaixaTextoAtiva].texto = el.value;
-                window.renderizarFiltroAtual(true);
-            }
-        };
-
-        window.atualizarCorCaixaAtiva = function() {
-            if (indiceCaixaTextoAtiva !== null && caixasTexto[indiceCaixaTextoAtiva]) {
-                const el = document.getElementById("corTextoCanvas");
-                if (el) caixasTexto[indiceCaixaTextoAtiva].cor = el.value;
-                window.renderizarFiltroAtual(true);
-            }
-        };
-
-        window.atualizarTamanhoCaixaAtiva = function() {
-            if (indiceCaixaTextoAtiva !== null && caixasTexto[indiceCaixaTextoAtiva]) {
-                const el = document.getElementById("sliderTamanhoFonte");
-                if (el) caixasTexto[indiceCaixaTextoAtiva].tamanhoFonte = parseInt(el.value);
-                window.renderizarFiltroAtual(true);
-            }
-        };
-
-        window.atualizarLarguraCaixaAtiva = function() {
-            if (indiceCaixaTextoAtiva !== null && caixasTexto[indiceCaixaTextoAtiva]) {
-                const el = document.getElementById("sliderLarguraCaixaTexto");
-                if (el) caixasTexto[indiceCaixaTextoAtiva].larguraCaixa = parseInt(el.value);
-                window.renderizarFiltroAtual(true);
-            }
-        };
-
-        function desenharTextoEstiloDocumentoAutoAjustavel(ctx, texto, x, y, larguraCaixaMax, tamanhoFonteDesejado, cor) {
-            ctx.fillStyle = cor;
-            ctx.textBaseline = "top";
-            
-            let tamanhoFonteFinal = tamanhoFonteDesejado;
-            let linhasFinais = [];
-            let alturaLinha = tamanhoFonteFinal * 1.25;
-
-            while (tamanhoFonteFinal > 8) {
-                ctx.font = `${tamanhoFonteFinal}px Arial`;
-                alturaLinha = tamanhoFonteFinal * 1.25;
-                
-                let linhasBrutas = texto.split('\n');
-                linhasFinais = [];
-                let palavraExcedeLargura = false;
-
-                for (let i = 0; i < linhasBrutas.length; i++) {
-                    let palavras = linhasBrutas[i].split(' ');
-                    let linhaAtual = '';
-
-                    for (let n = 0; n < palavras.length; n++) {
-                        let larguraPalavraUnica = ctx.measureText(palavras[n]).width;
-                        if (larguraPalavraUnica > larguraCaixaMax) {
-                            palavraExcedeLargura = true;
-                            break;
-                        }
-
-                        let linhaTeste = linhaAtual + palavras[n] + ' ';
-                        let larguraTeste = ctx.measureText(linhaTeste).width;
-
-                        if (larguraTeste > larguraCaixaMax && n > 0) {
-                            linhasFinais.push(linhaAtual);
-                            linhaAtual = palavras[n] + ' ';
-                        } else {
-                            linhaAtual = linhaTeste;
-                        }
-                    }
-                    if (palavraExcedeLargura) break;
-                    linhasFinais.push(linhaAtual);
-                }
-
-                if (!palavraExcedeLargura) break;
-                tamanhoFonteFinal--; 
-            }
-
-            for (let k = 0; k < linhasFinais.length; k++) {
-                ctx.fillText(linhasFinais[k].trim(), x, y + (k * alturaLinha));
-            }
-
-            return {
-                w: larguraCaixaMax,
-                h: Math.max(alturaLinha, linhasFinais.length * alturaLinha)
-            };
-        }
-
-        window.renderizarFiltroAtual = function(mostrarGuias = true) {
-            const canvasLive = document.getElementById("canvasLivePreview");
-            if (!canvasLive || !canvasOriginalContextData) return;
-            const ctxLive = canvasLive.getContext("2d");
-            
-            const slB = document.getElementById("sliderBrilho");
-            const slC = document.getElementById("sliderContraste");
-            let valBrilho = slB ? parseInt(slB.value) : 0;
-            let valContraste = slC ? parseInt(slC.value) : 0;
-
-            if (indiceCaixaTextoAtiva !== null && caixasTexto[indiceCaixaTextoAtiva]) {
-                const lblF = document.getElementById("lblTamanhoFonte");
-                const lblL = document.getElementById("lblLarguraCaixaTexto");
-                if (lblF) lblF.innerText = caixasTexto[indiceCaixaTextoAtiva].tamanhoFonte + "px";
-                if (lblL) lblL.innerText = caixasTexto[indiceCaixaTextoAtiva].larguraCaixa + "px";
-            }
-
-            // 1. Imagem Base
-            ctxLive.putImageData(canvasOriginalContextData, 0, 0);
-            
-            // 2. Filtros
-            if (window.filtroAtivo !== 'original' || valBrilho !== 0 || valContraste !== 0) {
-                const imgData = ctxLive.getImageData(0, 0, larguraCrop, alturaCrop);
-                const data = imgData.data;
-                const fatorContraste = (259 * (valContraste + 255)) / (255 * (259 - valContraste));
-
-                for (let i = 0; i < data.length; i += 4) {
-                    let r = data[i], g = data[i+1], b = data[i+2];
-
-                    if (window.filtroAtivo === 'pb' || window.filtroAtivo === 'cinza') {
-                        let gray = 0.34 * r + 0.5 * g + 0.16 * b;
-                        r = g = b = gray;
-                    } else if (window.filtroAtivo === 'auto') {
-                        r *= 1.1; g *= 1.1; b *= 1.1;
-                    } else if (window.filtroAtivo === 'cor') {
-                        let media = (r + g + b) / 3;
-                        r += (r - media) * 0.4; g += (g - media) * 0.4; b += (b - media) * 0.4;
-                    }
-
-                    r += valBrilho; g += valBrilho; b += valBrilho;
-
-                    if (valContraste !== 0) {
-                        r = fatorContraste * (r - 128) + 128;
-                        g = fatorContraste * (g - 128) + 128;
-                        b = fatorContraste * (b - 128) + 128;
-                    }
-
-                    if (window.filtroAtivo === 'pb') {
-                        let limiar = 140; 
-                        r = r > limiar ? 255 : (r < 90 ? 0 : r - 20);
-                        g = b = r;
-                    }
-
-                    data[i] = Math.min(255, Math.max(0, r));
-                    data[i+1] = Math.min(255, Math.max(0, g));
-                    data[i+2] = Math.min(255, Math.max(0, b));
-                }
-                ctxLive.putImageData(imgData, 0, 0);
-            }
-
-            // 3. Renderiza Caixas de Texto
-            caixasTexto.forEach((caixa, index) => {
-                if (caixa.texto.trim() !== "") {
-                    caixa.dimensaoCalculada = desenharTextoEstiloDocumentoAutoAjustavel(
-                        ctxLive, caixa.texto, caixa.posicao.x, caixa.posicao.y, caixa.larguraCaixa, caixa.tamanhoFonte, caixa.cor
-                    );
-
-                    if (mostrarGuias) {
-                        let eSelecionada = (index === indiceCaixaTextoAtiva);
-                        ctxLive.strokeStyle = eSelecionada ? "rgba(59, 130, 246, 0.9)" : "rgba(156, 163, 175, 0.4)";
-                        ctxLive.lineWidth = eSelecionada ? 2 : 1;
-                        ctxLive.setLineDash([4, 4]);
-                        ctxLive.strokeRect(caixa.posicao.x - 4, caixa.posicao.y - 4, caixa.dimensaoCalculada.w + 8, caixa.dimensaoCalculada.h + 8);
-                        ctxLive.setLineDash([]);
-                    }
-                }
-            });
-
-            // 4. Renderiza Assinatura
-            if (imgAssinaturaElemento) {
-                const slEsc = document.getElementById("sliderEscalaAssinatura");
-                let escala = slEsc ? parseInt(slEsc.value) / 100 : 0.5;
-                let larguraAss = (larguraCrop * 0.35) * escala;
-                let alturaAss = (imgAssinaturaElemento.height * larguraAss) / imgAssinaturaElemento.width;
-                ctxLive.drawImage(imgAssinaturaElemento, posicaoAssinatura.x, posicaoAssinatura.y, larguraAss, alturaAss);
-            }
-        };
-
-        function configurarEventosArrastoCanvas(canvas) {
-            const obterPosicaoRealCanvas = (e) => {
-                const rect = canvas.getBoundingClientRect();
-                const escalaX = canvas.width / rect.width;
-                const escalaY = canvas.height / rect.height;
-                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                return {
-                    x: (clientX - rect.left) * escalaX,
-                    y: (clientY - rect.top) * escalaY
-                };
-            };
-
-            const iniciarArrasto = (e) => {
-                const pos = obterPosicaoRealCanvas(e);
-                
-                if (imgAssinaturaElemento) {
-                    const slEsc = document.getElementById("sliderEscalaAssinatura");
-                    let escala = slEsc ? parseInt(slEsc.value) / 100 : 0.5;
-                    let larguraAss = (larguraCrop * 0.35) * escala;
-                    let alturaAss = (imgAssinaturaElemento.height * larguraAss) / imgAssinaturaElemento.width;
-                    
-                    if (pos.x >= posicaoAssinatura.x && pos.x <= posicaoAssinatura.x + larguraAss &&
-                        pos.y >= posicaoAssinatura.y && pos.y <= posicaoAssinatura.y + alturaAss) {
-                        elementoSendoArrastado = 'assinatura';
-                        offsetArrasto = { x: pos.x - posicaoAssinatura.x, y: pos.y - posicaoAssinatura.y };
-                        return;
-                    }
-                }
-
-                for (let i = caixasTexto.length - 1; i >= 0; i--) {
-                    let caixa = caixasTexto[i];
-                    if (caixa.texto.trim() !== "") {
-                        if (pos.x >= caixa.posicao.x - 10 && pos.x <= caixa.posicao.x + caixa.dimensaoCalculada.w + 10 &&
-                            pos.y >= caixa.posicao.y - 10 && pos.y <= caixa.posicao.y + caixa.dimensaoCalculada.h + 10) {
-                            
-                            indiceCaixaTextoAtiva = i;
-                            sincronizarPainelComCaixaAtiva();
-                            
-                            elementoSendoArrastado = 'texto_' + i;
-                            offsetArrasto = { x: pos.x - caixa.posicao.x, y: pos.y - caixa.posicao.y };
-                            window.renderizarFiltroAtual(true);
-                            return;
-                        }
-                    }
-                }
-            };
-
-            const moverArrasto = (e) => {
-                if (!elementoSendoArrastado) return;
-                e.preventDefault();
-                const pos = obterPosicaoRealCanvas(e);
-
-                if (elementoSendoArrastado.startsWith('texto_')) {
-                    let idx = parseInt(elementoSendoArrastado.split('_')[1]);
-                    if (caixasTexto[idx]) {
-                        caixasTexto[idx].posicao.x = pos.x - offsetArrasto.x;
-                        caixasTexto[idx].posicao.y = pos.y - offsetArrasto.y;
-                    }
-                } else if (elementoSendoArrastado === 'assinatura') {
-                    posicaoAssinatura.x = pos.x - offsetArrasto.x;
-                    posicaoAssinatura.y = pos.y - offsetArrasto.y;
-                }
-                window.renderizarFiltroAtual(true);
-            };
-
-            const finalizarArrasto = () => { elementoSendoArrastado = null; };
-
-            canvas.onmousedown = iniciarArrasto;
-            canvas.onmousemove = moverArrasto;
-            canvas.onmouseup = finalizarArrasto;
-
-            canvas.ontouchstart = iniciarArrasto;
-            canvas.ontouchmove = moverArrasto;
-            canvas.ontouchend = finalizarArrasto;
-        }
-
-        window.abrirModalAssinatura = function() {
-            const modal = document.getElementById("modalAssinatura");
-            if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
-            
-            const canvasAss = document.getElementById("canvasAssinatura");
-            if (!canvasAss) return;
-            canvasAss.width = canvasAss.offsetWidth;
-            canvasAss.height = canvasAss.offsetHeight;
-            
-            ctxAssinaturaPad = canvasAss.getContext("2d");
-            ctxAssinaturaPad.strokeStyle = "#000000";
-            ctxAssinaturaPad.lineWidth = 2.5;
-            ctxAssinaturaPad.lineCap = "round";
-
-            const getPosPad = (e) => {
-                const rect = canvasAss.getBoundingClientRect();
-                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                return { x: clientX - rect.left, y: clientY - rect.top };
-            };
-
-            const iniciar = (e) => { assinandoPad = true; const p = getPosPad(e); ctxAssinaturaPad.beginPath(); ctxAssinaturaPad.moveTo(p.x, p.y); };
-            const desenhar = (e) => { if (!assinandoPad) return; const p = getPosPad(e); ctxAssinaturaPad.lineTo(p.x, p.y); ctxAssinaturaPad.stroke(); };
-            const parar = () => { assinandoPad = false; };
-
-            canvasAss.onmousedown = iniciar; canvasAss.onmousemove = desenhar; canvasAss.onmouseup = parar;
-            canvasAss.ontouchstart = iniciar; canvasAss.ontouchmove = desenhar; canvasAss.ontouchend = parar;
-        };
-
-        window.limparAssinaturaPad = function() {
-            const canvasAss = document.getElementById("canvasAssinatura");
-            if (ctxAssinaturaPad && canvasAss) {
-                ctxAssinaturaPad.clearRect(0, 0, canvasAss.width, canvasAss.height);
-            }
-        };
-
-        window.fecharModalAssinatura = function() {
-            const modal = document.getElementById("modalAssinatura");
-            if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
-        };
-
-        window.salvarAssinaturaParaCanvas = function() {
-            const canvasAss = document.getElementById("canvasAssinatura");
-            if (!canvasAss) return;
-            const dataUrl = canvasAss.toDataURL("image/png");
-            
-            const img = new Image();
-            img.onload = function() {
-                imgAssinaturaElemento = img;
-                const pAss = document.getElementById("painelControleAssinatura");
-                if (pAss) { pAss.classList.remove("hidden"); pAss.classList.add("flex"); }
-                
-                const txtBtnAss = document.getElementById("txtBtnAssinatura");
-                if (txtBtnAss) txtBtnAss.innerText = "Refazer Assinatura";
-                
-                window.fecharModalAssinatura();
-                window.renderizarFiltroAtual(true);
-            };
-            img.src = dataUrl;
-        };
-
-        window.removerAssinaturaCanvas = function() {
-            imgAssinaturaElemento = null;
-            const pAss = document.getElementById("painelControleAssinatura");
-            if (pAss) { pAss.classList.add("hidden"); pAss.classList.remove("flex"); }
-            
-            const txtBtnAss = document.getElementById("txtBtnAssinatura");
-            if (txtBtnAss) txtBtnAss.innerText = "Adicionar Assinatura";
-            
-            window.renderizarFiltroAtual(true);
-        };
-
-        window.confirmarSalvarPaginaScanner = function() {
-            window.renderizarFiltroAtual(false);
-            const canvasLive = document.getElementById("canvasLivePreview");
-            if (!canvasLive) return;
-            const imgSalvaDataUrl = canvasLive.toDataURL('image/jpeg', 0.85); 
-
-            arrayPaginasEscaneadas.push(imgSalvaDataUrl);
-            modoUploadAtual = 'scanner';
-
-            const modalFiltros = document.getElementById("modalFiltrosScanner");
-            if (modalFiltros) { modalFiltros.classList.add("hidden"); modalFiltros.classList.remove("flex"); }
-            if (cropperInstancia) cropperInstancia.destroy();
-            window.renderizarCarrinhoScanner();
-        };
-
-        window.renderizarCarrinhoScanner = function() {
-            const areaEscolha = document.getElementById("areaEscolhaModo");
-            const areaPrev = document.getElementById("areaPreviewScanner");
-            const btnSalvar = document.getElementById("btnSalvarUpload");
-            
-            if (areaEscolha) areaEscolha.classList.add("hidden");
-            if (areaPrev) { areaPrev.classList.remove("hidden"); areaPrev.classList.add("flex"); }
-            if (btnSalvar) { btnSalvar.classList.remove("hidden"); btnSalvar.classList.add("flex"); }
-
-            const grid = document.getElementById("gridPaginasScanner");
-            if (grid) grid.innerHTML = "";
-            
-            const txtQtd = document.getElementById("txtQtdPaginas");
-            if (txtQtd) txtQtd.innerText = `${arrayPaginasEscaneadas.length} páginas`;
-
-            arrayPaginasEscaneadas.forEach((pagData, index) => {
-                let imgUrl = typeof pagData === 'string' ? pagData : pagData.finalDataUrl;
-                const div = document.createElement("div");
-                div.className = "relative border-2 border-gray-700 rounded-lg overflow-hidden h-24 bg-gray-900 group";
-                div.innerHTML = `
-                    <img src="${imgUrl}" class="w-full h-full object-cover opacity-80">
-                    <div class="absolute bottom-0 left-0 right-0 bg-black/80 text-[9px] text-center py-1 font-bold shadow-inner">Pág ${index + 1}</div>
-                    
-                    <div class="absolute top-1 right-1 flex gap-1">
-                        <button onclick="window.removerPaginaScanner(${index})" class="bg-red-600 hover:bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-lg"><i class="fas fa-times text-[9px]"></i></button>
-                    </div>
-                `;
-                if (grid) grid.appendChild(div);
-            });
-            if (arrayPaginasEscaneadas.length === 0) window.limparModosUpload();
-        };
-
-        window.removerPaginaScanner = function(index) {
-            arrayPaginasEscaneadas.splice(index, 1);
-            window.renderizarCarrinhoScanner();
-        };
-
         window.limparModosUpload = function() {
             modoUploadAtual = null;
             arquivosFilaEnvio = [];
             arrayPaginasEscaneadas = [];
-            indicePaginaSendoEditada = null;
-            
-            const inCam = document.getElementById("inputArquivoCamera"); if (inCam) inCam.value = "";
-            const inGal = document.getElementById("inputArquivoGaleria"); if (inGal) inGal.value = "";
-            const inScanCam = document.getElementById("inputArquivoScannerCamera"); if (inScanCam) inScanCam.value = "";
-            const inScanGal = document.getElementById("inputArquivoScannerGaleria"); if (inScanGal) inScanGal.value = "";
-            const inGen = document.getElementById("inputArquivoGenerico"); if (inGen) inGen.value = "";
             
             const areaEscolha = document.getElementById("areaEscolhaModo"); if (areaEscolha) areaEscolha.classList.remove("hidden");
             const areaPrevArq = document.getElementById("areaPreviewArquivos"); if (areaPrevArq) { areaPrevArq.classList.add("hidden"); areaPrevArq.classList.remove("flex"); }
-            const areaPrevScan = document.getElementById("areaPreviewScanner"); if (areaPrevScan) { areaPrevScan.classList.add("hidden"); areaPrevScan.classList.remove("flex"); }
             const btnSalvar = document.getElementById("btnSalvarUpload"); if (btnSalvar) { btnSalvar.classList.add("hidden"); btnSalvar.classList.remove("flex"); }
         };
 
@@ -1355,7 +788,6 @@
             const container = document.getElementById("listaArquivosFila");
             if (!container) return;
             container.innerHTML = "";
-            
             const txtQtd = document.getElementById("txtQtdFila");
             if (txtQtd) txtQtd.innerText = `${arquivosFilaEnvio.length} itens`;
             
@@ -1363,8 +795,8 @@
                 let isImg = file.type.startsWith('image/');
                 let iconeLateral = isImg ? `<i class="fas fa-image text-blue-400 mr-2 text-sm"></i>` : `<i class="fas fa-file-alt text-purple-400 mr-2 text-sm"></i>`;
                 const div = document.createElement("div");
-                div.className = "flex justify-between items-center bg-gray-800 p-2.5 rounded-lg border border-gray-700 text-xs hover:border-gray-600 transition";
-                div.innerHTML = `<div class="truncate flex-1 text-gray-300 pr-2 flex items-center font-medium">${iconeLateral} ${file.name}</div><button onclick="window.removerArquivoFila(${index})" class="text-gray-500 hover:text-red-400 p-1.5 transition rounded-full hover:bg-gray-700/50"><i class="fas fa-times"></i></button>`;
+                div.className = "flex justify-between items-center bg-gray-800 p-2.5 rounded-lg border border-gray-700 text-xs";
+                div.innerHTML = `<div class="truncate flex-1 text-gray-300 pr-2 flex items-center">${iconeLateral} ${file.name}</div><button onclick="window.removerArquivoFila(${index})" class="text-gray-500 hover:text-red-400 p-1.5 transition rounded-full"><i class="fas fa-times"></i></button>`;
                 container.appendChild(div);
             });
             if (arquivosFilaEnvio.length === 0) window.limparModosUpload();
@@ -1436,7 +868,7 @@
                 const pdfDocLib = await window.PDFLib.PDFDocument.load(arrayBuffer); 
                 const pdfDocJs = await window.pdfjsLib.getDocument({data: arrayBuffer}).promise; 
 
-                let pacienteAtual = "Paciente Não Identificado";
+                let pacienteAtual = "Desconhecido";
                 let paginasPorPaciente = {}; 
                 const worker = await Tesseract.createWorker('por');
 
@@ -1444,16 +876,21 @@
                     if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Lendo Pág. ${pageNum}...`;
                     try {
                         const page = await pdfDocJs.getPage(pageNum);
-                        const viewport = page.getViewport({ scale: 2.0 });
-                        const canvas = document.createElement('canvas');
-                        const ctx = canvas.getContext('2d');
-                        canvas.height = viewport.height;
-                        canvas.width = viewport.width;
-                        await page.render({ canvasContext: ctx, viewport: viewport }).promise;
-                        
-                        const imgBw = await preProcessarImagemParaOCR(canvas.toDataURL('image/jpeg'));
-                        const ret = await worker.recognize(imgBw);
-                        const texto = ret.data.text;
+                        const textContent = await page.getTextContent();
+                        let texto = textContent.items.map(item => item.str).join(' ');
+
+                        if (!texto.toLowerCase().includes("nome do paciente")) {
+                            const viewport = page.getViewport({ scale: 2.0 });
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            canvas.height = viewport.height;
+                            canvas.width = viewport.width;
+                            await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                            
+                            const imgBw = await preProcessarImagemParaOCR(canvas.toDataURL('image/jpeg'));
+                            const ret = await worker.recognize(imgBw);
+                            texto = ret.data.text;
+                        }
                         
                         // Busca RIGOROSA para evitar separar por rabiscos aleatórios
                         const match = texto.match(/(?:Nome|Noma|Mome)\s+d[oa]\s+paciente\s*[:\-\.]*\s*([^\r\n]+)/i);
@@ -1528,13 +965,22 @@
             }
         };
 
-        // ESTRUTURA DE PASTAS E RENDERIZAÇÃO LIMPA E MINIMALISTA
-        function carregarGaleriaDeAnexos() {
-            const container = document.getElementById("listaAnexos");
-            if (container && todosAnexosNaMemoria.length === 0) {
-                container.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center py-10"><i class="fas fa-circle-notch fa-spin text-4xl text-blue-500 mb-3"></i><p class="text-gray-400 text-sm animate-pulse">Sincronizando base de dados...</p></div>`;
-            }
+        // ESTRUTURA DE PASTAS E RENDERIZAÇÃO LIMPA E MINIMALISTA (SEM ÍCONES EXTRAS)
+        function renderizarCardPasta(container, nomePasta, subtitulo, onclickAction) {
+            const card = document.createElement("div");
+            card.className = "bg-gray-800 border border-gray-700 p-3 rounded-xl shadow-md flex items-center gap-4 hover:border-blue-500/50 hover:bg-gray-700/50 transition cursor-pointer active:scale-95";
+            card.setAttribute("onclick", onclickAction);
+            card.innerHTML = `
+                <div class="flex-1 min-w-0">
+                    <h4 class="font-bold text-gray-200 text-sm truncate block">${nomePasta}</h4>
+                    <p class="text-[10px] text-gray-400 mt-0.5">${subtitulo}</p>
+                </div>
+                <i class="fas fa-chevron-right text-gray-600 text-xs"></i>
+            `;
+            container.appendChild(card);
+        }
 
+        function carregarGaleriaDeAnexos() {
             onValue(dbRef(db, 'arquivos_anexos'), (snapshot) => {
                 todosAnexosNaMemoria = [];
                 const selectUsuario = document.getElementById("filtroUsuario");
@@ -1544,10 +990,8 @@
                     snapshot.forEach(child => { 
                         const anexo = { id: child.key, ...child.val() };
                         if (!anexo.tipo) anexo.tipo = 'imagem'; 
-                        if (perfilUsuario === "administrador" || anexo.statusExclusao !== "pendente_aprovacao") {
-                            todosAnexosNaMemoria.push(anexo);
-                            if (anexo.enviadoPor) usuariosUnicos.add(anexo.enviadoPor);
-                        }
+                        todosAnexosNaMemoria.push(anexo);
+                        if (anexo.enviadoPor) usuariosUnicos.add(anexo.enviadoPor);
                     });
                     todosAnexosNaMemoria.sort((a, b) => b.dataEnvio - a.dataEnvio);
                 }
@@ -1563,8 +1007,8 @@
             });
         }
 
-        window.abrirPasta = function(rota) {
-            window.pastaAbertaAtual = rota;
+        window.abrirPasta = function(dataSTR) {
+            window.pastaAbertaAtual = dataSTR;
             window.aplicarFiltrosNaGaleria();
         };
 
@@ -1588,29 +1032,41 @@
             const areaBreadcrumb = document.getElementById("areaBreadcrumb");
             if (!container) return;
             container.innerHTML = "";
+            
+            let anexosFiltrados = todosAnexosNaMemoria.filter(arq => {
+                const dataObj = new Date(arq.dataEnvio);
+                const dataFormatadaDia = dataObj.toLocaleDateString('pt-BR'); 
+                const mesAnoFormatado = String(dataObj.getMonth() + 1).padStart(2, '0') + '/' + dataObj.getFullYear();
+                
+                const passaTexto = arq.nome.toLowerCase().includes(termoBusca) || 
+                                   dataFormatadaDia.includes(termoBusca) || 
+                                   mesAnoFormatado.includes(termoBusca) ||
+                                   (arq.pastaPaciente && arq.pastaPaciente.toLowerCase().includes(termoBusca));
+                
+                const passaUsuario = usuarioFiltro === "todos" || arq.enviadoPor === usuarioFiltro;
+                let passaData = true;
+                dataObj.setHours(0,0,0,0);
+                if (dataInicio) { const dataIni = new Date(dataInicio + "T00:00:00"); if (dataObj < dataIni) passaData = false; }
+                if (dataFim) { const dataF = new Date(dataFim + "T23:59:59"); if (dataObj > dataF) passaData = false; }
+                return passaTexto && passaUsuario && passaData;
+            });
 
-            let anexosFiltrados = todosAnexosNaMemoria;
-            if (isBuscaAtiva) {
-                anexosFiltrados = todosAnexosNaMemoria.filter(arq => 
-                    arq.nome.toLowerCase().includes(termoBusca) || 
-                    (arq.pastaPaciente && arq.pastaPaciente.toLowerCase().includes(termoBusca))
-                );
-            }
+            const isBuscaAtiva = termoBusca.length > 0;
 
             const txtInfo = document.getElementById("txtInfoVista");
             const txtCount = document.getElementById("txtContadorArquivos");
 
-            // NIVEL 0: RAIZ - Apenas Relatório Geral e Pacientes
+            // NIVEL 0: RAIZ - Relatório Geral e Pacientes
             if (window.pastaAbertaAtual === null && !isBuscaAtiva) {
-                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<span class="text-gray-300 font-bold"><i class="fas fa-folder text-blue-500 mr-2"></i> Pastas do Sistema</span>`;
+                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<span class="text-gray-300 font-bold">Pastas do Sistema</span>`;
                 if (txtInfo) txtInfo.innerText = "Navegando nas Pastas";
 
                 const arqsGeral = anexosFiltrados.filter(a => a.pasta && a.pasta.startsWith("Relatorio_Geral"));
                 const arqsPacientes = anexosFiltrados.filter(a => a.pastaPaciente);
 
-                // Renderiza o visual bonito, sem emojis no título e texto menor
-                renderizarCardPasta(container, "Relatório Geral", `${arqsGeral.length} itens salvos`, "window.abrirPasta('relatorio_geral')", false);
-                renderizarCardPasta(container, "Pacientes", `${arqsPacientes.length} evoluções`, "window.abrirPasta('pacientes_root')", true);
+                // Pastas limpas (Sem Emojis, Sem Ícone, Fonte Menor)
+                renderizarCardPasta(container, "Relatório Geral", `${arqsGeral.length} itens salvos`, "window.abrirPasta('relatorio_geral')");
+                renderizarCardPasta(container, "Pacientes", `${arqsPacientes.length} evoluções`, "window.abrirPasta('pacientes_root')");
 
                 if (txtCount) txtCount.innerText = `2 pastas`;
 
@@ -1633,7 +1089,7 @@
 
                 pacientesNomes.forEach(nome => {
                     const qtd = agrupamentoPacientes[nome].length;
-                    renderizarCardPasta(container, nome, `${qtd} evoluções`, `window.abrirPasta('paciente:${nome}')`, true);
+                    renderizarCardPasta(container, nome, `${qtd} evoluções`, `window.abrirPasta('paciente:${nome}')`);
                 });
                 if (txtCount) txtCount.innerText = `${pacientesNomes.length} pacientes`;
             }
@@ -1658,58 +1114,33 @@
             }
             // BUSCA GLOBAL
             else {
-                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="document.getElementById('inputBuscaAnexo').value=''; window.aplicarFiltrosNaGaleria();" class="text-gray-400 hover:text-white transition flex items-center gap-2"><i class="fas fa-arrow-left"></i> Limpar</button><span class="text-gray-600 mx-2">/</span><span class="text-blue-400 font-bold">Resultados</span>`;
+                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="document.getElementById('inputBuscaAnexo').value=''; window.aplicarFiltrosNaGaleria();" class="text-gray-400 hover:text-white transition flex items-center gap-2"><i class="fas fa-arrow-left"></i> Limpar Busca</button><span class="text-gray-600 mx-2">/</span><span class="text-blue-400 font-bold">Resultados</span>`;
                 if (txtInfo) txtInfo.innerText = "Resultados da Pesquisa";
                 renderizarArquivosFinais(anexosFiltrados, container);
                 if (txtCount) txtCount.innerText = `${anexosFiltrados.length} encontrados`;
             }
         };
 
-        // RENDERIZAÇÃO DOS CARDS DE PASTAS
-        function renderizarCardPasta(container, nomePasta, subtitulo, onclickAction, isPaciente = false) {
-            const card = document.createElement("div");
-            card.className = "bg-gray-800 border border-gray-700 p-3 rounded-lg shadow-sm flex items-center justify-between hover:bg-gray-700/50 transition cursor-pointer active:scale-95";
-            card.setAttribute("onclick", onclickAction);
-            card.innerHTML = `
-                <div class="flex-1 min-w-0">
-                    <span class="font-bold text-gray-200 text-sm truncate uppercase block">${nomePasta}</span>
-                    <p class="text-[10px] text-gray-400 mt-0.5">${subtitulo}</p>
-                </div>
-                <i class="fas fa-chevron-right text-gray-600 text-xs ml-2"></i>
-            `;
-            container.appendChild(card);
-        }
-
-        // RENDERIZAÇÃO DOS CARDS DE ARQUIVOS (PDF E FOTOS)
         function renderizarArquivosFinais(lista, container) {
-            if (lista.length === 0) { container.innerHTML = `<div class="col-span-full py-8 text-center text-gray-500 text-xs">Nenhum documento encontrado.</div>`; return; }
+            if (lista.length === 0) { container.innerHTML = `<div class="col-span-full py-8 text-center text-gray-500 text-sm">Nenhum documento encontrado.</div>`; return; }
             lista.forEach(arq => {
                 const dataObj = new Date(arq.dataEnvio);
                 const dataStr = dataObj.toLocaleDateString('pt-BR');
                 const horaStr = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
                 const nomeSeguro = arq.nome.replace(/'/g, "\\'").replace(/"/g, "&quot;");
 
-                let visualConteudo = renderizarVisualArquivo(arq.tipo.toLowerCase(), arq.url);
+                let icone = `<div class="w-12 h-12 rounded bg-gray-800 border border-gray-700 flex items-center justify-center flex-shrink-0"><i class="fas fa-file-pdf text-xl text-red-500"></i></div>`;
+                if(arq.tipo === 'imagem') icone = `<div class="relative w-12 h-12 rounded bg-gray-800 border border-gray-700 overflow-hidden flex-shrink-0"><img src="${arq.url}" loading="lazy" class="w-full h-full object-cover"></div>`;
 
                 const card = document.createElement("div");
                 card.className = "bg-gray-900 border border-gray-800 p-2.5 rounded-lg shadow flex gap-3 items-center hover:border-blue-500/30 transition cursor-pointer active:scale-95";
                 card.setAttribute("onclick", `window.abrirModalVisualizacao('${arq.id}', '${arq.url}', '${nomeSeguro}', '${arq.tipo}')`);
-                card.innerHTML = `${visualConteudo}<div class="flex-1 min-w-0"><h4 class="font-bold text-white text-[11px] truncate uppercase">${arq.nome}</h4><p class="text-[9px] text-gray-400 mt-0.5"><i class="fas fa-user text-blue-500"></i> @${arq.enviadoPor}</p><p class="text-[9px] text-gray-500"><i class="far fa-clock"></i> ${dataStr} às ${horaStr}</p></div>`;
+                card.innerHTML = `${icone}<div class="flex-1 min-w-0"><h4 class="font-bold text-white text-[11px] truncate uppercase">${arq.nome}</h4><p class="text-[9px] text-gray-500 mt-1"><i class="far fa-clock"></i> ${dataStr} às ${horaStr}</p></div>`;
                 container.appendChild(card);
             });
         }
 
-        function renderizarVisualArquivo(tp, url) {
-            if (['jpg', 'jpeg', 'png', 'imagem'].includes(tp)) { 
-                return `<div class="relative w-12 h-12 rounded bg-gray-800 border border-gray-700 overflow-hidden flex-shrink-0"><div class="absolute inset-0 flex items-center justify-center"><i class="fas fa-spinner fa-spin text-gray-500"></i></div><img src="${url}" loading="lazy" class="absolute inset-0 w-full h-full object-cover z-10 transition-opacity duration-500 opacity-0" onload="this.classList.remove('opacity-0')"></div>`; 
-            } 
-            else if (tp === 'pdf') { return `<div class="w-12 h-12 rounded border border-red-900/50 bg-red-950/30 flex items-center justify-center shadow-inner flex-shrink-0"><i class="fas fa-file-pdf text-xl text-red-500"></i></div>`; } 
-            else if (['xls', 'xlsx', 'csv'].includes(tp)) { return `<div class="w-12 h-12 rounded border border-green-900/50 bg-green-950/30 flex items-center justify-center shadow-inner flex-shrink-0"><i class="fas fa-file-excel text-xl text-green-500"></i></div>`; } 
-            else if (['doc', 'docx'].includes(tp)) { return `<div class="w-12 h-12 rounded border border-blue-900/50 bg-blue-950/30 flex items-center justify-center shadow-inner flex-shrink-0"><i class="fas fa-file-word text-xl text-blue-500"></i></div>`; } 
-            else { return `<div class="w-12 h-12 rounded border border-gray-700 bg-gray-800 flex items-center justify-center shadow-inner flex-shrink-0"><i class="fas fa-file-alt text-xl text-gray-400"></i></div>`; }
-        }
-
-        // VISUALIZAÇÃO, COMPARTILHAMENTO, DOWNLOAD E EXCLUSÃO
+        // COMPARTILHAMENTO NATIVO E VISUALIZAÇÃO
         window.abrirModalVisualizacao = function(id, url, nome, tipo) {
             window.idImagemAtiva = id; window.urlImagemAtiva = url; window.tipoAnexoAtivo = tipo || 'imagem';
             const tCard = document.getElementById("tituloImagemCard"); if (tCard) tCard.innerText = nome;
@@ -1804,14 +1235,8 @@
             const tCard = document.getElementById("tituloImagemCard");
             const nomeArquivo = tCard ? tCard.innerText : "";
             if (!confirm(`⚠️ Tem certeza de que deseja excluir o anexo "${nomeArquivo}"?`)) return;
-            if (perfilUsuario === "administrador") {
-                remove(dbRef(db, 'arquivos_anexos/' + window.idImagemAtiva)).then(() => { window.fecharModalVisualizacao(); }).catch(err => alert("Erro ao excluir: " + err.message));
-            } else {
-                update(dbRef(db, 'arquivos_anexos/' + window.idImagemAtiva), { statusExclusao: "pendente_aprovacao", solicitadoPor: usuarioLogado }).then(() => {
-                    push(dbRef(db, 'notificacoes_sistema'), { titulo: "Solicitação de Exclusão de Anexo", mensagem: `O usuário @${usuarioLogado} solicitou a exclusão do anexo "${nomeArquivo}".`, tipo: "alerta", usuarioSolicitante: usuarioLogado, enviadoPorUid: uidUsuarioLogado, idAnexo: window.idImagemAtiva, timestamp: Date.now(), data: Date.now() });
-                    window.fecharModalVisualizacao();
-                }).catch(err => alert("Erro ao processar: " + err.message));
-            }
+            
+            remove(dbRef(db, 'arquivos_anexos/' + window.idImagemAtiva)).then(() => { window.fecharModalVisualizacao(); }).catch(err => alert("Erro ao excluir: " + err.message));
         };
 
         window.abrirEdicaoNome = function() {
@@ -1870,7 +1295,6 @@
                     } else {
                         usuarioLogado = fallbackUsername;
                         perfilUsuario = "administrador";
-                        dadosUser = { username: usuarioLogado, perfil: "administrador" };
                     }
 
                     const elSidebarNome = document.getElementById("sidebarNomeUsuario");
@@ -1884,9 +1308,6 @@
                     if (perfilUsuario === "administrador") {
                         if (areaSino) areaSino.classList.remove("hidden");
                         if (espacador) espacador.classList.add("hidden");
-                        if (typeof window.inicializarNotificacoes === 'function') {
-                            window.inicializarNotificacoes(dadosUser, "containerNotificacoes", "badgeNotificacoes");
-                        }
                     } else {
                         if (areaSino) areaSino.classList.add("hidden");
                         if (espacador) espacador.classList.remove("hidden");
