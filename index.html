@@ -5,16 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Anexos - Sistema</title>
 
+    <!-- CONFIGURAÇÕES DE PWA E ÍCONES -->
     <meta name="theme-color" content="#030712">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Anexos">
     
+    <!-- Força a busca do ícone pelo caminho real do repositório -->
     <link rel="icon" type="image/png" href="./icon.png">
     <link rel="apple-touch-icon" href="./icon.png">
 
-    <!-- MANIFEST DINÂMICO PARA PWA -->
+    <!-- MANIFEST DINÂMICO PARA PWA (Sem o bloqueio de Blob do GitHub) -->
     <script>
         (function() {
             const baseUrl = window.location.href.split('?')[0].replace(/\/[^\/]*$/, '/');
@@ -45,12 +47,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Bibliotecas para Scanner, Manipulação de PDF, OCR e Leitura de Texto em PDF -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://unpkg.com/tesseract.js@5.0.5/dist/tesseract.min.js"></script>
     
+    <!-- PDF.JS para extrair texto de PDFs upados pelo "Outros Arquivos" -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
@@ -61,11 +65,63 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
         .popup-blur { backdrop-filter: blur(5px); }
+        
         .cropper-view-box { outline: 3px solid rgba(59, 130, 246, 0.9) !important; border-radius: 4px; }
         .cropper-line { background-color: transparent !important; }
-        input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; background: transparent; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; height: 18px; width: 18px; border-radius: 50%; background: #3b82f6; cursor: pointer; margin-top: -7px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #475569; border-radius: 2px; }
+        .cropper-line.line-e { width: 40px !important; right: -20px !important; }
+        .cropper-line.line-w { width: 40px !important; left: -20px !important; }
+        .cropper-line.line-n { height: 40px !important; top: -20px !important; }
+        .cropper-line.line-s { height: 40px !important; bottom: -20px !important; }
+
+        .cropper-point {
+            width: 44px !important;
+            height: 44px !important;
+            background-color: transparent !important;
+            opacity: 1 !important;
+        }
+        .cropper-point::before {
+            content: '';
+            position: absolute;
+            width: 16px; height: 16px;
+            background-color: #3b82f6;
+            border-radius: 50%;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 5px rgba(0,0,0,0.8);
+        }
+        .cropper-point.point-nw { top: -22px !important; left: -22px !important; }
+        .cropper-point.point-ne { top: -22px !important; right: -22px !important; }
+        .cropper-point.point-sw { bottom: -22px !important; left: -22px !important; }
+        .cropper-point.point-se { bottom: -22px !important; right: -22px !important; }
+        .cropper-point.point-n { top: -22px !important; margin-left: -22px !important; }
+        .cropper-point.point-s { bottom: -22px !important; margin-left: -22px !important; }
+        .cropper-point.point-e { right: -22px !important; margin-top: -22px !important; }
+        .cropper-point.point-w { left: -22px !important; margin-top: -22px !important; }
+
+        .filtro-ativo { border-color: #3b82f6 !important; background-color: #1e3a8a !important; color: #60a5fa !important; }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none; 
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none; 
+            height: 18px; width: 18px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            margin-top: -7px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px;
+            cursor: pointer;
+            background: #475569;
+            border-radius: 2px;
+        }
     </style>
 </head>
 <body class="bg-gray-950 text-gray-100 font-sans min-h-screen flex flex-col relative pb-24">
@@ -155,7 +211,28 @@
         </div>
     </div>
 
-    <!-- OVERLAY E MENU LATERAL -->
+    <!-- MODAL DE GERENCIAR PACIENTES (BANCO DE DADOS REFERÊNCIA OCR) -->
+    <div id="modalGerenciarPacientes" class="fixed inset-0 bg-black/90 popup-blur hidden items-center justify-center p-4 z-[120]">
+        <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 w-full max-w-md shadow-2xl flex flex-col gap-4">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fas fa-users text-blue-500"></i> Banco de Pacientes</h3>
+                <button onclick="window.fecharModalPacientes()" class="text-gray-500 hover:text-white"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            
+            <p class="text-xs text-gray-400">Adicione os nomes completos dos pacientes. A Inteligência Artificial cruzará esses nomes para não errar a leitura da letra cursiva.</p>
+
+            <form onsubmit="window.adicionarPacienteFirebase(event)" class="flex gap-2 mt-1">
+                <input type="text" id="cadNomePaciente" required placeholder="Digite o nome completo do paciente..." class="flex-1 p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 rounded-xl font-bold text-xs transition shadow"><i class="fas fa-plus"></i></button>
+            </form>
+
+            <div class="flex flex-col gap-2 max-h-60 overflow-y-auto custom-scrollbar pr-1 mt-2" id="listaPacientesBanco">
+                <!-- Lista injetada via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- OVERLAY E MENU LATERAL (SIDEBAR) -->
     <div id="overlaySidebar" onclick="window.toggleSidebar(false)" class="fixed inset-0 bg-black/70 popup-blur z-50 hidden transition-opacity"></div>
     <aside id="sidebar" class="fixed top-0 left-0 w-72 h-full bg-gray-900 border-r border-gray-800 z-50 transform -translate-x-full transition-transform duration-300 flex flex-col justify-between shadow-2xl">
         <div class="p-5 border-b border-gray-800 flex items-center justify-between">
@@ -175,6 +252,9 @@
             <button id="btnSidebarCadastrarUsuario" onclick="window.abrirModalCadastroUsuario()" class="hidden w-full bg-blue-900/40 hover:bg-blue-800/60 border border-blue-700/60 text-blue-300 p-3 rounded-xl font-bold text-xs transition flex items-center gap-2.5">
                 <i class="fas fa-user-plus text-blue-400"></i> Cadastrar Novo Usuário
             </button>
+            <button id="btnSidebarPacientes" onclick="window.abrirModalPacientes()" class="hidden w-full bg-indigo-900/40 hover:bg-indigo-800/60 border border-indigo-700/60 text-indigo-300 p-3 rounded-xl font-bold text-xs transition flex items-center gap-2.5">
+                <i class="fas fa-address-book text-indigo-400"></i> Banco de Pacientes
+            </button>
         </div>
 
         <div class="p-4 border-t border-gray-800">
@@ -184,6 +264,7 @@
         </div>
     </aside>
 
+    <!-- Cabeçalho -->
     <header class="bg-gray-900 border-b border-gray-800 p-4 sticky top-0 z-40 shadow-md">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <button onclick="window.toggleSidebar && window.toggleSidebar(true)" class="text-gray-300 hover:text-white text-xl p-2 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-700 focus:outline-none w-10 h-10 flex items-center justify-center">
@@ -202,10 +283,11 @@
     </header>
 
     <main class="flex-1 max-w-5xl w-full mx-auto p-4 flex flex-col gap-6">
+        <!-- Barra de Filtros -->
         <section class="bg-gray-900 border border-gray-800 p-4 rounded-xl shadow-lg flex flex-col gap-3">
             <div class="relative w-full">
                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500"></i>
-                <input type="text" id="inputBuscaAnexo" placeholder="Buscar por paciente, data ou mês..." class="w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-blue-500 focus:outline-none text-sm transition-all">
+                <input type="text" id="inputBuscaAnexo" placeholder="Buscar por paciente, relatórios ou data..." class="w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-blue-500 focus:outline-none text-sm transition-all">
             </div>
             
             <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -287,7 +369,7 @@
 
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button onclick="window.abrirEdicaoNome()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-pen text-blue-500"></i> Editar</button>
-                <button onclick="window.compartilharAnexoAtivo()" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-share-nodes"></i> Compartilhar</button>
+                <button onclick="window.compartilharAnexoAtivo()" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-share-nodes"></i> Enviar</button>
                 <button id="btnBaixarAnexo" onclick="window.baixarAnexoAtivo()" class="bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-download"></i> Baixar</button>
                 <button id="btnExcluirDisfarce" onclick="window.executarExclusaoDisfarçada()" class="bg-red-950/60 hover:bg-red-900/80 text-red-400 border border-red-800/60 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-trash-alt"></i> Excluir</button>
             </div>
@@ -330,7 +412,7 @@
                         <span class="text-xs font-bold text-red-400"><i class="fas fa-file-pdf"></i> Revisão de Documentos</span>
                         <span id="txtQtdPaginas" class="text-[10px] text-gray-400 bg-gray-800 px-2 py-1 rounded border border-gray-700">0 páginas</span>
                     </div>
-                    <p class="text-[10px] text-yellow-500 mb-1 leading-tight"><i class="fas fa-info-circle"></i> A IA preencheu o que conseguiu ler. O que estiver em branco ou errado, por favor digite o nome correto do paciente.</p>
+                    <p class="text-[10px] text-yellow-500 mb-1 leading-tight"><i class="fas fa-info-circle"></i> A IA escolheu o nome. Caso ela falhe devido à letra cursiva, basta selecionar manualmente na caixinha de cada foto.</p>
                     
                     <div id="gridPaginasScanner" class="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto custom-scrollbar p-1"></div>
                     
@@ -412,7 +494,7 @@
         </div>
     </div>
 
-    <!-- MODAL 2: APLICADOR DE FILTROS E CAIXAS/CARIMBO -->
+    <!-- MODAL 2: APLICADOR DE FILTROS E MÚLTIPLAS CAIXAS -->
     <div id="modalFiltrosScanner" class="fixed inset-0 bg-gray-950 z-[70] hidden flex-col overflow-y-auto">
         <div class="flex justify-between items-center bg-gray-900 border-b border-gray-800 p-4 shadow-md">
             <button onclick="window.voltarParaCropper()" class="text-gray-400 hover:text-white"><i class="fas fa-arrow-left text-xl"></i></button>
@@ -477,7 +559,6 @@
                     <div id="painelEdicaoCaixaAtiva" class="flex flex-col gap-3">
                         <div class="flex gap-2 items-center">
                             <textarea id="inputTextoCanvas" rows="2" placeholder="Digite seu texto..." oninput="window.atualizarTextoCaixaAtiva()" class="w-full p-2.5 rounded-lg bg-gray-900 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500 resize-none custom-scrollbar"></textarea>
-                            <button id="btnNegritoTexto" onclick="window.alternarNegritoCaixaAtiva()" title="Negrito" class="bg-gray-900 hover:bg-gray-700 border border-gray-700 text-gray-300 font-black px-3 py-2.5 rounded-lg transition"><i class="fas fa-bold"></i></button>
                             <button onclick="window.removerCaixaTextoAtiva()" title="Excluir Caixa Selecionada" class="bg-red-950/60 hover:bg-red-900 border border-red-800/60 text-red-400 p-2.5 rounded-lg transition"><i class="fas fa-trash-alt text-xs"></i></button>
                         </div>
                         
@@ -488,8 +569,8 @@
                             </div>
                             <div class="flex items-center gap-2">
                                 <label class="text-[10px] text-gray-400 font-bold uppercase whitespace-nowrap">Tamanho:</label>
-                                <input type="range" id="sliderTamanhoFonte" min="12" max="100" value="36" oninput="window.atualizarTamanhoCaixaAtiva()">
-                                <span id="lblTamanhoFonte" class="text-xs font-bold text-white w-8">36px</span>
+                                <input type="range" id="sliderTamanhoFonte" min="12" max="72" value="24" oninput="window.atualizarTamanhoCaixaAtiva()">
+                                <span id="lblTamanhoFonte" class="text-xs font-bold text-white w-8">24px</span>
                             </div>
                         </div>
 
@@ -512,58 +593,37 @@
                     <span class="text-xs font-bold text-indigo-400 flex items-center gap-1.5"><i class="fas fa-pen-nib"></i> Ajustar Assinatura (Arraste no canvas)</span>
                     <div class="flex items-center gap-3">
                         <label class="text-[10px] text-gray-400 font-bold uppercase whitespace-nowrap">Tamanho/Escala:</label>
-                        <input type="range" id="sliderEscalaAssinatura" min="30" max="300" value="120" oninput="window.renderizarFiltroAtual(true)">
-                        <button onclick="window.removerAssinaturaCanvas()" class="text-red-400 hover:text-red-300 text-xs p-1" title="Remover Assinatura"><i class="fas fa-trash-alt"></i></button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- CONTROLES DO CARIMBO DA EMPRESA COM ORDEM DE CAMADAS -->
-            <div id="painelControleCarimbo" class="hidden px-4 mt-2">
-                <div class="bg-red-950/40 p-3 rounded-xl border border-red-800/60 flex flex-col gap-2">
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs font-bold text-red-400 flex items-center gap-1.5"><i class="fas fa-stamp"></i> Ajustar Carimbo</span>
-                        <div class="flex gap-1.5">
-                            <button onclick="window.alterarOrdemCarimbo('tras')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-[10px] font-bold px-2 py-1 rounded shadow" title="Enviar para Trás"><i class="fas fa-layer-group text-blue-400"></i> Para Trás</button>
-                            <button onclick="window.alterarOrdemCarimbo('frente')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-[10px] font-bold px-2 py-1 rounded shadow" title="Trazer para Frente"><i class="fas fa-layer-group text-green-400"></i> Para Frente</button>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-3 mt-1">
-                        <label class="text-[10px] text-gray-400 font-bold uppercase whitespace-nowrap">Tamanho/Escala:</label>
-                        <input type="range" id="sliderEscalaCarimbo" min="20" max="250" value="85" oninput="window.renderizarFiltroAtual(true)">
-                        <button onclick="window.removerCarimboCanvas()" class="text-red-400 hover:text-red-300 text-xs p-1" title="Remover Carimbo"><i class="fas fa-trash-alt"></i></button>
+                        <input type="range" id="sliderEscalaAssinatura" min="20" max="100" value="50" oninput="window.renderizarFiltroAtual(true)">
+                        <button onclick="window.removerAssinaturaCanvas()" class="text-red-400 hover:text-red-300 text-xs p-1"><i class="fas fa-trash-alt"></i></button>
                     </div>
                 </div>
             </div>
 
             <div class="px-4 mt-2 flex gap-2">
-                <button onclick="window.adicionarCarimboEmpresa()" class="bg-red-600 hover:bg-red-500 text-white py-3.5 rounded-xl font-bold text-xs sm:text-sm flex-1 flex items-center justify-center gap-2 transition shadow-lg">
-                    <i class="fas fa-stamp"></i> <span id="txtBtnCarimbo">Carimbar</span>
-                </button>
                 <button onclick="window.abrirModalAssinatura()" class="bg-indigo-600 hover:bg-indigo-500 text-white py-3.5 rounded-xl font-bold text-xs sm:text-sm flex-1 flex items-center justify-center gap-2 transition shadow-lg">
-                    <i class="fas fa-signature"></i> <span id="txtBtnAssinatura">Assinar</span>
+                    <i class="fas fa-signature"></i> <span id="txtBtnAssinatura">Adicionar Assinatura</span>
                 </button>
                 <button onclick="window.confirmarSalvarPaginaScanner()" class="bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-xl font-bold text-xs sm:text-sm flex-1 flex items-center justify-center gap-2 shadow-lg">
-                    <i class="fas fa-check"></i> Salvar
+                    <i class="fas fa-check"></i> Aplicar e Salvar Página
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL 3: POP-UP DE ASSINATURA EXPANDIDO E EM ALTA DEFINIÇÃO -->
-    <div id="modalAssinatura" class="fixed inset-0 bg-black/95 popup-blur hidden items-center justify-center p-4 z-[80]">
-        <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 w-full max-w-lg shadow-2xl flex flex-col gap-4">
-            <div class="flex justify-between items-center border-b border-gray-800 pb-3">
-                <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fas fa-pen-nib text-indigo-400"></i> Assinatura Digital (HD)</h3>
-                <button onclick="window.fecharModalAssinatura()" class="text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+    <!-- MODAL 3: POP-UP DE ASSINATURA -->
+    <div id="modalAssinatura" class="fixed inset-0 bg-black/90 popup-blur hidden items-center justify-center p-4 z-[80]">
+        <div class="bg-gray-900 rounded-xl border border-gray-800 p-5 w-full max-w-md shadow-2xl flex flex-col gap-4">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fas fa-pen-nib text-indigo-400"></i> Assinatura Digital</h3>
+                <button onclick="window.fecharModalAssinatura()" class="text-gray-500 hover:text-white"><i class="fas fa-times text-lg"></i></button>
             </div>
-            <p class="text-xs text-gray-400">Desenhe sua assinatura com alta precisão abaixo:</p>
-            <div class="w-full h-56 bg-white rounded-xl overflow-hidden relative touch-none border-2 border-gray-700 shadow-inner">
+            <p class="text-xs text-gray-400">Desenhe sua assinatura no quadro abaixo:</p>
+            <div class="w-full h-40 bg-white rounded-lg overflow-hidden relative touch-none border border-gray-700">
                 <canvas id="canvasAssinatura" class="w-full h-full cursor-crosshair"></canvas>
             </div>
-            <div class="flex gap-3 mt-1">
-                <button onclick="window.limparAssinaturaPad()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-xl text-xs font-bold border border-gray-700 transition flex items-center justify-center gap-2"><i class="fas fa-eraser"></i> Limpar</button>
-                <button onclick="window.salvarAssinaturaParaCanvas()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-3 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg"><i class="fas fa-check"></i> Inserir Assinatura</button>
+            <div class="flex gap-2">
+                <button onclick="window.limparAssinaturaPad()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2.5 rounded-lg text-xs font-bold border border-gray-700 transition"><i class="fas fa-eraser"></i> Limpar</button>
+                <button onclick="window.salvarAssinaturaParaCanvas()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2.5 px-4 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2"><i class="fas fa-check"></i> Inserir Assinatura</button>
             </div>
         </div>
     </div>
@@ -571,19 +631,18 @@
     <!-- SCRIPT PRINCIPAL E FIREBASE COM PROTEÇÃO CONTRA NULL -->
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, setPersistence, browserSessionPersistence, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref as dbRef, push, onValue, update, remove, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref as dbRef, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
-        // CREDENCIAIS ATUALIZADAS E FUNCIONAIS
         const firebaseConfig = {
-            apiKey: "AIzaSyCQ8--X39oK3BnwNES7zDklKnWP0_4hEas",
-            authDomain: "anexos-2.firebaseapp.com",
-            databaseURL: "https://anexos-2-default-rtdb.firebaseio.com",
-            projectId: "anexos-2",
-            storageBucket: "anexos-2.firebasestorage.app",
-            messagingSenderId: "233223560502",
-            appId: "1:233223560502:web:87a7b0be7d7587b8b3a797"
+            apiKey: "AIzaSyCfzVSlcB2BU1TTqn_kyo_Gq-EtDps8yys",
+            authDomain: "anexos-relatorio.firebaseapp.com",
+            databaseURL: "https://anexos-relatorio-default-rtdb.firebaseio.com",
+            projectId: "anexos-relatorio",
+            storageBucket: "anexos-relatorio.firebasestorage.app",
+            messagingSenderId: "334917539541",
+            appId: "1:334917539541:web:b00a572569d45bb0e2b45c"
         };
 
         const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
@@ -591,29 +650,11 @@
         const db = getDatabase(app);
         const storage = getStorage(app);
 
-        setPersistence(auth, browserSessionPersistence).catch(err => console.warn(err));
-
-        let timerInatividade = null;
-        const TEMPO_INATIVIDADE_MS = 8 * 60 * 1000;
-
-        function resetarTimerInatividade() {
-            if (timerInatividade) clearTimeout(timerInatividade);
-            if (auth.currentUser) {
-                timerInatividade = setTimeout(() => {
-                    alert("⏰ Sessão expirada devido a 8 minutos de inatividade.");
-                    window.fazerLogout();
-                }, TEMPO_INATIVIDADE_MS);
-            }
-        }
-
-        ['mousemove', 'mousedown', 'keypress', 'touchstart', 'scroll', 'click'].forEach(evt => {
-            window.addEventListener(evt, resetarTimerInatividade, true);
-        });
-
         let usuarioLogado = "Operador";
         let perfilUsuario = "operador";
         let uidUsuarioLogado = "";
         let todosAnexosNaMemoria = [];
+        let listaPacientesCadastrados = [];
         
         window.idImagemAtiva = null;
         window.urlImagemAtiva = null;
@@ -637,223 +678,17 @@
 
         let posicaoAssinatura = { x: 50, y: 150 };
         let imgAssinaturaElemento = null;
-
-        let imgCarimboElemento = null;
-        let posicaoCarimbo = { x: 50, y: 50 };
-        let ordemCamadas = ['imagem', 'texto', 'assinatura', 'carimbo'];
-
         let elementoSendoArrastado = null;
         let offsetArrasto = { x: 0, y: 0 };
 
         let assinandoPad = false;
         let ctxAssinaturaPad = null;
-        let pontosTraçoAssinatura = [];
 
+        // HELPER PARA ESCUTAR EVENTOS SEM ERRO DE NULL
         function escutarEventoSeguro(idElemento, evento, callback) {
             const el = document.getElementById(idElemento);
             if (el) el.addEventListener(evento, callback);
         }
-
-        window.alterarOrdemCarimbo = function(direcao) {
-            ordemCamadas = ordemCamadas.filter(c => c !== 'carimbo');
-            if (direcao === 'tras') {
-                ordemCamadas.unshift('carimbo');
-            } else {
-                ordemCamadas.push('carimbo');
-            }
-            window.renderizarFiltroAtual(true);
-        };
-
-        function criarImagemCarimboVetor() {
-            const canvasC = document.createElement('canvas');
-            canvasC.width = 460;
-            canvasC.height = 160;
-            const ctxC = canvasC.getContext('2d');
-
-            ctxC.clearRect(0, 0, canvasC.width, canvasC.height);
-
-            const corCarimbo = "#1e3a8a"; 
-            ctxC.strokeStyle = corCarimbo;
-            ctxC.fillStyle = corCarimbo;
-
-            ctxC.lineWidth = 5;
-            ctxC.strokeRect(10, 10, canvasC.width - 20, canvasC.height - 20);
-            ctxC.lineWidth = 2;
-            ctxC.strokeRect(16, 16, canvasC.width - 32, canvasC.height - 32);
-
-            ctxC.textAlign = "center";
-            ctxC.textBaseline = "middle";
-
-            ctxC.font = "bold 20px 'Courier New', Courier, monospace";
-            ctxC.fillText("CNPJ: 47.960.950/1716-001", canvasC.width / 2, 42);
-
-            ctxC.font = "black 22px 'Arial Black', Arial, sans-serif";
-            ctxC.fillText("MAGAZINE LUIZA S/A", canvasC.width / 2, 75);
-
-            ctxC.font = "bold 14px Arial, sans-serif";
-            ctxC.fillText("Rua Doutor Feliciano Sodré, 218 - Centro", canvasC.width / 2, 110);
-            ctxC.fillText("CEP 24.440-440 - São Gonçalo/RJ", canvasC.width / 2, 132);
-
-            const img = new Image();
-            img.src = canvasC.toDataURL("image/png");
-            return img;
-        }
-
-        window.adicionarCarimboEmpresa = function() {
-            imgCarimboElemento = criarImagemCarimboVetor();
-            imgCarimboElemento.onload = function() {
-                posicaoCarimbo = { x: (larguraCrop - 380) / 2, y: (alturaCrop / 2) - 80 };
-                const pCar = document.getElementById("painelControleCarimbo");
-                if (pCar) { pCar.classList.remove("hidden"); pCar.classList.add("flex"); }
-                const txtB = document.getElementById("txtBtnCarimbo");
-                if (txtB) txtB.innerText = "Reaplicar Carimbo";
-                window.renderizarFiltroAtual(true);
-            };
-        };
-
-        window.removerCarimboCanvas = function() {
-            imgCarimboElemento = null;
-            const pCar = document.getElementById("painelControleCarimbo");
-            if (pCar) { pCar.classList.add("hidden"); pCar.classList.remove("flex"); }
-            const txtB = document.getElementById("txtBtnCarimbo");
-            if (txtB) txtB.innerText = "Carimbar";
-            window.renderizarFiltroAtual(true);
-        };
-
-        window.executarLoginFirebase = async function(e) {
-            e.preventDefault();
-            const usernameDigitado = document.getElementById("loginUsuario")?.value.trim();
-            const senha = document.getElementById("loginSenha")?.value.trim();
-            const btn = document.getElementById("btnEntrarLogin");
-
-            if (!usernameDigitado || !senha) return alert("⚠️ Digite seu usuário e senha.");
-            if (btn) btn.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Entrando...`;
-
-            let emailVinculado = null;
-
-            try {
-                const dbSnap = await get(dbRef(db, 'usuarios_sistema'));
-                if (dbSnap.exists()) {
-                    const lista = dbSnap.val();
-                    for (let key in lista) {
-                        if (lista[key].username && lista[key].username.toLowerCase() === usernameDigitado.toLowerCase()) {
-                            if (lista[key].email) {
-                                emailVinculado = lista[key].email;
-                                break;
-                            }
-                        }
-                    }
-                }
-            } catch (err) {
-                console.warn("Aviso de leitura:", err);
-            }
-
-            if (!emailVinculado) {
-                emailVinculado = usernameDigitado.includes("@") ? usernameDigitado : `${usernameDigitado}@anexos.com`;
-            }
-
-            signInWithEmailAndPassword(auth, emailVinculado, senha)
-                .then(() => {
-                    const modalLogin = document.getElementById("modalLoginApp");
-                    if (modalLogin) modalLogin.classList.add("hidden");
-                    resetarTimerInatividade();
-                })
-                .catch((error) => {
-                    alert("❌ Usuário ou senha incorretos.");
-                    if (btn) btn.innerText = "Entrar";
-                });
-        };
-
-        window.abrirModalRecuperarSenha = function() {
-            const modal = document.getElementById("modalRecuperarSenha");
-            if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
-        };
-
-        window.fecharModalRecuperarSenha = function() {
-            const modal = document.getElementById("modalRecuperarSenha");
-            if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
-        };
-
-        window.confirmarRecuperacaoSenha = async function(e) {
-            if (e) e.preventDefault();
-            const usernameInput = document.getElementById("recUsuario")?.value.trim();
-            if (!usernameInput) return alert("⚠️ Digite o seu nome de usuário.");
-
-            const btn = document.getElementById("btnEnviarRecuperacao");
-            if (btn) btn.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Buscando...`;
-
-            let emailEncontrado = usernameInput.includes("@") ? usernameInput : null;
-            if (!emailEncontrado) {
-                try {
-                    const dbSnap = await get(dbRef(db, 'usuarios_sistema'));
-                    if (dbSnap.exists()) {
-                        const lista = dbSnap.val();
-                        for (let key in lista) {
-                            if (lista[key].username && lista[key].username.toLowerCase() === usernameInput.toLowerCase()) {
-                                emailEncontrado = lista[key].email;
-                                break;
-                            }
-                        }
-                    }
-                } catch (err) {}
-            }
-
-            if (!emailEncontrado) emailEncontrado = `${usernameInput}@anexos.com`;
-
-            sendPasswordResetEmail(auth, emailEncontrado)
-                .then(() => {
-                    alert(`📧 O link de redefinição foi enviado para o e-mail cadastrado do usuário "${usernameInput}".`);
-                    window.fecharModalRecuperarSenha();
-                    if (btn) btn.innerText = "Enviar Link";
-                })
-                .catch((error) => {
-                    alert("Erro ao enviar e-mail: " + error.message);
-                    if (btn) btn.innerText = "Enviar Link";
-                });
-        };
-
-        window.abrirModalCadastroUsuario = function() {
-            const modal = document.getElementById("modalCadastroUsuario");
-            if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
-        };
-
-        window.fecharModalCadastroUsuario = function() {
-            const modal = document.getElementById("modalCadastroUsuario");
-            if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
-        };
-
-        window.executarCadastroFirebase = function(e) {
-            if (e) e.preventDefault();
-            const username = document.getElementById("cadUsuario")?.value.trim();
-            const email = document.getElementById("cadEmail")?.value.trim();
-            const senha = document.getElementById("cadSenha")?.value.trim();
-            const perfil = document.getElementById("cadPerfil")?.value;
-
-            if (!username || !email || !senha || !perfil) {
-                return alert("⚠️ Preencha todos os campos.");
-            }
-
-            const btn = document.getElementById("btnSalvarCadastro");
-            if (btn) btn.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Cadastrando...`;
-
-            createUserWithEmailAndPassword(auth, email, senha)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    set(dbRef(db, 'usuarios_sistema/' + user.uid), {
-                        username: username,
-                        email: email,
-                        perfil: perfil
-                    }).then(() => {
-                        alert(`✅ Usuário @${username} cadastrado com sucesso!`);
-                        window.fecharModalCadastroUsuario();
-                        if (btn) btn.innerText = "Salvar Cadastro";
-                    });
-                })
-                .catch((error) => {
-                    alert("Erro ao cadastrar: " + error.message);
-                    if (btn) btn.innerText = "Salvar Cadastro";
-                });
-        };
 
         window.toggleSidebar = function(abrir) {
             const sidebar = document.getElementById("sidebar");
@@ -870,62 +705,114 @@
         };
 
         window.fazerLogout = function() {
-            if (timerInatividade) clearTimeout(timerInatividade);
-            signOut(auth).then(() => {
-                const modalLogin = document.getElementById("modalLoginApp");
-                if (modalLogin) modalLogin.classList.remove("hidden");
-            });
+            signOut(auth).then(() => alert("Logout realizado!"));
         };
 
-        // --- SISTEMA DE LIMPEZA E PADRONIZAÇÃO DE NOME ---
-        function padronizarNomePaciente(nomeRaw) {
-            if (!nomeRaw) return "Desconhecido";
-            // Remove números e meses gerados por erro de OCR
-            let nomeLimpo = nomeRaw.replace(/[0-9]/g, '');
-            nomeLimpo = nomeLimpo.replace(/\b(Setembro|Outubro|Novembro|Dezembro|Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Atendimento|Primure|Sessao|Relatorio|Evolucao|OK|Ok)\b/ig, '');
-            
-            nomeLimpo = nomeLimpo.replace(/[^a-zA-ZÀ-ÿ\s]/g, '').replace(/\s+/g, ' ').trim();
-            
-            let palavras = nomeLimpo.split(' ');
-            if (palavras.length < 2) return "Desconhecido"; // Exige no minimo 2 palavras para evitar lixo
-            
-            // Retorna Title Case
-            return palavras.slice(0, 5).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-        }
+        // --- SISTEMA DE PACIENTES (BANCO DE DADOS REFERÊNCIA) ---
+        window.abrirModalPacientes = function() {
+            const modal = document.getElementById("modalGerenciarPacientes");
+            if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); window.toggleSidebar(false); }
+        };
 
-        // --- SISTEMA DE LEITURA OCR EM DUAS ETAPAS (MESMA LINHA OU LINHA ABAIXO) ---
-        function extrairNomePacienteOCR(textoRaw) {
-            if (!textoRaw) return "Desconhecido";
+        window.fecharModalPacientes = function() {
+            const modal = document.getElementById("modalGerenciarPacientes");
+            if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
+        };
+
+        window.adicionarPacienteFirebase = function(e) {
+            e.preventDefault();
+            const inNome = document.getElementById("cadNomePaciente");
+            let nome = inNome ? inNome.value.trim() : "";
+            if (!nome) return;
             
-            // Etapa 1: Tenta ler na mesma linha (se o scanner não quebrou)
-            const cleanText = textoRaw.replace(/[:\-\._]/g, ' ').replace(/\n/g, ' ').replace(/\s+/g, ' ');
-            const regex = /(?:paci[a-z]nte|nome\s+d[oa]\s+paci[a-z]nte)\s+([A-Za-zÀ-ÿ]{3,}(?:\s+[A-Za-zÀ-ÿ]{2,}){1,5})/i;
-            const match = cleanText.match(regex);
-            
-            if (match && match[1]) {
-                let possivel = padronizarNomePaciente(match[1]);
-                if (possivel !== "Desconhecido") return possivel;
+            // Title case perfeito para o banco
+            const nomePadronizado = nome.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+
+            push(dbRef(db, 'pacientes_cadastrados'), { nome: nomePadronizado }).then(() => {
+                if(inNome) inNome.value = "";
+            }).catch(err => alert("Erro ao salvar paciente: " + err.message));
+        };
+
+        window.removerPacienteFirebase = function(id, nome) {
+            if(confirm(`Tem certeza que deseja excluir "${nome}" do banco de referência? Isso não exclui as evoluções dele.`)) {
+                remove(dbRef(db, 'pacientes_cadastrados/' + id));
             }
+        };
 
-            // Etapa 2: Fallback (Linha a Linha). Se a IA quebrou a linha apos 'paciente:'
-            const linhas = textoRaw.split('\n');
-            for (let j = 0; j < linhas.length; j++) {
-                let linha = linhas[j].toLowerCase();
-                if (linha.includes("paciente")) {
-                    let restoNaMesmaLinha = linha.split("paciente")[1].replace(/[^a-z\s]/g, '').trim();
-                    if (restoNaMesmaLinha.split(' ').length >= 2) return padronizarNomePaciente(restoNaMesmaLinha);
+        // CARREGA A LISTA DE PACIENTES (PARA O FUZZY MATCH E PRO MODAL)
+        onValue(dbRef(db, 'pacientes_cadastrados'), (snapshot) => {
+            listaPacientesCadastrados = [];
+            const container = document.getElementById("listaPacientesBanco");
+            if(container) container.innerHTML = "";
+            
+            if (snapshot.exists()) {
+                snapshot.forEach(child => { 
+                    const p = { id: child.key, nome: child.val().nome };
+                    listaPacientesCadastrados.push(p);
                     
-                    // Se não tiver nada na frente de paciente, pega a LINHA DE BAIXO!
-                    if (j + 1 < linhas.length) {
-                        let linhaAbaixo = linhas[j+1].replace(/[^a-zA-ZÀ-ÿ\s]/g, '').trim();
-                        if (linhaAbaixo.split(' ').length >= 2) return padronizarNomePaciente(linhaAbaixo);
+                    if(container) {
+                        container.innerHTML += `
+                        <div class="flex justify-between items-center bg-gray-800 p-2.5 rounded-lg border border-gray-700 text-xs">
+                            <span class="text-white font-bold truncate flex-1">${p.nome}</span>
+                            <button onclick="window.removerPacienteFirebase('${p.id}', '${p.nome.replace(/'/g, "\\'")}')" class="text-red-400 hover:text-red-300 p-1.5 ml-2"><i class="fas fa-trash"></i></button>
+                        </div>`;
                     }
-                }
+                });
+                listaPacientesCadastrados.sort((a,b) => a.nome.localeCompare(b.nome));
+            } else {
+                if(container) container.innerHTML = `<div class="text-center text-gray-500 text-xs py-4">Nenhum paciente cadastrado.</div>`;
             }
-            return "Desconhecido";
+        });
+
+        // --- SISTEMA DE LEITURA OCR INTELIGENTE (FUZZY MATCH) ---
+        function encontrarPacienteNoBanco(textoRaw) {
+            if (!textoRaw || textoRaw.trim().length < 3) return "Desconhecido";
+            
+            // 1. Limpa o texto lido da imagem
+            let nomeLimpo = textoRaw;
+            const cleanText = textoRaw.replace(/[:\-\._\n]/g, ' ').replace(/\s+/g, ' ').toLowerCase();
+            
+            if (cleanText.includes("paciente")) {
+                nomeLimpo = cleanText.split("paciente")[1].trim();
+            } else {
+                nomeLimpo = cleanText; // Tenta usar tudo se o OCR comeu a palavra paciente
+            }
+
+            // Normaliza removendo acentos e divide em blocos (tokens)
+            let tokensLidos = nomeLimpo.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z\s]/g, '').split(/\s+/).filter(w => w.length > 2);
+
+            let melhorMatch = "Desconhecido";
+            let maiorScore = 0;
+
+            // 2. Cruza as palavras lidas com a Lista Perfeita do Banco de Dados
+            listaPacientesCadastrados.forEach(pac => {
+                let pacNormalizado = pac.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+                let tokensPac = pacNormalizado.split(/\s+/).filter(w => w.length > 2);
+                
+                let score = 0;
+                tokensPac.forEach(tp => {
+                    if (tokensLidos.includes(tp)) {
+                        score += 1; // Leu a palavra idêntica
+                    } else {
+                        // Se o OCR errou uma letra, valida se a palavra é parecida (Ex: Alesandra e Alessandra)
+                        let achouParecida = tokensLidos.some(tl => {
+                            return (tl.includes(tp) || tp.includes(tl)) && Math.abs(tl.length - tp.length) <= 2;
+                        });
+                        if (achouParecida) score += 0.5; 
+                    }
+                });
+
+                // Se bater pelo menos 1.5 pontos (ex: Acertou 1 nome e 1 sobrenome por alto)
+                if (score > maiorScore && score >= 1.5) {
+                    maiorScore = score;
+                    melhorMatch = pac.nome; 
+                }
+            });
+            
+            return melhorMatch;
         }
 
-        // --- PRE-PROCESSADOR DE IMAGEM PARA LETRA CURSIVA ---
+        // PRE-PROCESSADOR DE IMAGEM PARA LETRA CURSIVA
         async function preProcessarImagemParaOCR(imgBase64) {
             return new Promise((resolve) => {
                 const img = new Image();
@@ -941,7 +828,7 @@
                     const data = imageData.data;
                     for (let i = 0; i < data.length; i += 4) {
                         let avg = (data[i] + data[i+1] + data[i+2]) / 3;
-                        let val = avg > 150 ? 255 : 0; // Transforma P&B para anular as pautas do caderno
+                        let val = avg > 150 ? 255 : 0; 
                         data[i] = data[i+1] = data[i+2] = val;
                     }
                     ctx.putImageData(imageData, 0, 0);
@@ -951,7 +838,7 @@
             });
         }
 
-        // --- ROTINAS DE UPLOAD ---
+        // --- ROTINAS DE UPLOAD E SEPARAÇÃO NO CARRINHO ---
         window.abrirModalUpload = function() {
             const modal = document.getElementById("modalUpload");
             const content = document.getElementById("modalUploadContent");
@@ -1079,38 +966,33 @@
             const ctxBruto = canvasCortado.getContext('2d');
             canvasOriginalContextData = ctxBruto.getImageData(0, 0, larguraCrop, alturaCrop);
 
-            let larguraCaixaPadrao = Math.min(500, larguraCrop * 0.7);
             caixasTexto = [{
                 id: Date.now(),
                 texto: "",
-                posicao: { x: (larguraCrop - larguraCaixaPadrao) / 2, y: (alturaCrop / 2) - 50 },
+                posicao: { x: 40, y: alturaCrop - 150 },
                 cor: "#000000",
-                tamanhoFonte: 36,
-                negrito: false,
-                larguraCaixa: larguraCaixaPadrao,
-                dimensaoCalculada: { w: larguraCaixaPadrao, h: 50 }
+                tamanhoFonte: 24,
+                larguraCaixa: Math.min(400, larguraCrop - 80),
+                dimensaoCalculada: { w: 400, h: 40 }
             }];
             indiceCaixaTextoAtiva = 0;
 
-            let larguraAssPadrao = larguraCrop * 0.65;
-            posicaoAssinatura = { x: (larguraCrop - larguraAssPadrao) / 2, y: (alturaCrop / 2) + 50 };
+            posicaoAssinatura = { x: larguraCrop - 220, y: alturaCrop - 150 };
             imgAssinaturaElemento = null;
-            imgCarimboElemento = null;
             
             const slB = document.getElementById("sliderBrilho"); if (slB) slB.value = 0;
             const slC = document.getElementById("sliderContraste"); if (slC) slC.value = 0;
-            const slAss = document.getElementById("sliderEscalaAssinatura"); if (slAss) slAss.value = 120;
             
-            const pAss = document.getElementById("painelControleAssinatura"); if (pAss) { pAss.classList.add("hidden"); pAss.classList.remove("flex"); }
-            const pCar = document.getElementById("painelControleCarimbo"); if (pCar) { pCar.classList.add("hidden"); pCar.classList.remove("flex"); }
+            const pAss = document.getElementById("painelControleAssinatura");
+            if (pAss) { pAss.classList.add("hidden"); pAss.classList.remove("flex"); }
             
-            const txtBtnAss = document.getElementById("txtBtnAssinatura"); if (txtBtnAss) txtBtnAss.innerText = "Assinar";
-            const txtBtnCar = document.getElementById("txtBtnCarimbo"); if (txtBtnCar) txtBtnCar.innerText = "Carimbar";
+            const txtBtnAss = document.getElementById("txtBtnAssinatura");
+            if (txtBtnAss) txtBtnAss.innerText = "Adicionar Assinatura";
 
             const slLarg = document.getElementById("sliderLarguraCaixaTexto");
             if (slLarg) {
                 slLarg.max = larguraCrop;
-                slLarg.value = larguraCaixaPadrao;
+                slLarg.value = Math.min(400, larguraCrop - 80);
             }
 
             const modalCrop = document.getElementById("modalCropperScanner");
@@ -1161,16 +1043,14 @@
         };
 
         window.adicionarNovaCaixaTexto = function() {
-            let larguraCaixaPadrao = Math.min(400, larguraCrop * 0.7);
             const novaCaixa = {
                 id: Date.now(),
                 texto: "Novo Texto",
-                posicao: { x: (larguraCrop - larguraCaixaPadrao) / 2, y: 100 + (caixasTexto.length * 40) },
+                posicao: { x: 40, y: 60 + (caixasTexto.length * 30) },
                 cor: "#000000",
-                tamanhoFonte: 36,
-                negrito: false,
-                larguraCaixa: larguraCaixaPadrao,
-                dimensaoCalculada: { w: larguraCaixaPadrao, h: 50 }
+                tamanhoFonte: 24,
+                larguraCaixa: Math.min(300, larguraCrop - 80),
+                dimensaoCalculada: { w: 300, h: 40 }
             };
             caixasTexto.push(novaCaixa);
             indiceCaixaTextoAtiva = caixasTexto.length - 1;
@@ -1187,18 +1067,9 @@
             }
         };
 
-        window.alternarNegritoCaixaAtiva = function() {
-            if (indiceCaixaTextoAtiva !== null && caixasTexto[indiceCaixaTextoAtiva]) {
-                caixasTexto[indiceCaixaTextoAtiva].negrito = !caixasTexto[indiceCaixaTextoAtiva].negrito;
-                sincronizarPainelComCaixaAtiva();
-                window.renderizarFiltroAtual(true);
-            }
-        };
-
         function sincronizarPainelComCaixaAtiva() {
             const painel = document.getElementById("painelEdicaoCaixaAtiva");
             const msg = document.getElementById("msgSemCaixaTexto");
-            const btnN = document.getElementById("btnNegritoTexto");
 
             if (indiceCaixaTextoAtiva !== null && caixasTexto[indiceCaixaTextoAtiva]) {
                 const caixa = caixasTexto[indiceCaixaTextoAtiva];
@@ -1210,16 +1081,6 @@
                 const slFonte = document.getElementById("sliderTamanhoFonte"); if (slFonte) slFonte.value = caixa.tamanhoFonte;
                 const slLarg = document.getElementById("sliderLarguraCaixaTexto"); 
                 if (slLarg) { slLarg.max = larguraCrop; slLarg.value = caixa.larguraCaixa; }
-
-                if (btnN) {
-                    if (caixa.negrito) {
-                        btnN.classList.replace("bg-gray-900", "bg-blue-600");
-                        btnN.classList.replace("text-gray-300", "text-white");
-                    } else {
-                        btnN.classList.replace("bg-blue-600", "bg-gray-900");
-                        btnN.classList.replace("text-white", "text-gray-300");
-                    }
-                }
             } else {
                 if (painel) { painel.classList.add("hidden"); painel.classList.remove("flex"); }
                 if (msg) msg.classList.remove("hidden");
@@ -1258,20 +1119,19 @@
             }
         };
 
-        function desenharTextoEstiloDocumentoAutoAjustavel(ctx, caixa, x, y) {
-            ctx.fillStyle = caixa.cor;
+        function desenharTextoEstiloDocumentoAutoAjustavel(ctx, texto, x, y, larguraCaixaMax, tamanhoFonteDesejado, cor) {
+            ctx.fillStyle = cor;
             ctx.textBaseline = "top";
             
-            let tamanhoFonteFinal = caixa.tamanhoFonte;
+            let tamanhoFonteFinal = tamanhoFonteDesejado;
             let linhasFinais = [];
             let alturaLinha = tamanhoFonteFinal * 1.25;
-            let estiloFonte = caixa.negrito ? "bold " : "";
 
             while (tamanhoFonteFinal > 8) {
-                ctx.font = `${estiloFonte}${tamanhoFonteFinal}px Arial`;
+                ctx.font = `${tamanhoFonteFinal}px Arial`;
                 alturaLinha = tamanhoFonteFinal * 1.25;
                 
-                let linhasBrutas = caixa.texto.split('\n');
+                let linhasBrutas = texto.split('\n');
                 linhasFinais = [];
                 let palavraExcedeLargura = false;
 
@@ -1281,7 +1141,7 @@
 
                     for (let n = 0; n < palavras.length; n++) {
                         let larguraPalavraUnica = ctx.measureText(palavras[n]).width;
-                        if (larguraPalavraUnica > caixa.larguraCaixa) {
+                        if (larguraPalavraUnica > larguraCaixaMax) {
                             palavraExcedeLargura = true;
                             break;
                         }
@@ -1289,7 +1149,7 @@
                         let linhaTeste = linhaAtual + palavras[n] + ' ';
                         let larguraTeste = ctx.measureText(linhaTeste).width;
 
-                        if (larguraTeste > caixa.larguraCaixa && n > 0) {
+                        if (larguraTeste > larguraCaixaMax && n > 0) {
                             linhasFinais.push(linhaAtual);
                             linhaAtual = palavras[n] + ' ';
                         } else {
@@ -1309,7 +1169,7 @@
             }
 
             return {
-                w: caixa.larguraCaixa,
+                w: larguraCaixaMax,
                 h: Math.max(alturaLinha, linhasFinais.length * alturaLinha)
             };
         }
@@ -1331,8 +1191,10 @@
                 if (lblL) lblL.innerText = caixasTexto[indiceCaixaTextoAtiva].larguraCaixa + "px";
             }
 
+            // 1. Imagem Base
             ctxLive.putImageData(canvasOriginalContextData, 0, 0);
             
+            // 2. Filtros
             if (window.filtroAtivo !== 'original' || valBrilho !== 0 || valContraste !== 0) {
                 const imgData = ctxLive.getImageData(0, 0, larguraCrop, alturaCrop);
                 const data = imgData.data;
@@ -1372,46 +1234,32 @@
                 ctxLive.putImageData(imgData, 0, 0);
             }
 
-            ordemCamadas.forEach(camada => {
-                if (camada === 'texto') {
-                    caixasTexto.forEach((caixa, index) => {
-                        if (caixa.texto.trim() !== "") {
-                            caixa.dimensaoCalculada = desenharTextoEstiloDocumentoAutoAjustavel(
-                                ctxLive, caixa, caixa.posicao.x, caixa.posicao.y
-                            );
-
-                            if (mostrarGuias) {
-                                let eSelecionada = (index === indiceCaixaTextoAtiva);
-                                ctxLive.strokeStyle = eSelecionada ? "rgba(59, 130, 246, 0.9)" : "rgba(156, 163, 175, 0.4)";
-                                ctxLive.lineWidth = eSelecionada ? 2 : 1;
-                                ctxLive.setLineDash([4, 4]);
-                                ctxLive.strokeRect(caixa.posicao.x - 4, caixa.posicao.y - 4, caixa.dimensaoCalculada.w + 8, caixa.dimensaoCalculada.h + 8);
-                                ctxLive.setLineDash([]);
-                            }
-                        }
-                    });
-                } else if (camada === 'assinatura' && imgAssinaturaElemento) {
-                    const slEsc = document.getElementById("sliderEscalaAssinatura");
-                    let escala = slEsc ? parseInt(slEsc.value) / 100 : 1.2;
-                    let larguraAss = (larguraCrop * 0.45) * escala;
-                    let alturaAss = (imgAssinaturaElemento.height * larguraAss) / imgAssinaturaElemento.width;
-                    ctxLive.drawImage(imgAssinaturaElemento, posicaoAssinatura.x, posicaoAssinatura.y, larguraAss, alturaAss);
-                } else if (camada === 'carimbo' && imgCarimboElemento) {
-                    const slCar = document.getElementById("sliderEscalaCarimbo");
-                    let escalaC = slCar ? parseInt(slCar.value) / 100 : 0.85;
-                    let larguraCar = 380 * escalaC;
-                    let alturaCar = (imgCarimboElemento.height * larguraCar) / imgCarimboElemento.width;
-                    ctxLive.drawImage(imgCarimboElemento, posicaoCarimbo.x, posicaoCarimbo.y, larguraCar, alturaCar);
+            // 3. Renderiza Caixas de Texto
+            caixasTexto.forEach((caixa, index) => {
+                if (caixa.texto.trim() !== "") {
+                    caixa.dimensaoCalculada = desenharTextoEstiloDocumentoAutoAjustavel(
+                        ctxLive, caixa.texto, caixa.posicao.x, caixa.posicao.y, caixa.larguraCaixa, caixa.tamanhoFonte, caixa.cor
+                    );
 
                     if (mostrarGuias) {
-                        ctxLive.strokeStyle = "rgba(220, 38, 38, 0.8)";
-                        ctxLive.lineWidth = 2;
+                        let eSelecionada = (index === indiceCaixaTextoAtiva);
+                        ctxLive.strokeStyle = eSelecionada ? "rgba(59, 130, 246, 0.9)" : "rgba(156, 163, 175, 0.4)";
+                        ctxLive.lineWidth = eSelecionada ? 2 : 1;
                         ctxLive.setLineDash([4, 4]);
-                        ctxLive.strokeRect(posicaoCarimbo.x - 4, posicaoCarimbo.y - 4, larguraCar + 8, alturaCar + 8);
+                        ctxLive.strokeRect(caixa.posicao.x - 4, caixa.posicao.y - 4, caixa.dimensaoCalculada.w + 8, caixa.dimensaoCalculada.h + 8);
                         ctxLive.setLineDash([]);
                     }
                 }
             });
+
+            // 4. Renderiza Assinatura
+            if (imgAssinaturaElemento) {
+                const slEsc = document.getElementById("sliderEscalaAssinatura");
+                let escala = slEsc ? parseInt(slEsc.value) / 100 : 0.5;
+                let larguraAss = (larguraCrop * 0.35) * escala;
+                let alturaAss = (imgAssinaturaElemento.height * larguraAss) / imgAssinaturaElemento.width;
+                ctxLive.drawImage(imgAssinaturaElemento, posicaoAssinatura.x, posicaoAssinatura.y, larguraAss, alturaAss);
+            }
         };
 
         function configurarEventosArrastoCanvas(canvas) {
@@ -1429,25 +1277,11 @@
 
             const iniciarArrasto = (e) => {
                 const pos = obterPosicaoRealCanvas(e);
-
-                if (imgCarimboElemento) {
-                    const slCar = document.getElementById("sliderEscalaCarimbo");
-                    let escalaC = slCar ? parseInt(slCar.value) / 100 : 0.85;
-                    let larguraCar = 380 * escalaC;
-                    let alturaCar = (imgCarimboElemento.height * larguraCar) / imgCarimboElemento.width;
-
-                    if (pos.x >= posicaoCarimbo.x && pos.x <= posicaoCarimbo.x + larguraCar &&
-                        pos.y >= posicaoCarimbo.y && pos.y <= posicaoCarimbo.y + alturaCar) {
-                        elementoSendoArrastado = 'carimbo';
-                        offsetArrasto = { x: pos.x - posicaoCarimbo.x, y: pos.y - posicaoCarimbo.y };
-                        return;
-                    }
-                }
                 
                 if (imgAssinaturaElemento) {
                     const slEsc = document.getElementById("sliderEscalaAssinatura");
-                    let escala = slEsc ? parseInt(slEsc.value) / 100 : 1.2;
-                    let larguraAss = (larguraCrop * 0.45) * escala;
+                    let escala = slEsc ? parseInt(slEsc.value) / 100 : 0.5;
+                    let larguraAss = (larguraCrop * 0.35) * escala;
                     let alturaAss = (imgAssinaturaElemento.height * larguraAss) / imgAssinaturaElemento.width;
                     
                     if (pos.x >= posicaoAssinatura.x && pos.x <= posicaoAssinatura.x + larguraAss &&
@@ -1490,9 +1324,6 @@
                 } else if (elementoSendoArrastado === 'assinatura') {
                     posicaoAssinatura.x = pos.x - offsetArrasto.x;
                     posicaoAssinatura.y = pos.y - offsetArrasto.y;
-                } else if (elementoSendoArrastado === 'carimbo') {
-                    posicaoCarimbo.x = pos.x - offsetArrasto.x;
-                    posicaoCarimbo.y = pos.y - offsetArrasto.y;
                 }
                 window.renderizarFiltroAtual(true);
             };
@@ -1514,22 +1345,13 @@
             
             const canvasAss = document.getElementById("canvasAssinatura");
             if (!canvasAss) return;
-
-            const ratio = window.devicePixelRatio || 1;
-            const width = canvasAss.offsetWidth;
-            const height = canvasAss.offsetHeight;
-
-            canvasAss.width = width * ratio;
-            canvasAss.height = height * ratio;
+            canvasAss.width = canvasAss.offsetWidth;
+            canvasAss.height = canvasAss.offsetHeight;
             
             ctxAssinaturaPad = canvasAss.getContext("2d");
-            ctxAssinaturaPad.scale(ratio, ratio);
             ctxAssinaturaPad.strokeStyle = "#000000";
-            ctxAssinaturaPad.lineWidth = 3;
+            ctxAssinaturaPad.lineWidth = 2.5;
             ctxAssinaturaPad.lineCap = "round";
-            ctxAssinaturaPad.lineJoin = "round";
-
-            pontosTraçoAssinatura = [];
 
             const getPosPad = (e) => {
                 const rect = canvasAss.getBoundingClientRect();
@@ -1538,29 +1360,8 @@
                 return { x: clientX - rect.left, y: clientY - rect.top };
             };
 
-            const iniciar = (e) => { 
-                assinandoPad = true; 
-                const p = getPosPad(e); 
-                pontosTraçoAssinatura = [p];
-                ctxAssinaturaPad.beginPath(); 
-                ctxAssinaturaPad.moveTo(p.x, p.y); 
-            };
-
-            const desenhar = (e) => { 
-                if (!assinandoPad) return; 
-                e.preventDefault();
-                const p = getPosPad(e); 
-                pontosTraçoAssinatura.push(p);
-
-                if (pontosTraçoAssinatura.length > 2) {
-                    const len = pontosTraçoAssinatura.length;
-                    const xc = (pontosTraçoAssinatura[len - 1].x + pontosTraçoAssinatura[len - 2].x) / 2;
-                    const yc = (pontosTraçoAssinatura[len - 1].y + pontosTraçoAssinatura[len - 2].y) / 2;
-                    ctxAssinaturaPad.quadraticCurveTo(pontosTraçoAssinatura[len - 2].x, pontosTraçoAssinatura[len - 2].y, xc, yc);
-                    ctxAssinaturaPad.stroke();
-                }
-            };
-
+            const iniciar = (e) => { assinandoPad = true; const p = getPosPad(e); ctxAssinaturaPad.beginPath(); ctxAssinaturaPad.moveTo(p.x, p.y); };
+            const desenhar = (e) => { if (!assinandoPad) return; const p = getPosPad(e); ctxAssinaturaPad.lineTo(p.x, p.y); ctxAssinaturaPad.stroke(); };
             const parar = () => { assinandoPad = false; };
 
             canvasAss.onmousedown = iniciar; canvasAss.onmousemove = desenhar; canvasAss.onmouseup = parar;
@@ -1570,9 +1371,7 @@
         window.limparAssinaturaPad = function() {
             const canvasAss = document.getElementById("canvasAssinatura");
             if (ctxAssinaturaPad && canvasAss) {
-                const ratio = window.devicePixelRatio || 1;
-                ctxAssinaturaPad.clearRect(0, 0, canvasAss.width / ratio, canvasAss.height / ratio);
-                pontosTraçoAssinatura = [];
+                ctxAssinaturaPad.clearRect(0, 0, canvasAss.width, canvasAss.height);
             }
         };
 
@@ -1607,52 +1406,31 @@
             if (pAss) { pAss.classList.add("hidden"); pAss.classList.remove("flex"); }
             
             const txtBtnAss = document.getElementById("txtBtnAssinatura");
-            if (txtBtnAss) txtBtnAss.innerText = "Assinar";
+            if (txtBtnAss) txtBtnAss.innerText = "Adicionar Assinatura";
             
             window.renderizarFiltroAtual(true);
         };
 
+        // SALVAR PÁGINA (VAI PARA O CARRINHO)
         window.confirmarSalvarPaginaScanner = function() {
             window.renderizarFiltroAtual(false);
             const canvasLive = document.getElementById("canvasLivePreview");
             if (!canvasLive) return;
             const imgSalvaDataUrl = canvasLive.toDataURL('image/jpeg', 0.85); 
 
-            const estadoPagina = {
-                imagemBaseContextData: canvasOriginalContextData,
-                larguraCrop: larguraCrop,
-                alturaCrop: alturaCrop,
-                caixasTexto: JSON.parse(JSON.stringify(caixasTexto)),
-                indiceCaixaTextoAtiva: indiceCaixaTextoAtiva,
-                posicaoAssinatura: { ...posicaoAssinatura },
-                imgAssinaturaElemento: imgAssinaturaElemento,
-                imgCarimboElemento: imgCarimboElemento,
-                posicaoCarimbo: { ...posicaoCarimbo },
-                escalaCarimbo: document.getElementById("sliderEscalaCarimbo") ? document.getElementById("sliderEscalaCarimbo").value : 85,
-                escalaAssinatura: document.getElementById("sliderEscalaAssinatura") ? document.getElementById("sliderEscalaAssinatura").value : 120,
-                brilho: document.getElementById("sliderBrilho") ? document.getElementById("sliderBrilho").value : 0,
-                contraste: document.getElementById("sliderContraste") ? document.getElementById("sliderContraste").value : 0,
-                finalDataUrl: imgSalvaDataUrl,
-                paciente: "" // Criado campo em branco para a Revisão Inteligente
-            };
-
-            if (indicePaginaSendoEditada !== null) {
-                arrayPaginasEscaneadas[indicePaginaSendoEditada] = estadoPagina;
-            } else {
-                arrayPaginasEscaneadas.push(estadoPagina);
-            }
-
+            // Carga o Preview com "Desconhecido" ate processarmos o OCR depois na revisão
+            arrayPaginasEscaneadas.push({ finalDataUrl: imgSalvaDataUrl, paciente: "" });
+            
             modoUploadAtual = 'scanner';
 
             const modalFiltros = document.getElementById("modalFiltrosScanner");
             if (modalFiltros) { modalFiltros.classList.add("hidden"); modalFiltros.classList.remove("flex"); }
             if (cropperInstancia) cropperInstancia.destroy();
             
-            // NÃO SALVA direto. Envia para o Preview Inteligente do Scanner.
             window.renderizarCarrinhoScanner();
         };
 
-        // --- PREVIEW INTELIGENTE PARA DIGITAÇÃO DO NOME ---
+        // --- SISTEMA DE CARRINHO COM DROPDOWN DE PACIENTES PARA REVISÃO INTELIGENTE ---
         window.renderizarCarrinhoScanner = function() {
             const areaEscolha = document.getElementById("areaEscolhaModo");
             const areaPrev = document.getElementById("areaPreviewScanner");
@@ -1669,8 +1447,15 @@
             if (txtQtd) txtQtd.innerText = `${arrayPaginasEscaneadas.length} páginas`;
 
             arrayPaginasEscaneadas.forEach((pagData, index) => {
-                let imgUrl = typeof pagData === 'string' ? pagData : pagData.finalDataUrl;
+                let imgUrl = pagData.finalDataUrl;
                 let nomePacSugerido = pagData.paciente || "";
+
+                // Monta o select de Pacientes Baseado no Banco Referência
+                let optionsHTML = `<option value="">Desconhecido (Puxar do Anterior)</option>`;
+                listaPacientesCadastrados.forEach(pac => {
+                    let selected = (nomePacSugerido === pac.nome) ? "selected" : "";
+                    optionsHTML += `<option value="${pac.nome}" ${selected}>${pac.nome}</option>`;
+                });
 
                 const div = document.createElement("div");
                 div.className = "relative border border-gray-700 rounded-lg overflow-hidden h-36 bg-gray-900 flex flex-col group shadow-lg";
@@ -1680,69 +1465,18 @@
                         <div class="absolute bottom-0 left-0 right-0 bg-black/80 text-[9px] text-center py-0.5 font-bold shadow-inner z-10">Pág ${index + 1}</div>
                         
                         <div class="absolute top-1 right-1 flex gap-1 z-20">
-                            <button onclick="window.reabrirEdicaoPagina(${index})" title="Editar Imagem" class="bg-blue-600 hover:bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow"><i class="fas fa-pen text-[9px]"></i></button>
                             <button onclick="window.removerPaginaScanner(${index})" title="Remover" class="bg-red-600 hover:bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow"><i class="fas fa-times text-[9px]"></i></button>
                         </div>
                     </div>
-                    <!-- CAMPO ONDE O USUÁRIO DIGITA SE A IA FALHAR -->
                     <div class="h-10 bg-gray-950 flex flex-col p-1 border-t border-gray-800">
-                        <input type="text" id="inputNomePac_${index}" value="${nomePacSugerido}" placeholder="Digite o nome..." class="w-full h-full bg-gray-800 text-[10px] text-center text-white font-bold rounded border border-gray-600 focus:outline-none focus:border-blue-500 transition">
+                        <select id="selectNomePac_${index}" class="w-full h-full bg-gray-800 text-[10px] text-center text-white font-bold rounded border border-gray-600 focus:outline-none focus:border-blue-500 transition">
+                            ${optionsHTML}
+                        </select>
                     </div>
                 `;
                 if (grid) grid.appendChild(div);
             });
             if (arrayPaginasEscaneadas.length === 0) window.limparModosUpload();
-        };
-
-        window.reabrirEdicaoPagina = function(index) {
-            indicePaginaSendoEditada = index;
-            const pag = arrayPaginasEscaneadas[index];
-
-            if (typeof pag === 'string') return;
-
-            canvasOriginalContextData = pag.imagemBaseContextData;
-            larguraCrop = pag.larguraCrop;
-            alturaCrop = pag.alturaCrop;
-            caixasTexto = JSON.parse(JSON.stringify(pag.caixasTexto));
-            indiceCaixaTextoAtiva = pag.indiceCaixaTextoAtiva;
-            posicaoAssinatura = { ...pag.posicaoAssinatura };
-            imgAssinaturaElemento = pag.imgAssinaturaElemento;
-            imgCarimboElemento = pag.imgCarimboElemento;
-            posicaoCarimbo = { ...pag.posicaoCarimbo };
-
-            const slEsc = document.getElementById("sliderEscalaAssinatura"); if (slEsc) slEsc.value = pag.escalaAssinatura || 120;
-            const slCar = document.getElementById("sliderEscalaCarimbo"); if (slCar) slCar.value = pag.escalaCarimbo || 85;
-            const slB = document.getElementById("sliderBrilho"); if (slB) slB.value = pag.brilho;
-            const slC = document.getElementById("sliderContraste"); if (slC) slC.value = pag.contraste;
-
-            if (imgAssinaturaElemento) {
-                const pAss = document.getElementById("painelControleAssinatura"); if (pAss) { pAss.classList.remove("hidden"); pAss.classList.add("flex"); }
-                const txtBtn = document.getElementById("txtBtnAssinatura"); if (txtBtn) txtBtn.innerText = "Refazer Assinatura";
-            } else {
-                const pAss = document.getElementById("painelControleAssinatura"); if (pAss) { pAss.classList.add("hidden"); pAss.classList.remove("flex"); }
-                const txtBtn = document.getElementById("txtBtnAssinatura"); if (txtBtn) txtBtn.innerText = "Assinar";
-            }
-
-            if (imgCarimboElemento) {
-                const pCar = document.getElementById("painelControleCarimbo"); if (pCar) { pCar.classList.remove("hidden"); pCar.classList.add("flex"); }
-                const txtB = document.getElementById("txtBtnCarimbo"); if (txtB) txtB.innerText = "Reaplicar Carimbo";
-            } else {
-                const pCar = document.getElementById("painelControleCarimbo"); if (pCar) { pCar.classList.add("hidden"); pCar.classList.remove("flex"); }
-                const txtB = document.getElementById("txtBtnCarimbo"); if (txtB) txtB.innerText = "Carimbar";
-            }
-
-            const modalFiltros = document.getElementById("modalFiltrosScanner");
-            if (modalFiltros) { modalFiltros.classList.remove("hidden"); modalFiltros.classList.add("flex"); }
-
-            const canvasLive = document.getElementById("canvasLivePreview");
-            if (canvasLive) {
-                canvasLive.width = larguraCrop;
-                canvasLive.height = alturaCrop;
-                configurarEventosArrastoCanvas(canvasLive);
-            }
-
-            sincronizarPainelComCaixaAtiva();
-            window.renderizarFiltroAtual(true);
         };
 
         window.removerPaginaScanner = function(index) {
@@ -1772,7 +1506,7 @@
             if (input.files && input.files.length > 0) {
                 const file = input.files[0];
                 
-                // NOVO FLUXO: Se o usuário subir um PDF genérico, nós fatiamos e jogamos no Carrinho de Revisão!
+                // NOVO FLUXO: Se o usuário subir um PDF genérico, fatiamos e jogamos no Carrinho de Revisão!
                 if (file.type === 'application/pdf') {
                     modoUploadAtual = 'scanner'; 
                     const areaEscolha = document.getElementById("areaEscolhaModo"); if (areaEscolha) areaEscolha.classList.add("hidden");
@@ -1781,7 +1515,7 @@
                     if (btnSalvar) { btnSalvar.classList.remove("hidden"); btnSalvar.classList.add("flex"); btnSalvar.disabled = true; btnSalvar.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Lendo Páginas do PDF...`; }
                     
                     const grid = document.getElementById("gridPaginasScanner");
-                    if (grid) grid.innerHTML = `<div class="col-span-2 text-center text-xs text-gray-400 py-8">Aguarde, extraindo as páginas...</div>`;
+                    if (grid) grid.innerHTML = `<div class="col-span-2 text-center text-xs text-gray-400 py-8">Aguarde, a Inteligência Artificial está escaneando a letra do PDF...</div>`;
 
                     try {
                         const arrayBuffer = await file.arrayBuffer();
@@ -1804,7 +1538,8 @@
                             try {
                                 const imgBw = await preProcessarImagemParaOCR(imgDataUrl);
                                 const ret = await worker.recognize(imgBw);
-                                let nomeVisto = extrairNomePacienteOCR(ret.data.text);
+                                // O cruzamento Fuzzy
+                                let nomeVisto = encontrarPacienteNoBanco(ret.data.text);
                                 if (nomeVisto !== "Desconhecido") nomeSugerido = nomeVisto;
                             } catch(e) {}
 
@@ -1842,7 +1577,6 @@
             const container = document.getElementById("listaArquivosFila");
             if (!container) return;
             container.innerHTML = "";
-            
             const txtQtd = document.getElementById("txtQtdFila");
             if (txtQtd) txtQtd.innerText = `${arquivosFilaEnvio.length} itens`;
             
@@ -1850,8 +1584,8 @@
                 let isImg = file.type.startsWith('image/');
                 let iconeLateral = isImg ? `<i class="fas fa-image text-blue-400 mr-2 text-sm"></i>` : `<i class="fas fa-file-alt text-purple-400 mr-2 text-sm"></i>`;
                 const div = document.createElement("div");
-                div.className = "flex justify-between items-center bg-gray-800 p-2.5 rounded-lg border border-gray-700 text-xs hover:border-gray-600 transition";
-                div.innerHTML = `<div class="truncate flex-1 text-gray-300 pr-2 flex items-center font-medium">${iconeLateral} ${file.name}</div><button onclick="window.removerArquivoFila(${index})" class="text-gray-500 hover:text-red-400 p-1.5 transition rounded-full hover:bg-gray-700/50"><i class="fas fa-times"></i></button>`;
+                div.className = "flex justify-between items-center bg-gray-800 p-2.5 rounded-lg border border-gray-700 text-xs";
+                div.innerHTML = `<div class="truncate flex-1 text-gray-300 pr-2 flex items-center">${iconeLateral} ${file.name}</div><button onclick="window.removerArquivoFila(${index})" class="text-gray-500 hover:text-red-400 p-1.5 transition rounded-full"><i class="fas fa-times"></i></button>`;
                 container.appendChild(div);
             });
             if (arquivosFilaEnvio.length === 0) window.limparModosUpload();
@@ -1862,7 +1596,7 @@
             window.renderizarListaFilaEnvio();
         };
 
-        // LÓGICA FINAL DE UPLOAD BASEADO NAS REVISÕES DO USUÁRIO
+        // LÓGICA DE UPLOAD DEFINITIVA BASEADA NO PREVIEW
         window.iniciarUploadStorage = async function() {
             const inNome = document.getElementById("nomeArquivoManual");
             let nomeDigitado = inNome ? inNome.value.trim() : "";
@@ -1880,11 +1614,10 @@
                 const dataAtual = new Date();
                 const pastaData = `${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, '0')}-${String(dataAtual.getDate()).padStart(2, '0')}`;
                 
-                // 1. GERA E SALVA O RELATÓRIO GERAL (Completo)
+                // 1. GERA E SALVA O RELATÓRIO GERAL
                 if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Salvando Relatório Geral...`;
                 
                 let arquivoGeralUpload = null;
-                // Se foi um PDF pronto que o usuario upou, pega o original. Se foi foto do scanner, cria um PDF.
                 if (arrayPaginasEscaneadas[0] && arrayPaginasEscaneadas[0].arquivoOriginalParaRelatorioGeral) {
                     arquivoGeralUpload = arrayPaginasEscaneadas[0].arquivoOriginalParaRelatorioGeral;
                 } else {
@@ -1894,7 +1627,7 @@
                     const pdfHeight = doc.internal.pageSize.getHeight();
 
                     arrayPaginasEscaneadas.forEach((pagData, i) => {
-                        let imgBase64 = typeof pagData === 'string' ? pagData : pagData.finalDataUrl;
+                        let imgBase64 = pagData.finalDataUrl;
                         if (i > 0) doc.addPage();
                         const imgProps = doc.getImageProperties(imgBase64);
                         let imgWidth = pdfWidth;
@@ -1919,29 +1652,29 @@
                     statusExclusao: "ativo"
                 });
 
-                // 2. AGRUPA E SEPARA PELOS NOMES QUE O USUÁRIO DIGITOU/VALIDOU
+                // 2. AGRUPA PELAS REVISÕES DA TELA
                 if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Separando por Paciente...`;
                 
                 let mapaPacientes = {};
-                let nomeAnteriorLembrado = "Desconhecido"; // Se tiver em branco, herda do anterior
+                let nomeAnteriorLembrado = "Desconhecido"; 
 
                 for (let i = 0; i < arrayPaginasEscaneadas.length; i++) {
                     let pagData = arrayPaginasEscaneadas[i];
-                    let imgBase64 = typeof pagData === 'string' ? pagData : pagData.finalDataUrl;
+                    let imgBase64 = pagData.finalDataUrl;
                     
-                    let elCaixinha = document.getElementById(`inputNomePac_${i}`);
-                    let nomeDigitadoNaTela = elCaixinha ? elCaixinha.value.trim() : "";
+                    let elCaixinha = document.getElementById(`selectNomePac_${i}`);
+                    let nomeSelecionadoNaTela = elCaixinha ? elCaixinha.value : "";
 
-                    // Se a pessoa digitou um nome valido ali
-                    if (nomeDigitadoNaTela.length >= 3 && nomeDigitadoNaTela.toLowerCase() !== "desconhecido") {
-                        nomeAnteriorLembrado = padronizarNomePaciente(nomeDigitadoNaTela);
+                    // Se escolheu um paciente no dropdown, atualiza a lembrança
+                    if (nomeSelecionadoNaTela !== "") {
+                        nomeAnteriorLembrado = nomeSelecionadoNaTela;
                     }
                     
                     if (!mapaPacientes[nomeAnteriorLembrado]) mapaPacientes[nomeAnteriorLembrado] = [];
                     mapaPacientes[nomeAnteriorLembrado].push(imgBase64);
                 }
 
-                // 3. FAZ O UPLOAD DOS FATIADOS (PDF por Paciente)
+                // 3. FAZ O UPLOAD DAS PASTAS INDIVIDUAIS
                 const { jsPDF } = window.jspdf;
                 const docPDF = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
                 const pdfW = docPDF.internal.pageSize.getWidth();
@@ -1954,7 +1687,8 @@
                     const nomePac = nomesPacientes[idx];
                     const imgsPac = mapaPacientes[nomePac];
 
-                    if (nomePac === "Desconhecido") continue; // Se sobrou algum lixo vazio, não cria pasta de desconhecido
+                    // Impede o upload se acabou não selecionando nenhum paciente na tela inteira
+                    if (nomePac === "Desconhecido") continue; 
 
                     if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Salvando: ${nomePac}...`;
 
@@ -2036,24 +1770,8 @@
             }
         };
 
-        function obterNomePastaInteligente(timestamp) {
-            const dataObj = new Date(timestamp);
-            const hoje = new Date();
-            if (dataObj.getMonth() === hoje.getMonth() && dataObj.getFullYear() === hoje.getFullYear()) {
-                return dataObj.toLocaleDateString('pt-BR');
-            } else {
-                const mes = String(dataObj.getMonth() + 1).padStart(2, '0');
-                return `${mes}/${dataObj.getFullYear()}`;
-            }
-        }
-
-        // RENDERIZAÇÃO DA GALERIA (MANTENDO LAYOUT)
+        // RENDERIZAÇÃO DA GALERIA
         function carregarGaleriaDeAnexos() {
-            const container = document.getElementById("listaAnexos");
-            if (container && todosAnexosNaMemoria.length === 0) {
-                container.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center py-10"><i class="fas fa-circle-notch fa-spin text-4xl text-blue-500 mb-3"></i><p class="text-gray-400 text-sm animate-pulse">Sincronizando base de dados...</p></div>`;
-            }
-
             onValue(dbRef(db, 'arquivos_anexos'), (snapshot) => {
                 todosAnexosNaMemoria = [];
                 const selectUsuario = document.getElementById("filtroUsuario");
@@ -2109,18 +1827,37 @@
             container.innerHTML = "";
 
             let anexosFiltrados = todosAnexosNaMemoria;
-            if (isBuscaAtiva) {
-                anexosFiltrados = todosAnexosNaMemoria.filter(arq => 
-                    arq.nome.toLowerCase().includes(termoBusca) || 
-                    (arq.pastaPaciente && arq.pastaPaciente.toLowerCase().includes(termoBusca))
-                );
-            }
+            
+            anexosFiltrados = anexosFiltrados.filter(arq => {
+                const dataObj = new Date(arq.dataEnvio);
+                const dataFormatadaDia = dataObj.toLocaleDateString('pt-BR'); 
+                const mesAnoFormatado = String(dataObj.getMonth() + 1).padStart(2, '0') + '/' + dataObj.getFullYear();
+                
+                let passaTexto = true;
+                if (termoBusca.length > 0) {
+                    passaTexto = arq.nome.toLowerCase().includes(termoBusca) || 
+                                 dataFormatadaDia.includes(termoBusca) || 
+                                 mesAnoFormatado.includes(termoBusca) ||
+                                 (arq.pastaPaciente && arq.pastaPaciente.toLowerCase().includes(termoBusca));
+                }
+
+                const passaUsuario = usuarioFiltro === "todos" || arq.enviadoPor === usuarioFiltro;
+                let passaData = true;
+                dataObj.setHours(0,0,0,0);
+                if (dataInicio) { const dataIni = new Date(dataInicio + "T00:00:00"); if (dataObj < dataIni) passaData = false; }
+                if (dataFim) { const dataF = new Date(dataFim + "T23:59:59"); if (dataObj > dataF) passaData = false; }
+                
+                return passaTexto && passaUsuario && passaData;
+            });
+
+            const isBuscaAtiva = termoBusca.length > 0;
 
             const txtInfo = document.getElementById("txtInfoVista");
             const txtCount = document.getElementById("txtContadorArquivos");
 
+            // NIVEL 0: RAIZ - Apenas Relatório Geral e Pacientes
             if (window.pastaAbertaAtual === null && !isBuscaAtiva) {
-                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<span class="text-gray-300 font-bold">Pastas do Sistema</span>`;
+                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<span class="text-gray-300 font-bold text-xs">Pastas do Sistema</span>`;
                 if (txtInfo) txtInfo.innerText = "Navegando nas Pastas";
 
                 const arqsGeral = anexosFiltrados.filter(a => a.pasta && a.pasta.startsWith("Relatorio_Geral"));
@@ -2132,8 +1869,9 @@
                 if (txtCount) txtCount.innerText = `2 pastas`;
 
             } 
+            // NIVEL 1: DENTRO DE PACIENTES - Subpastas por Nomes Limpos
             else if (window.pastaAbertaAtual === 'pacientes_root' && !isBuscaAtiva) {
-                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold">Pacientes</span>`;
+                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs">Pacientes</span>`;
                 if (txtInfo) txtInfo.innerText = "Selecione o Paciente";
                 
                 const agrupamentoPacientes = {};
@@ -2145,7 +1883,7 @@
                 });
 
                 const pacientesNomes = Object.keys(agrupamentoPacientes).sort();
-                if(pacientesNomes.length === 0) container.innerHTML = `<div class="col-span-full text-center text-gray-500 py-4 text-sm">Nenhum paciente ainda.</div>`;
+                if(pacientesNomes.length === 0) container.innerHTML = `<div class="col-span-full text-center text-gray-500 py-4 text-xs">Nenhum paciente encontrado.</div>`;
 
                 pacientesNomes.forEach(nome => {
                     const qtd = agrupamentoPacientes[nome].length;
@@ -2153,25 +1891,28 @@
                 });
                 if (txtCount) txtCount.innerText = `${pacientesNomes.length} pacientes`;
             }
+            // NIVEL 1: DENTRO DO RELATÓRIO GERAL
             else if (window.pastaAbertaAtual === 'relatorio_geral' && !isBuscaAtiva) {
-                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold">Relatório Geral</span>`;
+                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs">Relatório Geral</span>`;
                 if (txtInfo) txtInfo.innerText = "Arquivos Gerais";
                 
                 const arqs = anexosFiltrados.filter(a => a.pasta && a.pasta.startsWith("Relatorio_Geral"));
                 renderizarArquivosFinais(arqs, container);
                 if (txtCount) txtCount.innerText = `${arqs.length} relatórios`;
             }
+            // NIVEL 2: DENTRO DO NOME DO PACIENTE
             else if (window.pastaAbertaAtual && window.pastaAbertaAtual.startsWith('paciente:') && !isBuscaAtiva) {
                 const nomePac = window.pastaAbertaAtual.split('paciente:')[1];
-                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.abrirPasta('pacientes_root')" class="text-gray-400 hover:text-white transition flex items-center gap-2"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold truncate max-w-[150px]">${nomePac}</span>`;
+                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.abrirPasta('pacientes_root')" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs truncate max-w-[150px]">${nomePac}</span>`;
                 if (txtInfo) txtInfo.innerText = "Evoluções do Paciente";
 
                 const arqs = anexosFiltrados.filter(a => a.pastaPaciente === nomePac);
                 renderizarArquivosFinais(arqs, container);
                 if (txtCount) txtCount.innerText = `${arqs.length} evoluções`;
             }
+            // BUSCA GLOBAL
             else {
-                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="document.getElementById('inputBuscaAnexo').value=''; window.aplicarFiltrosNaGaleria();" class="text-gray-400 hover:text-white transition flex items-center gap-2"><i class="fas fa-arrow-left"></i> Limpar</button><span class="text-gray-600 mx-2">/</span><span class="text-blue-400 font-bold">Resultados</span>`;
+                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="document.getElementById('inputBuscaAnexo').value=''; window.aplicarFiltrosNaGaleria();" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Limpar Busca</button><span class="text-gray-600 mx-2">/</span><span class="text-blue-400 font-bold text-xs">Resultados</span>`;
                 if (txtInfo) txtInfo.innerText = "Resultados da Pesquisa";
                 renderizarArquivosFinais(anexosFiltrados, container);
                 if (txtCount) txtCount.innerText = `${anexosFiltrados.length} encontrados`;
@@ -2183,47 +1924,38 @@
             const bgClass = isPaciente ? "bg-indigo-900/20 border-indigo-800/40" : "bg-blue-900/20 border-blue-800/40";
             
             const card = document.createElement("div");
-            card.className = "bg-gray-800 border border-gray-700 p-4 rounded-xl shadow-md flex items-center gap-4 hover:border-blue-500/50 hover:bg-gray-700/50 transition cursor-pointer active:scale-95";
+            card.className = "bg-gray-800 border border-gray-700 p-3 rounded-xl shadow-sm flex items-center gap-3 hover:border-blue-500/50 hover:bg-gray-700/50 transition cursor-pointer active:scale-95";
             card.setAttribute("onclick", onclickAction);
             card.innerHTML = `
-                <div class="w-14 h-14 ${bgClass} rounded-lg flex items-center justify-center border flex-shrink-0">
-                    <i class="fas ${iconClass} text-3xl"></i>
+                <div class="w-12 h-12 ${bgClass} rounded-lg flex items-center justify-center border flex-shrink-0">
+                    <i class="fas ${iconClass} text-2xl"></i>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <h4 class="font-bold text-white text-base truncate flex items-center">${nomePasta}</h4>
-                    <p class="text-xs text-gray-400 mt-0.5">${subtitulo}</p>
+                    <span class="font-bold text-gray-200 text-sm truncate uppercase block">${nomePasta}</span>
+                    <p class="text-[10px] text-gray-400 mt-0.5">${subtitulo}</p>
                 </div>
-                <i class="fas fa-chevron-right text-gray-600"></i>
+                <i class="fas fa-chevron-right text-gray-600 text-xs mr-1"></i>
             `;
             container.appendChild(card);
         }
 
         function renderizarArquivosFinais(lista, container) {
-            if (lista.length === 0) { container.innerHTML = `<div class="col-span-full py-8 text-center text-gray-500 text-sm">Nenhum documento encontrado.</div>`; return; }
+            if (lista.length === 0) { container.innerHTML = `<div class="col-span-full py-8 text-center text-gray-500 text-xs">Nenhum documento encontrado.</div>`; return; }
             lista.forEach(arq => {
                 const dataObj = new Date(arq.dataEnvio);
                 const dataStr = dataObj.toLocaleDateString('pt-BR');
                 const horaStr = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
                 const nomeSeguro = arq.nome.replace(/'/g, "\\'").replace(/"/g, "&quot;");
 
-                let visualConteudo = renderizarVisualArquivo(arq.tipo.toLowerCase(), arq.url);
+                let icone = `<div class="w-12 h-12 rounded-lg bg-red-950/30 border border-red-900/50 flex items-center justify-center flex-shrink-0"><i class="fas fa-file-pdf text-2xl text-red-500"></i></div>`;
+                if(arq.tipo === 'imagem') icone = `<div class="relative w-12 h-12 rounded-lg border border-gray-700 overflow-hidden flex-shrink-0"><img src="${arq.url}" loading="lazy" class="w-full h-full object-cover"></div>`;
 
                 const card = document.createElement("div");
-                card.className = "bg-gray-900 border border-gray-800 p-3 rounded-xl shadow flex gap-3 items-center hover:border-blue-500/30 transition cursor-pointer active:scale-95";
+                card.className = "bg-gray-900 border border-gray-800 p-2.5 rounded-lg shadow flex gap-3 items-center hover:border-blue-500/30 transition cursor-pointer active:scale-95";
                 card.setAttribute("onclick", `window.abrirModalVisualizacao('${arq.id}', '${arq.url}', '${nomeSeguro}', '${arq.tipo}')`);
-                card.innerHTML = `${visualConteudo}<div class="flex-1 min-w-0"><h4 class="font-bold text-white text-sm truncate uppercase flex-1">${arq.nome}</h4><p class="text-[10px] text-gray-400 mt-0.5"><i class="fas fa-user text-blue-500"></i> @${arq.enviadoPor}</p><p class="text-[10px] text-gray-500"><i class="far fa-clock"></i> ${dataStr} às ${horaStr}</p></div>`;
+                card.innerHTML = `${icone}<div class="flex-1 min-w-0"><h4 class="font-bold text-white text-[11px] truncate uppercase">${arq.nome}</h4><p class="text-[9px] text-gray-500 mt-1"><i class="far fa-clock"></i> ${dataStr} às ${horaStr}</p></div>`;
                 container.appendChild(card);
             });
-        }
-
-        function renderizarVisualArquivo(tp, url) {
-            if (['jpg', 'jpeg', 'png', 'imagem'].includes(tp)) { 
-                return `<div class="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-700 bg-gray-800 flex-shrink-0"><div class="absolute inset-0 flex items-center justify-center"><i class="fas fa-spinner fa-spin text-gray-500"></i></div><img src="${url}" loading="lazy" class="absolute inset-0 w-full h-full object-cover z-10 transition-opacity duration-500 opacity-0" onload="this.classList.remove('opacity-0')"></div>`; 
-            } 
-            else if (tp === 'pdf') { return `<div class="w-16 h-16 rounded-lg border border-red-900/50 bg-red-950/30 flex items-center justify-center shadow-inner flex-shrink-0"><i class="fas fa-file-pdf text-3xl text-red-500"></i></div>`; } 
-            else if (['xls', 'xlsx', 'csv'].includes(tp)) { return `<div class="w-16 h-16 rounded-lg border border-green-900/50 bg-green-950/30 flex items-center justify-center shadow-inner flex-shrink-0"><i class="fas fa-file-excel text-3xl text-green-500"></i></div>`; } 
-            else if (['doc', 'docx'].includes(tp)) { return `<div class="w-16 h-16 rounded-lg border border-blue-900/50 bg-blue-950/30 flex items-center justify-center shadow-inner flex-shrink-0"><i class="fas fa-file-word text-3xl text-blue-500"></i></div>`; } 
-            else { return `<div class="w-16 h-16 rounded-lg border border-gray-700 bg-gray-800 flex items-center justify-center shadow-inner flex-shrink-0"><i class="fas fa-file-alt text-3xl text-gray-400"></i></div>`; }
         }
 
         window.abrirModalVisualizacao = function(id, url, nome, tipo) {
@@ -2365,8 +2097,6 @@
             if (modal && content) { content.classList.remove("scale-100", "opacity-100"); content.classList.add("scale-95", "opacity-0"); setTimeout(() => { modal.classList.remove("flex"); modal.classList.add("hidden"); }, 200); }
         };
 
-        let isBuscaAtiva = false; // VARIAVEL CORRIGIDA PARA O FIREBASE NÃO DAR ERRO AO CARREGAR
-        
         onAuthStateChanged(auth, (user) => {
             const modalLogin = document.getElementById("modalLoginApp");
 
@@ -2394,13 +2124,20 @@
 
                     const areaSino = document.getElementById("areaSinoAdmin");
                     const espacador = document.getElementById("espacadorHeader");
+                    const btnBancoPacientes = document.getElementById("btnSidebarPacientes");
                     
                     if (perfilUsuario === "administrador") {
                         if (areaSino) areaSino.classList.remove("hidden");
                         if (espacador) espacador.classList.add("hidden");
+                        if (btnBancoPacientes) btnBancoPacientes.classList.remove("hidden");
+                        if (btnBancoPacientes) btnBancoPacientes.classList.add("flex");
+                        if (typeof window.inicializarNotificacoes === 'function') {
+                            window.inicializarNotificacoes(dadosUser, "containerNotificacoes", "badgeNotificacoes");
+                        }
                     } else {
                         if (areaSino) areaSino.classList.add("hidden");
                         if (espacador) espacador.classList.remove("hidden");
+                        if (btnBancoPacientes) { btnBancoPacientes.classList.add("hidden"); btnBancoPacientes.classList.remove("flex"); }
                     }
                     carregarGaleriaDeAnexos();
                 });
