@@ -238,7 +238,7 @@
     </header>
 
     <main class="flex-1 max-w-5xl w-full mx-auto p-4 flex flex-col gap-6">
-        <!-- Barra de Filtros (Expansão Data Início e Fim / Removido "Enviado Por") -->
+        <!-- Barra de Filtros -->
         <section class="bg-gray-900 border border-gray-800 p-4 rounded-xl shadow-lg flex flex-col gap-3">
             <div class="relative w-full">
                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500"></i>
@@ -337,7 +337,7 @@
                         <span class="text-xs font-bold text-red-400"><i class="fas fa-file-pdf"></i> Revisão de Documentos</span>
                         <span id="txtQtdPaginas" class="text-[10px] text-gray-400 bg-gray-800 px-2 py-1 rounded border border-gray-700">0 páginas</span>
                     </div>
-                    <p class="text-[10px] text-yellow-500 mb-1 leading-tight"><i class="fas fa-info-circle"></i> A IA selecionou o nome. Clique na foto para ler o conteúdo ou altere a caixa de seleção abaixo de cada página.</p>
+                    <p class="text-[10px] text-yellow-500 mb-1 leading-tight"><i class="fas fa-info-circle"></i> A IA selecionou o nome pelo Banco. Clique na miniatura para dar zoom e ler o conteúdo, ou altere na caixinha de seleção.</p>
                     
                     <div id="gridPaginasScanner" class="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto custom-scrollbar p-1"></div>
                     
@@ -716,35 +716,30 @@
             window.renderizarFiltroAtual(true);
         };
 
+        // ==========================================
+        // NOVO CARIMBO: Marcelly Souza da Silva Rosa
+        // ==========================================
         function criarImagemCarimboVetor() {
             const canvasC = document.createElement('canvas');
-            canvasC.width = 460;
-            canvasC.height = 160;
+            canvasC.width = 400;
+            canvasC.height = 130;
             const ctxC = canvasC.getContext('2d');
 
             ctxC.clearRect(0, 0, canvasC.width, canvasC.height);
 
             const corCarimbo = "#1e3a8a"; 
-            ctxC.strokeStyle = corCarimbo;
             ctxC.fillStyle = corCarimbo;
-
-            ctxC.lineWidth = 5;
-            ctxC.strokeRect(10, 10, canvasC.width - 20, canvasC.height - 20);
-            ctxC.lineWidth = 2;
-            ctxC.strokeRect(16, 16, canvasC.width - 32, canvasC.height - 32);
-
             ctxC.textAlign = "center";
             ctxC.textBaseline = "middle";
 
-            ctxC.font = "bold 20px 'Courier New', Courier, monospace";
-            ctxC.fillText("CNPJ: 47.960.950/1716-001", canvasC.width / 2, 42);
+            ctxC.font = "italic bold 24px 'Georgia', serif"; 
+            ctxC.fillText("Marcelly Souza da Silva Rosa", canvasC.width / 2, 35);
 
-            ctxC.font = "black 22px 'Arial Black', Arial, sans-serif";
-            ctxC.fillText("MAGAZINE LUIZA S/A", canvasC.width / 2, 75);
+            ctxC.font = "20px 'Arial', sans-serif";
+            ctxC.fillText("Psicóloga", canvasC.width / 2, 70);
 
-            ctxC.font = "bold 14px Arial, sans-serif";
-            ctxC.fillText("Rua Doutor Feliciano Sodré, 218 - Centro", canvasC.width / 2, 110);
-            ctxC.fillText("CEP 24.440-440 - São Gonçalo/RJ", canvasC.width / 2, 132);
+            ctxC.font = "bold 20px 'Arial', sans-serif";
+            ctxC.fillText("CRP: 05/66521", canvasC.width / 2, 100);
 
             const img = new Image();
             img.src = canvasC.toDataURL("image/png");
@@ -754,7 +749,7 @@
         window.adicionarCarimboEmpresa = function() {
             imgCarimboElemento = criarImagemCarimboVetor();
             imgCarimboElemento.onload = function() {
-                posicaoCarimbo = { x: (larguraCrop - 380) / 2, y: (alturaCrop / 2) - 80 };
+                posicaoCarimbo = { x: (larguraCrop - 400) / 2, y: (alturaCrop / 2) - 65 };
                 const pCar = document.getElementById("painelControleCarimbo");
                 if (pCar) { pCar.classList.remove("hidden"); pCar.classList.add("flex"); }
                 const txtB = document.getElementById("txtBtnCarimbo");
@@ -1236,6 +1231,7 @@
 
             posicaoAssinatura = { x: larguraCrop - 220, y: alturaCrop - 150 };
             imgAssinaturaElemento = null;
+            imgCarimboElemento = null;
             
             const slB = document.getElementById("sliderBrilho"); if (slB) slB.value = 0;
             const slC = document.getElementById("sliderContraste"); if (slC) slC.value = 0;
@@ -1513,6 +1509,22 @@
                 let alturaAss = (imgAssinaturaElemento.height * larguraAss) / imgAssinaturaElemento.width;
                 ctxLive.drawImage(imgAssinaturaElemento, posicaoAssinatura.x, posicaoAssinatura.y, larguraAss, alturaAss);
             }
+
+            if (imgCarimboElemento) {
+                const slCar = document.getElementById("sliderEscalaCarimbo");
+                let escalaC = slCar ? parseInt(slCar.value) / 100 : 0.85;
+                let larguraCar = 380 * escalaC;
+                let alturaCar = (imgCarimboElemento.height * larguraCar) / imgCarimboElemento.width;
+                ctxLive.drawImage(imgCarimboElemento, posicaoCarimbo.x, posicaoCarimbo.y, larguraCar, alturaCar);
+
+                if (mostrarGuias) {
+                    ctxLive.strokeStyle = "rgba(220, 38, 38, 0.8)";
+                    ctxLive.lineWidth = 2;
+                    ctxLive.setLineDash([4, 4]);
+                    ctxLive.strokeRect(posicaoCarimbo.x - 4, posicaoCarimbo.y - 4, larguraCar + 8, alturaCar + 8);
+                    ctxLive.setLineDash([]);
+                }
+            }
         };
 
         function configurarEventosArrastoCanvas(canvas) {
@@ -1751,6 +1763,7 @@
                 let imgUrl = typeof pagData === 'string' ? pagData : pagData.finalDataUrl;
                 let nomePacSugerido = pagData.paciente || "";
 
+                // Dropdown aprimorado
                 let optionsHTML = `<option value="">(Mesmo da Pág. Anterior)</option>`;
                 listaPacientesCadastrados.forEach(pac => {
                     let selected = (nomePacSugerido === pac.nome) ? "selected" : "";
@@ -2078,7 +2091,7 @@
             }
         }
 
-        // RENDERIZAÇÃO DA GALERIA E DO NOVO NÍVEL "ARQUIVOS DIVERSOS"
+        // RENDERIZAÇÃO DA GALERIA
         function carregarGaleriaDeAnexos() {
             const container = document.getElementById("listaAnexos");
             if (container && todosAnexosNaMemoria.length === 0) {
@@ -2087,28 +2100,16 @@
 
             onValue(dbRef(db, 'arquivos_anexos'), (snapshot) => {
                 todosAnexosNaMemoria = [];
-                const selectUsuario = document.getElementById("filtroUsuario");
-                let usuariosUnicos = new Set();
-
                 if (snapshot.exists()) {
                     snapshot.forEach(child => { 
                         const anexo = { id: child.key, ...child.val() };
                         if (!anexo.tipo) anexo.tipo = 'imagem'; 
                         if (perfilUsuario === "administrador" || anexo.statusExclusao !== "pendente_aprovacao") {
                             todosAnexosNaMemoria.push(anexo);
-                            if (anexo.enviadoPor) usuariosUnicos.add(anexo.enviadoPor);
                         }
                     });
                     todosAnexosNaMemoria.sort((a, b) => b.dataEnvio - a.dataEnvio);
                 }
-
-                if (selectUsuario) {
-                    const valorAtualSelect = selectUsuario.value;
-                    selectUsuario.innerHTML = '<option value="todos">Todos os Usuários</option>';
-                    usuariosUnicos.forEach(user => { selectUsuario.innerHTML += `<option value="${user}">@${user}</option>`; });
-                    selectUsuario.value = usuariosUnicos.has(valorAtualSelect) ? valorAtualSelect : "todos";
-                }
-
                 window.aplicarFiltrosNaGaleria();
             });
         }
@@ -2137,9 +2138,7 @@
             if (!container) return;
             container.innerHTML = "";
 
-            let anexosFiltrados = todosAnexosNaMemoria;
-            
-            anexosFiltrados = anexosFiltrados.filter(arq => {
+            let anexosFiltrados = todosAnexosNaMemoria.filter(arq => {
                 const dataObj = new Date(arq.dataEnvio);
                 const dataFormatadaDia = dataObj.toLocaleDateString('pt-BR'); 
                 const mesAnoFormatado = String(dataObj.getMonth() + 1).padStart(2, '0') + '/' + dataObj.getFullYear();
@@ -2378,14 +2377,10 @@
                         text: `Confira este documento: ${nomeLimpo}`,
                         url: window.urlImagemAtiva
                     });
-                } catch (err) {
-                    console.log("Compartilhamento nativo não concluído:", err);
-                }
+                } catch (err) {}
             } else {
                 navigator.clipboard.writeText(window.urlImagemAtiva).then(() => {
                     alert("🔗 Link copiado para a área de transferência!");
-                }).catch(() => {
-                    alert("Seu navegador não suporta compartilhamento automático.");
                 });
             }
         };
@@ -2415,6 +2410,7 @@
                 remove(dbRef(db, 'arquivos_anexos/' + window.idImagemAtiva)).then(() => { window.fecharModalVisualizacao(); }).catch(err => alert("Erro ao excluir: " + err.message));
             } else {
                 update(dbRef(db, 'arquivos_anexos/' + window.idImagemAtiva), { statusExclusao: "pendente_aprovacao", solicitadoPor: usuarioLogado }).then(() => {
+                    push(dbRef(db, 'notificacoes_sistema'), { titulo: "Exclusão Solicitada", mensagem: `@${usuarioLogado} pediu para excluir "${nomeArquivo}".`, tipo: "alerta", timestamp: Date.now() });
                     window.fecharModalVisualizacao();
                 }).catch(err => alert("Erro ao processar: " + err.message));
             }
@@ -2448,6 +2444,16 @@
             });
         };
 
+        window.abrirModalNotificacoes = function() { 
+            const modal = document.getElementById("modalNotificacoes"); const content = document.getElementById("modalNotificacoesContent"); 
+            if (modal && content) { modal.classList.remove("hidden"); modal.classList.add("flex"); setTimeout(() => { content.classList.remove("scale-95", "opacity-0"); content.classList.add("scale-100", "opacity-100"); }, 10); }
+        };
+
+        window.fecharModalNotificacoes = function() { 
+            const modal = document.getElementById("modalNotificacoes"); const content = document.getElementById("modalNotificacoesContent"); 
+            if (modal && content) { content.classList.remove("scale-100", "opacity-100"); content.classList.add("scale-95", "opacity-0"); setTimeout(() => { modal.classList.remove("flex"); modal.classList.add("hidden"); }, 200); }
+        };
+
         onAuthStateChanged(auth, (user) => {
             const modalLogin = document.getElementById("modalLoginApp");
 
@@ -2473,13 +2479,19 @@
                     if (elSidebarNome) elSidebarNome.innerText = `@${usuarioLogado}`;
                     if (elSidebarPerfil) elSidebarPerfil.innerText = perfilUsuario === "administrador" ? "Administrativo" : "Usuário";
 
+                    const areaSino = document.getElementById("areaSinoAdmin");
+                    const espacador = document.getElementById("espacadorHeader");
                     const btnBancoPacientes = document.getElementById("btnSidebarPacientes");
                     const btnCadastroUsuario = document.getElementById("btnSidebarCadastrarUsuario");
                     
                     if (perfilUsuario === "administrador") {
+                        if (areaSino) areaSino.classList.remove("hidden");
+                        if (espacador) espacador.classList.add("hidden");
                         if (btnBancoPacientes) { btnBancoPacientes.classList.remove("hidden"); btnBancoPacientes.classList.add("flex"); }
                         if (btnCadastroUsuario) { btnCadastroUsuario.classList.remove("hidden"); btnCadastroUsuario.classList.add("flex"); }
                     } else {
+                        if (areaSino) areaSino.classList.add("hidden");
+                        if (espacador) espacador.classList.remove("hidden");
                         if (btnBancoPacientes) { btnBancoPacientes.classList.add("hidden"); btnBancoPacientes.classList.remove("flex"); }
                         if (btnCadastroUsuario) { btnCadastroUsuario.classList.add("hidden"); btnCadastroUsuario.classList.remove("flex"); }
                     }
