@@ -507,6 +507,7 @@
                     <div id="painelEdicaoCaixaAtiva" class="flex flex-col gap-3">
                         <div class="flex gap-2 items-center">
                             <textarea id="inputTextoCanvas" rows="2" placeholder="Digite seu texto..." oninput="window.atualizarTextoCaixaAtiva()" class="w-full p-2.5 rounded-lg bg-gray-900 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500 resize-none custom-scrollbar"></textarea>
+                            <button id="btnNegritoTexto" onclick="window.alternarNegritoCaixaAtiva()" title="Negrito" class="bg-gray-900 hover:bg-gray-700 border border-gray-700 text-gray-300 font-black px-3 py-2.5 rounded-lg transition"><i class="fas fa-bold"></i></button>
                             <button onclick="window.removerCaixaTextoAtiva()" title="Excluir Caixa Selecionada" class="bg-red-950/60 hover:bg-red-900 border border-red-800/60 text-red-400 p-2.5 rounded-lg transition"><i class="fas fa-trash-alt text-xs"></i></button>
                         </div>
                         
@@ -517,8 +518,8 @@
                             </div>
                             <div class="flex items-center gap-2">
                                 <label class="text-[10px] text-gray-400 font-bold uppercase whitespace-nowrap">Tamanho:</label>
-                                <input type="range" id="sliderTamanhoFonte" min="12" max="72" value="24" oninput="window.atualizarTamanhoCaixaAtiva()">
-                                <span id="lblTamanhoFonte" class="text-xs font-bold text-white w-8">24px</span>
+                                <input type="range" id="sliderTamanhoFonte" min="12" max="100" value="36" oninput="window.atualizarTamanhoCaixaAtiva()">
+                                <span id="lblTamanhoFonte" class="text-xs font-bold text-white w-8">36px</span>
                             </div>
                         </div>
 
@@ -541,46 +542,67 @@
                     <span class="text-xs font-bold text-indigo-400 flex items-center gap-1.5"><i class="fas fa-pen-nib"></i> Ajustar Assinatura (Arraste no canvas)</span>
                     <div class="flex items-center gap-3">
                         <label class="text-[10px] text-gray-400 font-bold uppercase whitespace-nowrap">Tamanho/Escala:</label>
-                        <input type="range" id="sliderEscalaAssinatura" min="20" max="100" value="50" oninput="window.renderizarFiltroAtual(true)">
-                        <button onclick="window.removerAssinaturaCanvas()" class="text-red-400 hover:text-red-300 text-xs p-1"><i class="fas fa-trash-alt"></i></button>
+                        <input type="range" id="sliderEscalaAssinatura" min="30" max="300" value="120" oninput="window.renderizarFiltroAtual(true)">
+                        <button onclick="window.removerAssinaturaCanvas()" class="text-red-400 hover:text-red-300 text-xs p-1" title="Remover Assinatura"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTROLES DO CARIMBO DA EMPRESA COM ORDEM DE CAMADAS -->
+            <div id="painelControleCarimbo" class="hidden px-4 mt-2">
+                <div class="bg-red-950/40 p-3 rounded-xl border border-red-800/60 flex flex-col gap-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-red-400 flex items-center gap-1.5"><i class="fas fa-stamp"></i> Ajustar Carimbo</span>
+                        <div class="flex gap-1.5">
+                            <button onclick="window.alterarOrdemCarimbo('tras')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-[10px] font-bold px-2 py-1 rounded shadow" title="Enviar para Trás"><i class="fas fa-layer-group text-blue-400"></i> Para Trás</button>
+                            <button onclick="window.alterarOrdemCarimbo('frente')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-[10px] font-bold px-2 py-1 rounded shadow" title="Trazer para Frente"><i class="fas fa-layer-group text-green-400"></i> Para Frente</button>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 mt-1">
+                        <label class="text-[10px] text-gray-400 font-bold uppercase whitespace-nowrap">Tamanho/Escala:</label>
+                        <input type="range" id="sliderEscalaCarimbo" min="20" max="250" value="85" oninput="window.renderizarFiltroAtual(true)">
+                        <button onclick="window.removerCarimboCanvas()" class="text-red-400 hover:text-red-300 text-xs p-1" title="Remover Carimbo"><i class="fas fa-trash-alt"></i></button>
                     </div>
                 </div>
             </div>
 
             <div class="px-4 mt-2 flex gap-2">
+                <button onclick="window.adicionarCarimboEmpresa()" class="bg-red-600 hover:bg-red-500 text-white py-3.5 rounded-xl font-bold text-xs sm:text-sm flex-1 flex items-center justify-center gap-2 transition shadow-lg">
+                    <i class="fas fa-stamp"></i> <span id="txtBtnCarimbo">Carimbar</span>
+                </button>
                 <button onclick="window.abrirModalAssinatura()" class="bg-indigo-600 hover:bg-indigo-500 text-white py-3.5 rounded-xl font-bold text-xs sm:text-sm flex-1 flex items-center justify-center gap-2 transition shadow-lg">
-                    <i class="fas fa-signature"></i> <span id="txtBtnAssinatura">Adicionar Assinatura</span>
+                    <i class="fas fa-signature"></i> <span id="txtBtnAssinatura">Assinar</span>
                 </button>
                 <button onclick="window.confirmarSalvarPaginaScanner()" class="bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-xl font-bold text-xs sm:text-sm flex-1 flex items-center justify-center gap-2 shadow-lg">
-                    <i class="fas fa-check"></i> Aplicar e Salvar Página
+                    <i class="fas fa-check"></i> Salvar
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL 3: POP-UP DE ASSINATURA -->
-    <div id="modalAssinatura" class="fixed inset-0 bg-black/90 popup-blur hidden items-center justify-center p-4 z-[80]">
-        <div class="bg-gray-900 rounded-xl border border-gray-800 p-5 w-full max-w-md shadow-2xl flex flex-col gap-4">
-            <div class="flex justify-between items-center border-b border-gray-800 pb-2">
-                <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fas fa-pen-nib text-indigo-400"></i> Assinatura Digital</h3>
-                <button onclick="window.fecharModalAssinatura()" class="text-gray-500 hover:text-white"><i class="fas fa-times text-lg"></i></button>
+    <!-- MODAL 3: POP-UP DE ASSINATURA EXPANDIDO E EM ALTA DEFINIÇÃO -->
+    <div id="modalAssinatura" class="fixed inset-0 bg-black/95 popup-blur hidden items-center justify-center p-4 z-[80]">
+        <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 w-full max-w-lg shadow-2xl flex flex-col gap-4">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fas fa-pen-nib text-indigo-400"></i> Assinatura Digital (HD)</h3>
+                <button onclick="window.fecharModalAssinatura()" class="text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
             </div>
-            <p class="text-xs text-gray-400">Desenhe sua assinatura no quadro abaixo:</p>
-            <div class="w-full h-40 bg-white rounded-lg overflow-hidden relative touch-none border border-gray-700">
+            <p class="text-xs text-gray-400">Desenhe sua assinatura com alta precisão abaixo:</p>
+            <div class="w-full h-56 bg-white rounded-xl overflow-hidden relative touch-none border-2 border-gray-700 shadow-inner">
                 <canvas id="canvasAssinatura" class="w-full h-full cursor-crosshair"></canvas>
             </div>
-            <div class="flex gap-2">
-                <button onclick="window.limparAssinaturaPad()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2.5 rounded-lg text-xs font-bold border border-gray-700 transition"><i class="fas fa-eraser"></i> Limpar</button>
-                <button onclick="window.salvarAssinaturaParaCanvas()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2.5 px-4 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2"><i class="fas fa-check"></i> Inserir Assinatura</button>
+            <div class="flex gap-3 mt-1">
+                <button onclick="window.limparAssinaturaPad()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-xl text-xs font-bold border border-gray-700 transition flex items-center justify-center gap-2"><i class="fas fa-eraser"></i> Limpar</button>
+                <button onclick="window.salvarAssinaturaParaCanvas()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-3 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg"><i class="fas fa-check"></i> Inserir Assinatura</button>
             </div>
         </div>
     </div>
 
-    <!-- SCRIPT PRINCIPAL E FIREBASE COM PROTEÇÃO CONTRA NULL -->
+    <!-- SCRIPT PRINCIPAL E FIREBASE COM SUPORTE AO FATIAMENTO E LEITURA DE PDFS -->
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref as dbRef, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getAuth, setPersistence, browserSessionPersistence, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref as dbRef, push, onValue, update, remove, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
         const firebaseConfig = {
@@ -597,6 +619,25 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
         const storage = getStorage(app);
+
+        setPersistence(auth, browserSessionPersistence).catch(err => console.warn(err));
+
+        let timerInatividade = null;
+        const TEMPO_INATIVIDADE_MS = 8 * 60 * 1000;
+
+        function resetarTimerInatividade() {
+            if (timerInatividade) clearTimeout(timerInatividade);
+            if (auth.currentUser) {
+                timerInatividade = setTimeout(() => {
+                    alert("⏰ Sessão expirada devido a 8 minutos de inatividade.");
+                    window.fazerLogout();
+                }, TEMPO_INATIVIDADE_MS);
+            }
+        }
+
+        ['mousemove', 'mousedown', 'keypress', 'touchstart', 'scroll', 'click'].forEach(evt => {
+            window.addEventListener(evt, resetarTimerInatividade, true);
+        });
 
         let usuarioLogado = "Operador";
         let perfilUsuario = "operador";
@@ -626,17 +667,223 @@
 
         let posicaoAssinatura = { x: 50, y: 150 };
         let imgAssinaturaElemento = null;
+
+        let imgCarimboElemento = null;
+        let posicaoCarimbo = { x: 50, y: 50 };
+        let ordemCamadas = ['imagem', 'texto', 'assinatura', 'carimbo'];
+
         let elementoSendoArrastado = null;
         let offsetArrasto = { x: 0, y: 0 };
 
         let assinandoPad = false;
         let ctxAssinaturaPad = null;
+        let pontosTraçoAssinatura = [];
 
-        // HELPER PARA ESCUTAR EVENTOS SEM ERRO DE NULL
         function escutarEventoSeguro(idElemento, evento, callback) {
             const el = document.getElementById(idElemento);
             if (el) el.addEventListener(evento, callback);
         }
+
+        window.alterarOrdemCarimbo = function(direcao) {
+            ordemCamadas = ordemCamadas.filter(c => c !== 'carimbo');
+            if (direcao === 'tras') {
+                ordemCamadas.unshift('carimbo');
+            } else {
+                ordemCamadas.push('carimbo');
+            }
+            window.renderizarFiltroAtual(true);
+        };
+
+        function criarImagemCarimboVetor() {
+            const canvasC = document.createElement('canvas');
+            canvasC.width = 460;
+            canvasC.height = 160;
+            const ctxC = canvasC.getContext('2d');
+
+            ctxC.clearRect(0, 0, canvasC.width, canvasC.height);
+
+            const corCarimbo = "#1e3a8a"; 
+            ctxC.strokeStyle = corCarimbo;
+            ctxC.fillStyle = corCarimbo;
+
+            ctxC.lineWidth = 5;
+            ctxC.strokeRect(10, 10, canvasC.width - 20, canvasC.height - 20);
+            ctxC.lineWidth = 2;
+            ctxC.strokeRect(16, 16, canvasC.width - 32, canvasC.height - 32);
+
+            ctxC.textAlign = "center";
+            ctxC.textBaseline = "middle";
+
+            ctxC.font = "bold 20px 'Courier New', Courier, monospace";
+            ctxC.fillText("CNPJ: 47.960.950/1716-001", canvasC.width / 2, 42);
+
+            ctxC.font = "black 22px 'Arial Black', Arial, sans-serif";
+            ctxC.fillText("MAGAZINE LUIZA S/A", canvasC.width / 2, 75);
+
+            ctxC.font = "bold 14px Arial, sans-serif";
+            ctxC.fillText("Rua Doutor Feliciano Sodré, 218 - Centro", canvasC.width / 2, 110);
+            ctxC.fillText("CEP 24.440-440 - São Gonçalo/RJ", canvasC.width / 2, 132);
+
+            const img = new Image();
+            img.src = canvasC.toDataURL("image/png");
+            return img;
+        }
+
+        window.adicionarCarimboEmpresa = function() {
+            imgCarimboElemento = criarImagemCarimboVetor();
+            imgCarimboElemento.onload = function() {
+                posicaoCarimbo = { x: (larguraCrop - 380) / 2, y: (alturaCrop / 2) - 80 };
+                const pCar = document.getElementById("painelControleCarimbo");
+                if (pCar) { pCar.classList.remove("hidden"); pCar.classList.add("flex"); }
+                const txtB = document.getElementById("txtBtnCarimbo");
+                if (txtB) txtB.innerText = "Reaplicar Carimbo";
+                window.renderizarFiltroAtual(true);
+            };
+        };
+
+        window.removerCarimboCanvas = function() {
+            imgCarimboElemento = null;
+            const pCar = document.getElementById("painelControleCarimbo");
+            if (pCar) { pCar.classList.add("hidden"); pCar.classList.remove("flex"); }
+            const txtB = document.getElementById("txtBtnCarimbo");
+            if (txtB) txtB.innerText = "Carimbar";
+            window.renderizarFiltroAtual(true);
+        };
+
+        window.executarLoginFirebase = async function(e) {
+            if(e) e.preventDefault();
+            const usernameDigitado = document.getElementById("loginUsuario")?.value.trim();
+            const senha = document.getElementById("loginSenha")?.value.trim();
+            const btn = document.getElementById("btnEntrarLogin");
+
+            if (!usernameDigitado || !senha) return alert("⚠️ Digite seu usuário e senha.");
+            if (btn) btn.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Entrando...`;
+
+            let emailVinculado = null;
+
+            try {
+                const dbSnap = await get(dbRef(db, 'usuarios_sistema'));
+                if (dbSnap.exists()) {
+                    const lista = dbSnap.val();
+                    for (let key in lista) {
+                        if (lista[key].username && lista[key].username.toLowerCase() === usernameDigitado.toLowerCase()) {
+                            if (lista[key].email) {
+                                emailVinculado = lista[key].email;
+                                break;
+                            }
+                        }
+                    }
+                }
+            } catch (err) {
+                console.warn("Aviso de leitura:", err);
+            }
+
+            if (!emailVinculado) {
+                emailVinculado = usernameDigitado.includes("@") ? usernameDigitado : `${usernameDigitado}@anexos.com`;
+            }
+
+            signInWithEmailAndPassword(auth, emailVinculado, senha)
+                .then(() => {
+                    const modalLogin = document.getElementById("modalLoginApp");
+                    if (modalLogin) modalLogin.classList.add("hidden");
+                    resetarTimerInatividade();
+                })
+                .catch((error) => {
+                    alert("❌ Usuário ou senha incorretos.");
+                    if (btn) btn.innerText = "Entrar";
+                });
+        };
+
+        window.abrirModalRecuperarSenha = function() {
+            const modal = document.getElementById("modalRecuperarSenha");
+            if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
+        };
+
+        window.fecharModalRecuperarSenha = function() {
+            const modal = document.getElementById("modalRecuperarSenha");
+            if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
+        };
+
+        window.confirmarRecuperacaoSenha = async function(e) {
+            if (e) e.preventDefault();
+            const usernameInput = document.getElementById("recUsuario")?.value.trim();
+            if (!usernameInput) return alert("⚠️ Digite o seu nome de usuário.");
+
+            const btn = document.getElementById("btnEnviarRecuperacao");
+            if (btn) btn.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Buscando...`;
+
+            let emailEncontrado = usernameInput.includes("@") ? usernameInput : null;
+            if (!emailEncontrado) {
+                try {
+                    const dbSnap = await get(dbRef(db, 'usuarios_sistema'));
+                    if (dbSnap.exists()) {
+                        const lista = dbSnap.val();
+                        for (let key in lista) {
+                            if (lista[key].username && lista[key].username.toLowerCase() === usernameInput.toLowerCase()) {
+                                emailEncontrado = lista[key].email;
+                                break;
+                            }
+                        }
+                    }
+                } catch (err) {}
+            }
+
+            if (!emailEncontrado) emailEncontrado = `${usernameInput}@anexos.com`;
+
+            sendPasswordResetEmail(auth, emailEncontrado)
+                .then(() => {
+                    alert(`📧 O link de redefinição foi enviado para o e-mail cadastrado do usuário "${usernameInput}".`);
+                    window.fecharModalRecuperarSenha();
+                    if (btn) btn.innerText = "Enviar Link";
+                })
+                .catch((error) => {
+                    alert("Erro ao enviar e-mail: " + error.message);
+                    if (btn) btn.innerText = "Enviar Link";
+                });
+        };
+
+        window.abrirModalCadastroUsuario = function() {
+            const modal = document.getElementById("modalCadastroUsuario");
+            if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
+        };
+
+        window.fecharModalCadastroUsuario = function() {
+            const modal = document.getElementById("modalCadastroUsuario");
+            if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
+        };
+
+        window.executarCadastroFirebase = function(e) {
+            if (e) e.preventDefault();
+            const username = document.getElementById("cadUsuario")?.value.trim();
+            const email = document.getElementById("cadEmail")?.value.trim();
+            const senha = document.getElementById("cadSenha")?.value.trim();
+            const perfil = document.getElementById("cadPerfil")?.value;
+
+            if (!username || !email || !senha || !perfil) {
+                return alert("⚠️ Preencha todos os campos.");
+            }
+
+            const btn = document.getElementById("btnSalvarCadastro");
+            if (btn) btn.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Cadastrando...`;
+
+            createUserWithEmailAndPassword(auth, email, senha)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    set(dbRef(db, 'usuarios_sistema/' + user.uid), {
+                        username: username,
+                        email: email,
+                        perfil: perfil
+                    }).then(() => {
+                        alert(`✅ Usuário @${username} cadastrado com sucesso!`);
+                        window.fecharModalCadastroUsuario();
+                        if (btn) btn.innerText = "Salvar Cadastro";
+                    });
+                })
+                .catch((error) => {
+                    alert("Erro ao cadastrar: " + error.message);
+                    if (btn) btn.innerText = "Salvar Cadastro";
+                });
+        };
 
         window.toggleSidebar = function(abrir) {
             const sidebar = document.getElementById("sidebar");
@@ -653,7 +900,11 @@
         };
 
         window.fazerLogout = function() {
-            signOut(auth).then(() => alert("Logout realizado!"));
+            if (timerInatividade) clearTimeout(timerInatividade);
+            signOut(auth).then(() => {
+                const modalLogin = document.getElementById("modalLoginApp");
+                if (modalLogin) modalLogin.classList.remove("hidden");
+            });
         };
 
         // --- SISTEMA DE PACIENTES (BANCO DE DADOS REFERÊNCIA) ---
@@ -907,33 +1158,38 @@
             const ctxBruto = canvasCortado.getContext('2d');
             canvasOriginalContextData = ctxBruto.getImageData(0, 0, larguraCrop, alturaCrop);
 
+            let larguraCaixaPadrao = Math.min(500, larguraCrop * 0.7);
             caixasTexto = [{
                 id: Date.now(),
                 texto: "",
-                posicao: { x: 40, y: alturaCrop - 150 },
+                posicao: { x: (larguraCrop - larguraCaixaPadrao) / 2, y: (alturaCrop / 2) - 50 },
                 cor: "#000000",
-                tamanhoFonte: 24,
-                larguraCaixa: Math.min(400, larguraCrop - 80),
-                dimensaoCalculada: { w: 400, h: 40 }
+                tamanhoFonte: 36,
+                negrito: false,
+                larguraCaixa: larguraCaixaPadrao,
+                dimensaoCalculada: { w: larguraCaixaPadrao, h: 50 }
             }];
             indiceCaixaTextoAtiva = 0;
 
-            posicaoAssinatura = { x: larguraCrop - 220, y: alturaCrop - 150 };
+            let larguraAssPadrao = larguraCrop * 0.65;
+            posicaoAssinatura = { x: (larguraCrop - larguraAssPadrao) / 2, y: (alturaCrop / 2) + 50 };
             imgAssinaturaElemento = null;
+            imgCarimboElemento = null;
             
             const slB = document.getElementById("sliderBrilho"); if (slB) slB.value = 0;
             const slC = document.getElementById("sliderContraste"); if (slC) slC.value = 0;
+            const slAss = document.getElementById("sliderEscalaAssinatura"); if (slAss) slAss.value = 120;
             
-            const pAss = document.getElementById("painelControleAssinatura");
-            if (pAss) { pAss.classList.add("hidden"); pAss.classList.remove("flex"); }
+            const pAss = document.getElementById("painelControleAssinatura"); if (pAss) { pAss.classList.add("hidden"); pAss.classList.remove("flex"); }
+            const pCar = document.getElementById("painelControleCarimbo"); if (pCar) { pCar.classList.add("hidden"); pCar.classList.remove("flex"); }
             
-            const txtBtnAss = document.getElementById("txtBtnAssinatura");
-            if (txtBtnAss) txtBtnAss.innerText = "Adicionar Assinatura";
+            const txtBtnAss = document.getElementById("txtBtnAssinatura"); if (txtBtnAss) txtBtnAss.innerText = "Assinar";
+            const txtBtnCar = document.getElementById("txtBtnCarimbo"); if (txtBtnCar) txtBtnCar.innerText = "Carimbar";
 
             const slLarg = document.getElementById("sliderLarguraCaixaTexto");
             if (slLarg) {
                 slLarg.max = larguraCrop;
-                slLarg.value = Math.min(400, larguraCrop - 80);
+                slLarg.value = larguraCaixaPadrao;
             }
 
             const modalCrop = document.getElementById("modalCropperScanner");
@@ -984,14 +1240,16 @@
         };
 
         window.adicionarNovaCaixaTexto = function() {
+            let larguraCaixaPadrao = Math.min(400, larguraCrop * 0.7);
             const novaCaixa = {
                 id: Date.now(),
                 texto: "Novo Texto",
-                posicao: { x: 40, y: 60 + (caixasTexto.length * 30) },
+                posicao: { x: (larguraCrop - larguraCaixaPadrao) / 2, y: 100 + (caixasTexto.length * 40) },
                 cor: "#000000",
-                tamanhoFonte: 24,
-                larguraCaixa: Math.min(300, larguraCrop - 80),
-                dimensaoCalculada: { w: 300, h: 40 }
+                tamanhoFonte: 36,
+                negrito: false,
+                larguraCaixa: larguraCaixaPadrao,
+                dimensaoCalculada: { w: larguraCaixaPadrao, h: 50 }
             };
             caixasTexto.push(novaCaixa);
             indiceCaixaTextoAtiva = caixasTexto.length - 1;
@@ -1008,9 +1266,18 @@
             }
         };
 
+        window.alternarNegritoCaixaAtiva = function() {
+            if (indiceCaixaTextoAtiva !== null && caixasTexto[indiceCaixaTextoAtiva]) {
+                caixasTexto[indiceCaixaTextoAtiva].negrito = !caixasTexto[indiceCaixaTextoAtiva].negrito;
+                sincronizarPainelComCaixaAtiva();
+                window.renderizarFiltroAtual(true);
+            }
+        };
+
         function sincronizarPainelComCaixaAtiva() {
             const painel = document.getElementById("painelEdicaoCaixaAtiva");
             const msg = document.getElementById("msgSemCaixaTexto");
+            const btnN = document.getElementById("btnNegritoTexto");
 
             if (indiceCaixaTextoAtiva !== null && caixasTexto[indiceCaixaTextoAtiva]) {
                 const caixa = caixasTexto[indiceCaixaTextoAtiva];
@@ -1022,6 +1289,16 @@
                 const slFonte = document.getElementById("sliderTamanhoFonte"); if (slFonte) slFonte.value = caixa.tamanhoFonte;
                 const slLarg = document.getElementById("sliderLarguraCaixaTexto"); 
                 if (slLarg) { slLarg.max = larguraCrop; slLarg.value = caixa.larguraCaixa; }
+
+                if (btnN) {
+                    if (caixa.negrito) {
+                        btnN.classList.replace("bg-gray-900", "bg-blue-600");
+                        btnN.classList.replace("text-gray-300", "text-white");
+                    } else {
+                        btnN.classList.replace("bg-blue-600", "bg-gray-900");
+                        btnN.classList.replace("text-white", "text-gray-300");
+                    }
+                }
             } else {
                 if (painel) { painel.classList.add("hidden"); painel.classList.remove("flex"); }
                 if (msg) msg.classList.remove("hidden");
@@ -1060,19 +1337,20 @@
             }
         };
 
-        function desenharTextoEstiloDocumentoAutoAjustavel(ctx, texto, x, y, larguraCaixaMax, tamanhoFonteDesejado, cor) {
-            ctx.fillStyle = cor;
+        function desenharTextoEstiloDocumentoAutoAjustavel(ctx, caixa, x, y) {
+            ctx.fillStyle = caixa.cor;
             ctx.textBaseline = "top";
             
-            let tamanhoFonteFinal = tamanhoFonteDesejado;
+            let tamanhoFonteFinal = caixa.tamanhoFonte;
             let linhasFinais = [];
             let alturaLinha = tamanhoFonteFinal * 1.25;
+            let estiloFonte = caixa.negrito ? "bold " : "";
 
             while (tamanhoFonteFinal > 8) {
-                ctx.font = `${tamanhoFonteFinal}px Arial`;
+                ctx.font = `${estiloFonte}${tamanhoFonteFinal}px Arial`;
                 alturaLinha = tamanhoFonteFinal * 1.25;
                 
-                let linhasBrutas = texto.split('\n');
+                let linhasBrutas = caixa.texto.split('\n');
                 linhasFinais = [];
                 let palavraExcedeLargura = false;
 
@@ -1082,7 +1360,7 @@
 
                     for (let n = 0; n < palavras.length; n++) {
                         let larguraPalavraUnica = ctx.measureText(palavras[n]).width;
-                        if (larguraPalavraUnica > larguraCaixaMax) {
+                        if (larguraPalavraUnica > caixa.larguraCaixa) {
                             palavraExcedeLargura = true;
                             break;
                         }
@@ -1090,7 +1368,7 @@
                         let linhaTeste = linhaAtual + palavras[n] + ' ';
                         let larguraTeste = ctx.measureText(linhaTeste).width;
 
-                        if (larguraTeste > larguraCaixaMax && n > 0) {
+                        if (larguraTeste > caixa.larguraCaixa && n > 0) {
                             linhasFinais.push(linhaAtual);
                             linhaAtual = palavras[n] + ' ';
                         } else {
@@ -1110,7 +1388,7 @@
             }
 
             return {
-                w: larguraCaixaMax,
+                w: caixa.larguraCaixa,
                 h: Math.max(alturaLinha, linhasFinais.length * alturaLinha)
             };
         }
@@ -1173,30 +1451,46 @@
                 ctxLive.putImageData(imgData, 0, 0);
             }
 
-            caixasTexto.forEach((caixa, index) => {
-                if (caixa.texto.trim() !== "") {
-                    caixa.dimensaoCalculada = desenharTextoEstiloDocumentoAutoAjustavel(
-                        ctxLive, caixa.texto, caixa.posicao.x, caixa.posicao.y, caixa.larguraCaixa, caixa.tamanhoFonte, caixa.cor
-                    );
+            ordemCamadas.forEach(camada => {
+                if (camada === 'texto') {
+                    caixasTexto.forEach((caixa, index) => {
+                        if (caixa.texto.trim() !== "") {
+                            caixa.dimensaoCalculada = desenharTextoEstiloDocumentoAutoAjustavel(
+                                ctxLive, caixa, caixa.posicao.x, caixa.posicao.y
+                            );
+
+                            if (mostrarGuias) {
+                                let eSelecionada = (index === indiceCaixaTextoAtiva);
+                                ctxLive.strokeStyle = eSelecionada ? "rgba(59, 130, 246, 0.9)" : "rgba(156, 163, 175, 0.4)";
+                                ctxLive.lineWidth = eSelecionada ? 2 : 1;
+                                ctxLive.setLineDash([4, 4]);
+                                ctxLive.strokeRect(caixa.posicao.x - 4, caixa.posicao.y - 4, caixa.dimensaoCalculada.w + 8, caixa.dimensaoCalculada.h + 8);
+                                ctxLive.setLineDash([]);
+                            }
+                        }
+                    });
+                } else if (camada === 'assinatura' && imgAssinaturaElemento) {
+                    const slEsc = document.getElementById("sliderEscalaAssinatura");
+                    let escala = slEsc ? parseInt(slEsc.value) / 100 : 1.2;
+                    let larguraAss = (larguraCrop * 0.45) * escala;
+                    let alturaAss = (imgAssinaturaElemento.height * larguraAss) / imgAssinaturaElemento.width;
+                    ctxLive.drawImage(imgAssinaturaElemento, posicaoAssinatura.x, posicaoAssinatura.y, larguraAss, alturaAss);
+                } else if (camada === 'carimbo' && imgCarimboElemento) {
+                    const slCar = document.getElementById("sliderEscalaCarimbo");
+                    let escalaC = slCar ? parseInt(slCar.value) / 100 : 0.85;
+                    let larguraCar = 380 * escalaC;
+                    let alturaCar = (imgCarimboElemento.height * larguraCar) / imgCarimboElemento.width;
+                    ctxLive.drawImage(imgCarimboElemento, posicaoCarimbo.x, posicaoCarimbo.y, larguraCar, alturaCar);
 
                     if (mostrarGuias) {
-                        let eSelecionada = (index === indiceCaixaTextoAtiva);
-                        ctxLive.strokeStyle = eSelecionada ? "rgba(59, 130, 246, 0.9)" : "rgba(156, 163, 175, 0.4)";
-                        ctxLive.lineWidth = eSelecionada ? 2 : 1;
+                        ctxLive.strokeStyle = "rgba(220, 38, 38, 0.8)";
+                        ctxLive.lineWidth = 2;
                         ctxLive.setLineDash([4, 4]);
-                        ctxLive.strokeRect(caixa.posicao.x - 4, caixa.posicao.y - 4, caixa.dimensaoCalculada.w + 8, caixa.dimensaoCalculada.h + 8);
+                        ctxLive.strokeRect(posicaoCarimbo.x - 4, posicaoCarimbo.y - 4, larguraCar + 8, alturaCar + 8);
                         ctxLive.setLineDash([]);
                     }
                 }
             });
-
-            if (imgAssinaturaElemento) {
-                const slEsc = document.getElementById("sliderEscalaAssinatura");
-                let escala = slEsc ? parseInt(slEsc.value) / 100 : 0.5;
-                let larguraAss = (larguraCrop * 0.35) * escala;
-                let alturaAss = (imgAssinaturaElemento.height * larguraAss) / imgAssinaturaElemento.width;
-                ctxLive.drawImage(imgAssinaturaElemento, posicaoAssinatura.x, posicaoAssinatura.y, larguraAss, alturaAss);
-            }
         };
 
         function configurarEventosArrastoCanvas(canvas) {
@@ -1231,8 +1525,8 @@
                 
                 if (imgAssinaturaElemento) {
                     const slEsc = document.getElementById("sliderEscalaAssinatura");
-                    let escala = slEsc ? parseInt(slEsc.value) / 100 : 0.5;
-                    let larguraAss = (larguraCrop * 0.35) * escala;
+                    let escala = slEsc ? parseInt(slEsc.value) / 100 : 1.2;
+                    let larguraAss = (larguraCrop * 0.45) * escala;
                     let alturaAss = (imgAssinaturaElemento.height * larguraAss) / imgAssinaturaElemento.width;
                     
                     if (pos.x >= posicaoAssinatura.x && pos.x <= posicaoAssinatura.x + larguraAss &&
@@ -1432,30 +1726,29 @@
             if (txtQtd) txtQtd.innerText = `${arrayPaginasEscaneadas.length} páginas`;
 
             arrayPaginasEscaneadas.forEach((pagData, index) => {
-                let imgUrl = typeof pagData === 'string' ? pagData : pagData.finalDataUrl;
-                let nomePacSugerido = pagData.paciente || ""; 
+                let imgUrl = pagData.finalDataUrl;
+                let nomePacSugerido = pagData.paciente || "";
 
                 // Monta o select de Pacientes Baseado no Banco Referência
-                let optionsHTML = `<option value="">Desconhecido (Puxar do Anterior)</option>`;
+                let optionsHTML = `<option value="">(Mesmo da Pág. Anterior)</option>`;
                 listaPacientesCadastrados.forEach(pac => {
                     let selected = (nomePacSugerido === pac.nome) ? "selected" : "";
                     optionsHTML += `<option value="${pac.nome}" ${selected}>${pac.nome}</option>`;
                 });
 
                 const div = document.createElement("div");
-                div.className = "relative border border-gray-700 rounded-lg overflow-hidden h-40 bg-gray-900 flex flex-col group shadow-lg"; 
+                div.className = "relative border border-gray-700 rounded-lg overflow-hidden h-36 bg-gray-900 flex flex-col group shadow-lg";
                 div.innerHTML = `
-                    <div class="flex-1 relative overflow-hidden">
+                    <div class="flex-1 relative">
                         <img src="${imgUrl}" class="w-full h-full object-cover opacity-80">
                         <div class="absolute bottom-0 left-0 right-0 bg-black/80 text-[9px] text-center py-0.5 font-bold shadow-inner z-10">Pág ${index + 1}</div>
                         
                         <div class="absolute top-1 right-1 flex gap-1 z-20">
-                            <button onclick="window.removerPaginaScanner(${index})" title="Remover Página" class="bg-red-600 hover:bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow"><i class="fas fa-times text-[9px]"></i></button>
+                            <button onclick="window.removerPaginaScanner(${index})" title="Remover" class="bg-red-600 hover:bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow"><i class="fas fa-times text-[9px]"></i></button>
                         </div>
                     </div>
-                    <!-- DROPDOWN COM OS NOMES -->
-                    <div class="h-10 bg-gray-950 flex flex-col p-1 border-t border-gray-800 shrink-0">
-                        <select id="selectNomePac_${index}" class="w-full h-full bg-gray-800 text-[10px] text-center text-white font-bold rounded border border-gray-600 focus:outline-none focus:border-blue-500 transition custom-scrollbar">
+                    <div class="h-8 bg-gray-950 flex flex-col p-1 border-t border-gray-800">
+                        <select id="selectNomePac_${index}" class="w-full h-full bg-gray-800 text-[10px] text-center text-white font-bold rounded border border-gray-600 focus:outline-none focus:border-blue-500 transition">
                             ${optionsHTML}
                         </select>
                     </div>
@@ -1599,7 +1892,7 @@
                 const dataAtual = new Date();
                 const pastaData = `${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, '0')}-${String(dataAtual.getDate()).padStart(2, '0')}`;
                 
-                // 1. GERA E SALVA O RELATÓRIO GERAL
+                // 1. GERA E SALVA O RELATÓRIO GERAL (Completo)
                 if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Salvando Relatório Geral...`;
                 
                 let arquivoGeralUpload = null;
@@ -2135,11 +2428,6 @@
                         if (areaSino) areaSino.classList.remove("hidden");
                         if (espacador) espacador.classList.add("hidden");
                         if (btnBancoPacientes) { btnBancoPacientes.classList.remove("hidden"); btnBancoPacientes.classList.add("flex"); }
-                        
-                        // Lógica auxiliar de sino (já presente na sua base)
-                        if (typeof window.inicializarNotificacoes === 'function') {
-                            window.inicializarNotificacoes(dadosUser, "containerNotificacoes", "badgeNotificacoes");
-                        }
                     } else {
                         if (areaSino) areaSino.classList.add("hidden");
                         if (espacador) espacador.classList.remove("hidden");
