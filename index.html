@@ -54,7 +54,7 @@
     <script src="https://unpkg.com/tesseract.js@5.0.5/dist/tesseract.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
-    <!-- PDF.JS para extrair texto de PDFs upados pelo "Outros Arquivos" -->
+    <!-- PDF.JS para extrair texto de PDFs -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
@@ -66,39 +66,8 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
         .popup-blur { backdrop-filter: blur(5px); }
         
-        /* ========================================================
-           CROPPER CSS (Bordas mais grossas e arrasto para todos os lados)
-           ======================================================== */
-        .cropper-view-box { outline: 4px solid #3b82f6 !important; border-radius: 4px; }
-        .cropper-dashed { border: 1px dashed rgba(255, 255, 255, 0.8) !important; }
-        
-        /* Aumenta a área invisível de clique nas bordas para arrastar no celular */
+        .cropper-view-box { outline: 3px solid rgba(59, 130, 246, 0.9) !important; border-radius: 4px; }
         .cropper-line { background-color: transparent !important; }
-        .cropper-line.line-e { width: 50px !important; right: -25px !important; cursor: e-resize !important; }
-        .cropper-line.line-w { width: 50px !important; left: -25px !important; cursor: w-resize !important; }
-        .cropper-line.line-n { height: 50px !important; top: -25px !important; cursor: n-resize !important; }
-        .cropper-line.line-s { height: 50px !important; bottom: -25px !important; cursor: s-resize !important; }
-
-        /* Desenha as bolinhas nos cantos e lados (8 pontos de ancoragem) */
-        .cropper-point { width: 50px !important; height: 50px !important; background-color: transparent !important; opacity: 1 !important; }
-        .cropper-point::before {
-            content: ''; position: absolute; width: 18px; height: 18px; background-color: #3b82f6; border-radius: 50%;
-            top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 5px rgba(0,0,0,0.8); border: 2px solid white;
-        }
-        
-        /* Posição dos cantos */
-        .cropper-point.point-nw { top: -25px !important; left: -25px !important; }
-        .cropper-point.point-ne { top: -25px !important; right: -25px !important; }
-        .cropper-point.point-sw { bottom: -25px !important; left: -25px !important; }
-        .cropper-point.point-se { bottom: -25px !important; right: -25px !important; }
-        
-        /* Posição das bordas retas (cima, baixo, esquerda, direita) */
-        .cropper-point.point-n { top: -25px !important; margin-left: -25px !important; }
-        .cropper-point.point-s { bottom: -25px !important; margin-left: -25px !important; }
-        .cropper-point.point-e { right: -25px !important; margin-top: -25px !important; }
-        .cropper-point.point-w { left: -25px !important; margin-top: -25px !important; }
-        .cropper-center { display: none !important; }
-
         input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; background: transparent; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; height: 18px; width: 18px; border-radius: 50%; background: #3b82f6; cursor: pointer; margin-top: -7px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #475569; border-radius: 2px; }
@@ -106,7 +75,7 @@
 </head>
 <body class="bg-gray-950 text-gray-100 font-sans min-h-screen flex flex-col relative pb-24">
 
-    <!-- MODAL DE LOGIN EMBUTIDO COM PROTEÇÃO ANTI-REFRESH -->
+    <!-- MODAL DE LOGIN -->
     <div id="modalLoginApp" class="fixed inset-0 bg-black/95 popup-blur z-[100] flex items-center justify-center p-4">
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl flex flex-col gap-4">
             <div class="text-center flex flex-col items-center gap-2">
@@ -116,7 +85,6 @@
                 <h2 class="text-lg font-bold text-white">Acessar o Sistema</h2>
                 <p class="text-xs text-gray-400">Digite seu usuário e senha para continuar.</p>
             </div>
-
             <form id="formLogin" onsubmit="event.preventDefault(); if(window.executarLoginFirebase) window.executarLoginFirebase(event);" class="flex flex-col gap-3">
                 <div class="flex flex-col gap-1">
                     <label class="text-[10px] text-gray-400 font-bold uppercase">Usuário</label>
@@ -197,7 +165,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE GERENCIAR PACIENTES -->
+    <!-- MODAL DE GERENCIAR PACIENTES (BANCO DE DADOS E IMPORTAÇÃO XLSX) -->
     <div id="modalGerenciarPacientes" class="fixed inset-0 bg-black/90 popup-blur hidden items-center justify-center p-4 z-[120]">
         <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 w-full max-w-md shadow-2xl flex flex-col gap-4">
             <div class="flex justify-between items-center border-b border-gray-800 pb-3">
@@ -205,18 +173,21 @@
                 <button onclick="window.fecharModalPacientes()" class="text-gray-500 hover:text-white"><i class="fas fa-times text-lg"></i></button>
             </div>
             
-            <p class="text-xs text-gray-400 leading-tight">Adicione ou importe os nomes dos pacientes (Coluna A no XLSX). A IA cruzará esses nomes para não errar a leitura da letra cursiva.</p>
+            <p class="text-xs text-gray-400 leading-tight">A IA usará esses nomes de referência. Administradores podem importar listas inteiras (.xlsx).</p>
 
             <div class="flex flex-col gap-2">
                 <form onsubmit="event.preventDefault(); if(window.adicionarPacienteFirebase) window.adicionarPacienteFirebase(event);" class="flex gap-2">
                     <input type="text" id="cadNomePaciente" required placeholder="Adicionar manualmente..." class="flex-1 p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 rounded-xl font-bold text-xs transition shadow"><i class="fas fa-plus"></i></button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-4 rounded-xl font-bold text-xs transition shadow"><i class="fas fa-plus"></i></button>
                 </form>
 
-                <input type="file" id="inputImportXlsx" accept=".xlsx, .xls" class="hidden" onchange="window.importarPacientesXlsx(this)">
-                <button type="button" onclick="document.getElementById('inputImportXlsx').click()" class="w-full bg-green-600/20 hover:bg-green-600/40 border border-green-500/40 text-green-400 py-2.5 rounded-xl font-bold text-xs transition flex items-center justify-center gap-2">
-                    <i class="fas fa-file-excel"></i> Importar Lote de Pacientes (.xlsx)
-                </button>
+                <!-- BOTÃO DE IMPORTAÇÃO (SÓ APARECE PARA ADMIN VIA JS) -->
+                <div id="areaImportacaoPacientes" class="hidden w-full">
+                    <input type="file" id="inputImportXlsx" accept=".xlsx, .xls" class="hidden" onchange="window.importarPacientesXlsx(this)">
+                    <button type="button" onclick="document.getElementById('inputImportXlsx').click()" class="w-full bg-green-600/20 hover:bg-green-600/40 border border-green-500/40 text-green-400 py-2.5 rounded-xl font-bold text-xs transition flex items-center justify-center gap-2">
+                        <i class="fas fa-file-excel"></i> Importar Lote (.xlsx)
+                    </button>
+                </div>
             </div>
 
             <div class="flex flex-col gap-2 max-h-56 overflow-y-auto custom-scrollbar pr-1 mt-1" id="listaPacientesBanco">
@@ -245,7 +216,7 @@
             <button id="btnSidebarCadastrarUsuario" onclick="window.abrirModalCadastroUsuario()" class="hidden w-full bg-blue-900/40 hover:bg-blue-800/60 border border-blue-700/60 text-blue-300 p-3 rounded-xl font-bold text-xs transition flex items-center gap-2.5">
                 <i class="fas fa-user-plus text-blue-400"></i> Cadastrar Novo Usuário
             </button>
-            <button id="btnSidebarPacientes" onclick="window.abrirModalPacientes()" class="hidden w-full bg-indigo-900/40 hover:bg-indigo-800/60 border border-indigo-700/60 text-indigo-300 p-3 rounded-xl font-bold text-xs transition flex items-center gap-2.5">
+            <button id="btnSidebarPacientes" onclick="window.abrirModalPacientes()" class="w-full bg-indigo-900/40 hover:bg-indigo-800/60 border border-indigo-700/60 text-indigo-300 p-3 rounded-xl font-bold text-xs transition flex items-center gap-2.5">
                 <i class="fas fa-address-book text-indigo-400"></i> Banco de Pacientes
             </button>
         </div>
@@ -257,7 +228,7 @@
         </div>
     </aside>
 
-    <!-- Cabeçalho -->
+    <!-- Cabeçalho (Sino Removido) -->
     <header class="bg-gray-900 border-b border-gray-800 p-4 sticky top-0 z-40 shadow-md">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <button onclick="window.toggleSidebar && window.toggleSidebar(true)" class="text-gray-300 hover:text-white text-xl p-2 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-700 focus:outline-none w-10 h-10 flex items-center justify-center">
@@ -269,6 +240,7 @@
     </header>
 
     <main class="flex-1 max-w-5xl w-full mx-auto p-4 flex flex-col gap-6">
+        <!-- Barra de Filtros -->
         <section class="bg-gray-900 border border-gray-800 p-4 rounded-xl shadow-lg flex flex-col gap-3">
             <div class="relative w-full">
                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500"></i>
@@ -367,7 +339,7 @@
                         <span class="text-xs font-bold text-red-400"><i class="fas fa-file-pdf"></i> Revisão de Documentos</span>
                         <span id="txtQtdPaginas" class="text-[10px] text-gray-400 bg-gray-800 px-2 py-1 rounded border border-gray-700">0 páginas</span>
                     </div>
-                    <p class="text-[10px] text-yellow-500 mb-1 leading-tight"><i class="fas fa-info-circle"></i> O carimbo inserido em uma página é aplicado nas próximas. A IA seleciona o nome. Clique no Lápis para editar a página.</p>
+                    <p class="text-[10px] text-yellow-500 mb-1 leading-tight"><i class="fas fa-info-circle"></i> O carimbo inserido em uma página é aplicado nas próximas automaticamente. A IA seleciona o nome. Clique no Lápis para editar a página.</p>
                     
                     <div id="gridPaginasScanner" class="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto custom-scrollbar p-1"></div>
                     
@@ -546,32 +518,29 @@
                 </div>
             </div>
 
-            <!-- CONTROLES DE ASSINATURA -->
-            <div id="painelControleAssinatura" class="hidden px-4 mt-2">
-                <div class="bg-indigo-950/40 p-3 rounded-xl border border-indigo-800/60 flex flex-col gap-2">
-                    <span class="text-xs font-bold text-indigo-400 flex items-center gap-1.5"><i class="fas fa-pen-nib"></i> Ajustar Assinatura (Arraste no canvas)</span>
-                    <div class="flex items-center gap-3">
-                        <label class="text-[10px] text-gray-400 font-bold uppercase whitespace-nowrap">Tamanho/Escala:</label>
+            <!-- CONTROLES LADO A LADO: ASSINATURA E CARIMBO -->
+            <div class="px-4 mt-2 grid grid-cols-2 gap-2" id="gridControlesExtras">
+                <!-- CONTROLES DE ASSINATURA -->
+                <div id="painelControleAssinatura" class="hidden bg-indigo-950/40 p-2 rounded-xl border border-indigo-800/60 flex-col gap-1">
+                    <div class="flex justify-between items-center">
+                        <span class="text-[10px] font-bold text-indigo-400 flex items-center gap-1"><i class="fas fa-pen-nib"></i> Assinatura</span>
+                        <button onclick="window.removerAssinaturaCanvas()" class="text-red-400 hover:text-red-300 text-[10px] p-1"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-[9px] text-gray-400 font-bold uppercase">Escala:</label>
                         <input type="range" id="sliderEscalaAssinatura" min="30" max="300" value="120" oninput="window.renderizarFiltroAtual(true)">
-                        <button onclick="window.removerAssinaturaCanvas()" class="text-red-400 hover:text-red-300 text-xs p-1" title="Remover Assinatura"><i class="fas fa-trash-alt"></i></button>
                     </div>
                 </div>
-            </div>
 
-            <!-- CONTROLES DO CARIMBO DA EMPRESA -->
-            <div id="painelControleCarimbo" class="hidden px-4 mt-2">
-                <div class="bg-red-950/40 p-3 rounded-xl border border-red-800/60 flex flex-col gap-2">
+                <!-- CONTROLES DE CARIMBO -->
+                <div id="painelControleCarimbo" class="hidden bg-red-950/40 p-2 rounded-xl border border-red-800/60 flex-col gap-1">
                     <div class="flex justify-between items-center">
-                        <span class="text-xs font-bold text-red-400 flex items-center gap-1.5"><i class="fas fa-stamp"></i> Ajustar Carimbo</span>
-                        <div class="flex gap-1.5">
-                            <button onclick="window.alterarOrdemCarimbo('tras')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-[10px] font-bold px-2 py-1 rounded shadow" title="Enviar para Trás"><i class="fas fa-layer-group text-blue-400"></i> Para Trás</button>
-                            <button onclick="window.alterarOrdemCarimbo('frente')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-[10px] font-bold px-2 py-1 rounded shadow" title="Trazer para Frente"><i class="fas fa-layer-group text-green-400"></i> Para Frente</button>
-                        </div>
+                        <span class="text-[10px] font-bold text-red-400 flex items-center gap-1"><i class="fas fa-stamp"></i> Carimbo</span>
+                        <button onclick="window.removerCarimboCanvas()" class="text-red-400 hover:text-red-300 text-[10px] p-1"><i class="fas fa-trash-alt"></i></button>
                     </div>
-                    <div class="flex items-center gap-3 mt-1">
-                        <label class="text-[10px] text-gray-400 font-bold uppercase whitespace-nowrap">Tamanho/Escala:</label>
+                    <div class="flex items-center gap-2">
+                        <label class="text-[9px] text-gray-400 font-bold uppercase">Escala:</label>
                         <input type="range" id="sliderEscalaCarimbo" min="20" max="250" value="85" oninput="window.renderizarFiltroAtual(true)">
-                        <button onclick="window.removerCarimboCanvas()" class="text-red-400 hover:text-red-300 text-xs p-1" title="Remover Carimbo"><i class="fas fa-trash-alt"></i></button>
                     </div>
                 </div>
             </div>
@@ -603,12 +572,12 @@
             </div>
             <div class="flex gap-3 mt-1">
                 <button onclick="window.limparAssinaturaPad()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-xl text-xs font-bold border border-gray-700 transition flex items-center justify-center gap-2"><i class="fas fa-eraser"></i> Limpar</button>
-                <button onclick="window.salvarAssinaturaParaCanvas()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-3 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg"><i class="fas fa-check"></i> Inserir Assinatura</button>
+                <button onclick="window.salvarAssinaturaParaCanvas()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-3 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg"><i class="fas fa-check"></i> Inserir</button>
             </div>
         </div>
     </div>
 
-    <!-- SCRIPT PRINCIPAL E FIREBASE COM PROTEÇÃO CONTRA NULL -->
+    <!-- SCRIPT PRINCIPAL E FIREBASE -->
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, setPersistence, browserSessionPersistence, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -695,7 +664,6 @@
             if (el) el.addEventListener(evento, callback);
         }
 
-        // --- SISTEMA DE SENHA VISÍVEL ---
         window.toggleVisibilidadeSenha = function(inputId, iconId) {
             const input = document.getElementById(inputId);
             const icon = document.getElementById(iconId);
@@ -712,7 +680,6 @@
             }
         };
 
-        // --- SISTEMA DE ZOOM DO CARRINHO (LIGHTBOX) ---
         window.abrirZoomPagina = function(index) {
             const pag = arrayPaginasEscaneadas[index];
             if(!pag) return;
@@ -746,9 +713,7 @@
             window.renderizarFiltroAtual(true);
         };
 
-        // ==========================================
         // NOVO CARIMBO: Marcelly Souza da Silva Rosa
-        // ==========================================
         function criarImagemCarimboVetor() {
             const canvasC = document.createElement('canvas');
             canvasC.width = 400;
@@ -971,7 +936,7 @@
             
             const nomePadronizado = nome.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
 
-            push(dbRef(db, 'pacientes_cadastrados'), { nome: nomePadronizado }).then(() => {
+            push(dbRef(db, 'pacientes_cadastrados'), { nome: nomePadronizado, excluidoPorExecutor: false }).then(() => {
                 if(inNome) inNome.value = "";
             }).catch(err => alert("Erro ao salvar paciente: " + err.message));
         };
@@ -984,10 +949,21 @@
             }
         };
 
+        // Exclusão com permissão (Admin apaga de vez, Executor oculta)
         window.removerPacienteFirebase = function(id, nome) {
-            if(confirm(`Tem certeza que deseja excluir "${nome}" do banco de referência? Isso não exclui as evoluções dele.`)) {
-                remove(dbRef(db, 'pacientes_cadastrados/' + id));
+            if (perfilUsuario === 'administrador') {
+                if(confirm(`Tem certeza que deseja excluir DEFINITIVAMENTE "${nome}" do banco do sistema?`)) {
+                    remove(dbRef(db, 'pacientes_cadastrados/' + id));
+                }
+            } else {
+                if(confirm(`Deseja remover "${nome}" da lista?`)) {
+                    update(dbRef(db, 'pacientes_cadastrados/' + id), { excluidoPorExecutor: true });
+                }
             }
+        };
+
+        window.restaurarPacienteFirebase = function(id, nome) {
+            update(dbRef(db, 'pacientes_cadastrados/' + id), { excluidoPorExecutor: false });
         };
 
         window.importarPacientesXlsx = function(input) {
@@ -1014,7 +990,7 @@
 
                     if (nome && typeof nome === 'string' && nome.trim().length > 2) {
                         const nomePadronizado = nome.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-                        push(dbRef(db, 'pacientes_cadastrados'), { nome: nomePadronizado });
+                        push(dbRef(db, 'pacientes_cadastrados'), { nome: nomePadronizado, excluidoPorExecutor: false });
                         importados++;
                     }
                 });
@@ -1032,21 +1008,40 @@
                 
                 if (snapshot.exists()) {
                     snapshot.forEach(child => { 
-                        const p = { id: child.key, nome: child.val().nome };
+                        const v = child.val();
+                        const p = { id: child.key, nome: v.nome, excluidoPorExecutor: v.excluidoPorExecutor || false };
+                        
+                        // Se executor deletou e o logado for executor, pula ele (não mostra)
+                        if (perfilUsuario !== "administrador" && p.excluidoPorExecutor) return;
+
                         listaPacientesCadastrados.push(p);
                         
                         if(container) {
-                            container.innerHTML += `
-                            <div class="flex justify-between items-center bg-gray-800 p-2.5 rounded-lg border border-gray-700 text-xs">
-                                <span class="text-white font-bold truncate flex-1">${p.nome}</span>
-                                <div class="flex gap-1">
+                            let acoesHtml = '';
+                            if (perfilUsuario === "administrador" && p.excluidoPorExecutor) {
+                                acoesHtml = `<button onclick="window.restaurarPacienteFirebase('${p.id}', '${p.nome.replace(/'/g, "\\'")}')" title="Restaurar (Apagado por Executor)" class="text-green-400 hover:text-green-300 p-1.5"><i class="fas fa-recycle"></i></button>
+                                             <button onclick="window.removerPacienteFirebase('${p.id}', '${p.nome.replace(/'/g, "\\'")}')" title="Excluir Definitivo" class="text-red-600 hover:text-red-500 p-1.5"><i class="fas fa-trash"></i></button>`;
+                            } else {
+                                acoesHtml = `
                                     <button onclick="window.editarPacienteFirebase('${p.id}', '${p.nome.replace(/'/g, "\\'")}')" class="text-blue-400 hover:text-blue-300 p-1.5"><i class="fas fa-pen"></i></button>
                                     <button onclick="window.removerPacienteFirebase('${p.id}', '${p.nome.replace(/'/g, "\\'")}')" class="text-red-400 hover:text-red-300 p-1.5"><i class="fas fa-trash"></i></button>
+                                `;
+                            }
+
+                            const textColor = p.excluidoPorExecutor ? "text-gray-500 line-through" : "text-white";
+
+                            container.innerHTML += `
+                            <div class="flex justify-between items-center bg-gray-800 p-2.5 rounded-lg border border-gray-700 text-xs">
+                                <span class="${textColor} font-bold truncate flex-1">${p.nome}</span>
+                                <div class="flex gap-1 ml-2">
+                                    ${acoesHtml}
                                 </div>
                             </div>`;
                         }
                     });
-                    listaPacientesCadastrados.sort((a,b) => a.nome.localeCompare(b.nome));
+                    
+                    // Ordenação de A a Z ignorando acentos
+                    listaPacientesCadastrados.sort((a,b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
                 } else {
                     if(container) container.innerHTML = `<div class="text-center text-gray-500 text-xs py-4">Nenhum paciente cadastrado.</div>`;
                 }
@@ -1072,6 +1067,8 @@
             let maiorScore = 0;
 
             listaPacientesCadastrados.forEach(pac => {
+                if(pac.excluidoPorExecutor) return; // Não vincula nomes apagados no OCR
+                
                 let pacNormalizado = pac.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
                 let tokensPac = pacNormalizado.split(/\s+/).filter(w => w.length > 2);
                 
@@ -1203,7 +1200,7 @@
             }
         };
 
-        // --- SISTEMA DE EDIÇÃO DE PÁGINAS EXISTENTES ---
+        // --- SISTEMA DE MEMÓRIA DE EDIÇÃO (SAVE STATE) ---
         window.editarPaginaScanner = function(index) {
             indicePaginaSendoEditada = index;
             const pag = arrayPaginasEscaneadas[index];
@@ -1223,22 +1220,62 @@
                 tempCanvas.height = alturaCrop;
                 const ctx = tempCanvas.getContext('2d');
 
-                // Puxa a imagem limpa (sem carimbos) se existir
-                if (pag.baseDataUrl) {
-                    const baseImg = new Image();
-                    baseImg.onload = () => {
-                        ctx.drawImage(baseImg, 0, 0);
-                        canvasOriginalContextData = ctx.getImageData(0, 0, larguraCrop, alturaCrop);
-                        abrirModalsFiltro();
-                    };
-                    baseImg.src = pag.baseDataUrl;
+                // Sempre puxa a base limpa para permitir reeditar os carimbos
+                ctx.drawImage(img, 0, 0);
+                canvasOriginalContextData = ctx.getImageData(0, 0, larguraCrop, alturaCrop);
+                
+                // Restaura o Estado se existir
+                if (pag.estadoEdicao) {
+                    caixasTexto = JSON.parse(JSON.stringify(pag.estadoEdicao.caixasTexto));
+                    posicaoAssinatura = { ...pag.estadoEdicao.posicaoAssinatura };
+                    posicaoCarimbo = { ...pag.estadoEdicao.posicaoCarimbo };
+
+                    const slB = document.getElementById("sliderBrilho"); if (slB) slB.value = pag.estadoEdicao.brilho;
+                    const slC = document.getElementById("sliderContraste"); if (slC) slC.value = pag.estadoEdicao.contraste;
+                    const slAss = document.getElementById("sliderEscalaAssinatura"); if (slAss) slAss.value = pag.estadoEdicao.escalaAssinatura;
+                    const slCar = document.getElementById("sliderEscalaCarimbo"); if (slCar) slCar.value = pag.estadoEdicao.escalaCarimbo;
+
+                    // Carrega as imagens de assinatura/carimbo via promessa para garantir renderização
+                    let promises = [];
+
+                    if (pag.estadoEdicao.imgAssinaturaSrc) {
+                        promises.push(new Promise((res) => {
+                            let imgA = new Image();
+                            imgA.onload = () => { imgAssinaturaElemento = imgA; res(); };
+                            imgA.src = pag.estadoEdicao.imgAssinaturaSrc;
+                        }));
+                    } else { imgAssinaturaElemento = null; }
+
+                    if (pag.estadoEdicao.imgCarimboSrc) {
+                        promises.push(new Promise((res) => {
+                            let imgC = new Image();
+                            imgC.onload = () => { imgCarimboElemento = imgC; res(); };
+                            imgC.src = pag.estadoEdicao.imgCarimboSrc;
+                        }));
+                    } else { imgCarimboElemento = null; }
+
+                    Promise.all(promises).then(() => {
+                        abrirModalsFiltro(true);
+                    });
+
                 } else {
-                    ctx.drawImage(img, 0, 0);
-                    canvasOriginalContextData = ctx.getImageData(0, 0, larguraCrop, alturaCrop);
-                    abrirModalsFiltro();
+                    // Sem estado prévio, reset padrão
+                    caixasTexto = [{ id: Date.now(), texto: "", posicao: { x: 40, y: alturaCrop - 150 }, cor: "#000000", tamanhoFonte: 24, larguraCaixa: Math.min(400, larguraCrop - 80), dimensaoCalculada: { w: 400, h: 40 } }];
+                    indiceCaixaTextoAtiva = 0;
+                    posicaoAssinatura = { x: larguraCrop / 2, y: alturaCrop / 2 };
+                    posicaoCarimbo = { x: (larguraCrop - 400) / 2, y: (alturaCrop / 2) - 65 };
+                    
+                    const slB = document.getElementById("sliderBrilho"); if (slB) slB.value = 0;
+                    const slC = document.getElementById("sliderContraste"); if (slC) slC.value = 0;
+                    const slAss = document.getElementById("sliderEscalaAssinatura"); if (slAss) slAss.value = 120;
+                    const slCar = document.getElementById("sliderEscalaCarimbo"); if (slCar) slCar.value = 85;
+
+                    imgAssinaturaElemento = null;
+                    imgCarimboElemento = null;
+                    abrirModalsFiltro(false);
                 }
 
-                function abrirModalsFiltro() {
+                function abrirModalsFiltro(hasState) {
                     const canvasLive = document.getElementById("canvasLivePreview");
                     if (canvasLive) {
                         canvasLive.width = larguraCrop;
@@ -1246,26 +1283,28 @@
                         configurarEventosArrastoCanvas(canvasLive);
                     }
 
-                    const slB = document.getElementById("sliderBrilho"); if (slB) slB.value = 0;
-                    const slC = document.getElementById("sliderContraste"); if (slC) slC.value = 0;
-
-                    imgAssinaturaElemento = null;
-                    imgCarimboElemento = null;
-
                     const pAss = document.getElementById("painelControleAssinatura");
-                    if (pAss) { pAss.classList.add("hidden"); pAss.classList.remove("flex"); }
+                    if (pAss) { pAss.classList[imgAssinaturaElemento ? 'remove' : 'add']("hidden"); pAss.classList[imgAssinaturaElemento ? 'add' : 'remove']("flex"); }
                     const txtBtnAss = document.getElementById("txtBtnAssinatura");
-                    if (txtBtnAss) txtBtnAss.innerText = "Adicionar Assinatura";
+                    if (txtBtnAss) txtBtnAss.innerText = imgAssinaturaElemento ? "Refazer Assinatura" : "Adicionar Assinatura";
 
                     const pCar = document.getElementById("painelControleCarimbo");
-                    if (pCar) { pCar.classList.add("hidden"); pCar.classList.remove("flex"); }
+                    if (pCar) { pCar.classList[imgCarimboElemento ? 'remove' : 'add']("hidden"); pCar.classList[imgCarimboElemento ? 'add' : 'remove']("flex"); }
                     const txtB = document.getElementById("txtBtnCarimbo");
-                    if (txtB) txtB.innerText = "Carimbar";
+                    if (txtB) txtB.innerText = imgCarimboElemento ? "Reaplicar Carimbo" : "Carimbar";
+
+                    const slLarg = document.getElementById("sliderLarguraCaixaTexto");
+                    if (slLarg) {
+                        slLarg.max = larguraCrop;
+                        slLarg.value = Math.min(400, larguraCrop - 80);
+                    }
 
                     const modalFiltros = document.getElementById("modalFiltrosScanner");
                     if (modalFiltros) { modalFiltros.classList.remove("hidden"); modalFiltros.classList.add("flex"); }
 
                     sincronizarPainelComCaixaAtiva();
+                    // Se não tiver estado prévio, força o filtro P&B para o scanner
+                    if(!hasState) window.filtroAtivo = 'pb';
                     window.renderizarFiltroAtual(true);
                 }
             };
@@ -1328,21 +1367,25 @@
             }];
             indiceCaixaTextoAtiva = 0;
 
-            if (!imgAssinaturaElemento) { posicaoAssinatura = { x: larguraCrop - 220, y: alturaCrop - 150 }; }
-            if (!imgCarimboElemento) { posicaoCarimbo = { x: (larguraCrop - 400) / 2, y: (alturaCrop / 2) - 65 }; }
+            posicaoAssinatura = { x: larguraCrop / 2, y: alturaCrop / 2 };
+            posicaoCarimbo = { x: (larguraCrop - 400) / 2, y: (alturaCrop / 2) - 65 };
+            imgAssinaturaElemento = null;
+            imgCarimboElemento = null;
             
             const slB = document.getElementById("sliderBrilho"); if (slB) slB.value = 0;
             const slC = document.getElementById("sliderContraste"); if (slC) slC.value = 0;
+            const slAss = document.getElementById("sliderEscalaAssinatura"); if (slAss) slAss.value = 120;
+            const slCar = document.getElementById("sliderEscalaCarimbo"); if (slCar) slCar.value = 85;
             
             const pAss = document.getElementById("painelControleAssinatura");
-            if (pAss) { pAss.classList[imgAssinaturaElemento ? 'remove' : 'add']("hidden"); pAss.classList[imgAssinaturaElemento ? 'add' : 'remove']("flex"); }
+            if (pAss) { pAss.classList.add("hidden"); pAss.classList.remove("flex"); }
             const txtBtnAss = document.getElementById("txtBtnAssinatura");
-            if (txtBtnAss) txtBtnAss.innerText = imgAssinaturaElemento ? "Refazer Assinatura" : "Adicionar Assinatura";
+            if (txtBtnAss) txtBtnAss.innerText = "Adicionar Assinatura";
 
             const pCar = document.getElementById("painelControleCarimbo");
-            if (pCar) { pCar.classList[imgCarimboElemento ? 'remove' : 'add']("hidden"); pCar.classList[imgCarimboElemento ? 'add' : 'remove']("flex"); }
+            if (pCar) { pCar.classList.add("hidden"); pCar.classList.remove("flex"); }
             const txtB = document.getElementById("txtBtnCarimbo");
-            if (txtB) txtB.innerText = imgCarimboElemento ? "Reaplicar Carimbo" : "Carimbar";
+            if (txtB) txtB.innerText = "Carimbar";
 
             const slLarg = document.getElementById("sliderLarguraCaixaTexto");
             if (slLarg) {
@@ -1632,13 +1675,11 @@
         function configurarEventosArrastoCanvas(canvas) {
             const obterPosicaoRealCanvas = (e) => {
                 const rect = canvas.getBoundingClientRect();
-                const escalaX = canvas.width / rect.width;
-                const escalaY = canvas.height / rect.height;
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                 const clientY = e.touches ? e.touches[0].clientY : e.clientY;
                 return {
-                    x: (clientX - rect.left) * escalaX,
-                    y: (clientY - rect.top) * escalaY
+                    x: (clientX - rect.left) * (canvas.width / rect.width),
+                    y: (clientY - rect.top) * (canvas.height / rect.height)
                 };
             };
 
@@ -1730,15 +1771,11 @@
             const canvasAss = document.getElementById("canvasAssinatura");
             if (!canvasAss) return;
 
-            const ratio = window.devicePixelRatio || 1;
-            const width = canvasAss.offsetWidth;
-            const height = canvasAss.offsetHeight;
-
-            canvasAss.width = width * ratio;
-            canvasAss.height = height * ratio;
+            // Remove distorção de escala, usa resolução base pura
+            canvasAss.width = canvasAss.offsetWidth;
+            canvasAss.height = canvasAss.offsetHeight;
             
             ctxAssinaturaPad = canvasAss.getContext("2d");
-            ctxAssinaturaPad.scale(ratio, ratio);
             ctxAssinaturaPad.strokeStyle = "#000000";
             ctxAssinaturaPad.lineWidth = 3;
             ctxAssinaturaPad.lineCap = "round";
@@ -1750,7 +1787,10 @@
                 const rect = canvasAss.getBoundingClientRect();
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                 const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                return { x: clientX - rect.left, y: clientY - rect.top };
+                return { 
+                    x: (clientX - rect.left) * (canvasAss.width / rect.width), 
+                    y: (clientY - rect.top) * (canvasAss.height / rect.height) 
+                };
             };
 
             const iniciar = (e) => { 
@@ -1785,8 +1825,7 @@
         window.limparAssinaturaPad = function() {
             const canvasAss = document.getElementById("canvasAssinatura");
             if (ctxAssinaturaPad && canvasAss) {
-                const ratio = window.devicePixelRatio || 1;
-                ctxAssinaturaPad.clearRect(0, 0, canvasAss.width / ratio, canvasAss.height / ratio);
+                ctxAssinaturaPad.clearRect(0, 0, canvasAss.width, canvasAss.height);
                 pontosTraçoAssinatura = [];
             }
         };
@@ -1804,6 +1843,9 @@
             const img = new Image();
             img.onload = function() {
                 imgAssinaturaElemento = img;
+                // Centraliza se for a primeira vez para não sumir da tela
+                posicaoAssinatura = { x: (larguraCrop - img.width) / 2, y: (alturaCrop - img.height) / 2 };
+                
                 const pAss = document.getElementById("painelControleAssinatura");
                 if (pAss) { pAss.classList.remove("hidden"); pAss.classList.add("flex"); }
                 
@@ -1822,12 +1864,12 @@
             if (pAss) { pAss.classList.add("hidden"); pAss.classList.remove("flex"); }
             
             const txtBtnAss = document.getElementById("txtBtnAssinatura");
-            if (txtBtnAss) txtBtnAss.innerText = "Adicionar Assinatura";
+            if (txtBtnAss) txtBtnAss.innerText = "Assinar";
             
             window.renderizarFiltroAtual(true);
         };
 
-        // SALVAR PÁGINA COM DUPLICAÇÃO AUTOMÁTICA DE CARIMBO
+        // SALVAR PÁGINA (VAI PARA O CARRINHO) E CÓPIA DE ESTADO
         window.confirmarSalvarPaginaScanner = async function() {
             window.renderizarFiltroAtual(false);
             const canvasLive = document.getElementById("canvasLivePreview");
@@ -1839,20 +1881,35 @@
             tempC.getContext('2d').putImageData(canvasOriginalContextData, 0, 0);
             const cleanBaseUrl = tempC.toDataURL('image/jpeg', 0.85);
 
+            // MEMÓRIA DE ESTADO: Salva as edições atuais para recarregar se o usuário clicar no Lápis depois
+            const estadoEdicao = {
+                caixasTexto: JSON.parse(JSON.stringify(caixasTexto)),
+                posicaoAssinatura: { ...posicaoAssinatura },
+                imgAssinaturaSrc: imgAssinaturaElemento ? imgAssinaturaElemento.src : null,
+                posicaoCarimbo: { ...posicaoCarimbo },
+                imgCarimboSrc: imgCarimboElemento ? imgCarimboElemento.src : null,
+                brilho: document.getElementById("sliderBrilho")?.value || 0,
+                contraste: document.getElementById("sliderContraste")?.value || 0,
+                escalaAssinatura: document.getElementById("sliderEscalaAssinatura")?.value || 120,
+                escalaCarimbo: document.getElementById("sliderEscalaCarimbo")?.value || 85
+            };
+
             let indexAtual = indicePaginaSendoEditada !== null ? indicePaginaSendoEditada : arrayPaginasEscaneadas.length;
 
             if (indicePaginaSendoEditada !== null) {
                 arrayPaginasEscaneadas[indicePaginaSendoEditada].finalDataUrl = imgSalvaDataUrl;
                 arrayPaginasEscaneadas[indicePaginaSendoEditada].baseDataUrl = cleanBaseUrl;
+                arrayPaginasEscaneadas[indicePaginaSendoEditada].estadoEdicao = estadoEdicao;
             } else {
                 arrayPaginasEscaneadas.push({
                     finalDataUrl: imgSalvaDataUrl,
                     baseDataUrl: cleanBaseUrl,
+                    estadoEdicao: estadoEdicao,
                     paciente: ""
                 });
             }
 
-            // DUPLICAR PARA AS PRÓXIMAS PÁGINAS (Se houver páginas pra frente)
+            // DUPLICAR PARA AS PRÓXIMAS PÁGINAS (Carimbo e Memória de Estado)
             if ((imgAssinaturaElemento || imgCarimboElemento) && indexAtual < arrayPaginasEscaneadas.length - 1) {
                 const btnSalvar = document.querySelector("#modalFiltrosScanner button[onclick='window.confirmarSalvarPaginaScanner()']");
                 let originalText = btnSalvar ? btnSalvar.innerHTML : "";
@@ -1864,6 +1921,9 @@
                 for (let i = indexAtual + 1; i < arrayPaginasEscaneadas.length; i++) {
                     let pag = arrayPaginasEscaneadas[i];
                     let baseSrc = pag.baseDataUrl || pag.finalDataUrl;
+                    
+                    // Copia o estado para a próxima página também para permitir edição
+                    pag.estadoEdicao = JSON.parse(JSON.stringify(estadoEdicao));
 
                     await new Promise((resolve) => {
                         let img = new Image();
@@ -1940,12 +2000,11 @@
                 div.className = "relative border border-gray-700 rounded-lg overflow-hidden h-40 bg-gray-900 flex flex-col group shadow-lg"; 
                 div.innerHTML = `
                     <div class="flex-1 relative overflow-hidden group-hover:opacity-90 transition">
-                        <!-- IMAGEM COM FUNÇÃO DE ZOOM AO CLICAR -->
                         <img src="${imgUrl}" onclick="window.abrirZoomPagina(${index})" class="w-full h-full object-cover opacity-80 cursor-zoom-in hover:opacity-100 transition">
                         <div class="absolute bottom-0 left-0 right-0 bg-black/80 text-[9px] text-center py-0.5 font-bold shadow-inner z-10 pointer-events-none">Pág ${index + 1}</div>
                         
                         <div class="absolute top-1 right-1 flex gap-1 z-20">
-                            <!-- BOTÃO EDITAR DE VOLTA NA TELA -->
+                            <!-- BOTÃO EDITAR VOLTA MEMÓRIA DE ESTADO -->
                             <button onclick="window.editarPaginaScanner(${index})" title="Editar (Carimbo/Filtro)" class="bg-blue-600 hover:bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow"><i class="fas fa-pen text-[9px]"></i></button>
                             <button onclick="window.removerPaginaScanner(${index})" title="Remover Página" class="bg-red-600 hover:bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow"><i class="fas fa-times text-[9px]"></i></button>
                         </div>
@@ -2095,8 +2154,10 @@
                 if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Salvando Relatório Geral...`;
                 
                 let arquivoGeralUpload = null;
-                let houveEdicaoGlobal = imgCarimboElemento || imgAssinaturaElemento;
-                if (!houveEdicaoGlobal && arrayPaginasEscaneadas[0] && arrayPaginasEscaneadas[0].arquivoOriginalParaRelatorioGeral) {
+                // Só usa o original se ninguém fez nenhuma edição (carimbo, filtro, etc.) em nenhuma página
+                let houveEdicao = arrayPaginasEscaneadas.some(p => p.estadoEdicao && (p.estadoEdicao.imgCarimboSrc || p.estadoEdicao.imgAssinaturaSrc || p.estadoEdicao.brilho !== 0 || p.estadoEdicao.caixasTexto?.length > 0));
+                
+                if (!houveEdicao && arrayPaginasEscaneadas[0] && arrayPaginasEscaneadas[0].arquivoOriginalParaRelatorioGeral) {
                     arquivoGeralUpload = arrayPaginasEscaneadas[0].arquivoOriginalParaRelatorioGeral;
                 } else {
                     const { jsPDF } = window.jspdf;
@@ -2264,28 +2325,16 @@
 
             onValue(dbRef(db, 'arquivos_anexos'), (snapshot) => {
                 todosAnexosNaMemoria = [];
-                const selectUsuario = document.getElementById("filtroUsuario");
-                let usuariosUnicos = new Set();
-
                 if (snapshot.exists()) {
                     snapshot.forEach(child => { 
                         const anexo = { id: child.key, ...child.val() };
                         if (!anexo.tipo) anexo.tipo = 'imagem'; 
                         if (perfilUsuario === "administrador" || anexo.statusExclusao !== "pendente_aprovacao") {
                             todosAnexosNaMemoria.push(anexo);
-                            if (anexo.enviadoPor) usuariosUnicos.add(anexo.enviadoPor);
                         }
                     });
                     todosAnexosNaMemoria.sort((a, b) => b.dataEnvio - a.dataEnvio);
                 }
-
-                if (selectUsuario) {
-                    const valorAtualSelect = selectUsuario.value;
-                    selectUsuario.innerHTML = '<option value="todos">Todos os Usuários</option>';
-                    usuariosUnicos.forEach(user => { selectUsuario.innerHTML += `<option value="${user}">@${user}</option>`; });
-                    selectUsuario.value = usuariosUnicos.has(valorAtualSelect) ? valorAtualSelect : "todos";
-                }
-
                 window.aplicarFiltrosNaGaleria();
             });
         }
@@ -2304,21 +2353,17 @@
             const inBusca = document.getElementById("inputBuscaAnexo");
             const inIni = document.getElementById("dataInicioFiltro");
             const inFim = document.getElementById("dataFimFiltro");
-            const selUser = document.getElementById("filtroUsuario");
 
             const termoBusca = inBusca ? inBusca.value.toLowerCase().trim() : "";
             const dataInicio = inIni ? inIni.value : "";
             const dataFim = inFim ? inFim.value : "";
-            const usuarioFiltro = selUser ? selUser.value : "todos";
 
             const container = document.getElementById("listaAnexos");
             const areaBreadcrumb = document.getElementById("areaBreadcrumb");
             if (!container) return;
             container.innerHTML = "";
 
-            let anexosFiltrados = todosAnexosNaMemoria;
-            
-            anexosFiltrados = anexosFiltrados.filter(arq => {
+            let anexosFiltrados = todosAnexosNaMemoria.filter(arq => {
                 const dataObj = new Date(arq.dataEnvio);
                 const dataFormatadaDia = dataObj.toLocaleDateString('pt-BR'); 
                 const mesAnoFormatado = String(dataObj.getMonth() + 1).padStart(2, '0') + '/' + dataObj.getFullYear();
@@ -2331,13 +2376,12 @@
                                  (arq.pastaPaciente && arq.pastaPaciente.toLowerCase().includes(termoBusca));
                 }
 
-                const passaUsuario = usuarioFiltro === "todos" || arq.enviadoPor === usuarioFiltro;
                 let passaData = true;
                 dataObj.setHours(0,0,0,0);
                 if (dataInicio) { const dataIni = new Date(dataInicio + "T00:00:00"); if (dataObj < dataIni) passaData = false; }
                 if (dataFim) { const dataF = new Date(dataFim + "T23:59:59"); if (dataObj > dataF) passaData = false; }
                 
-                return passaTexto && passaUsuario && passaData;
+                return passaTexto && passaData;
             });
 
             const isBuscaAtiva = termoBusca.length > 0;
@@ -2372,7 +2416,7 @@
                     }
                 });
 
-                const pacientesNomes = Object.keys(agrupamentoPacientes).sort();
+                const pacientesNomes = Object.keys(agrupamentoPacientes).sort((a,b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
                 if(pacientesNomes.length === 0) container.innerHTML = `<div class="col-span-full text-center text-gray-500 py-4 text-xs">Nenhum paciente encontrado.</div>`;
 
                 pacientesNomes.forEach(nome => {
@@ -2549,14 +2593,10 @@
                         text: `Confira este documento: ${nomeLimpo}`,
                         url: window.urlImagemAtiva
                     });
-                } catch (err) {
-                    console.log("Compartilhamento nativo não concluído:", err);
-                }
+                } catch (err) {}
             } else {
                 navigator.clipboard.writeText(window.urlImagemAtiva).then(() => {
                     alert("🔗 Link copiado para a área de transferência!");
-                }).catch(() => {
-                    alert("Seu navegador não suporta compartilhamento automático.");
                 });
             }
         };
@@ -2586,7 +2626,6 @@
                 remove(dbRef(db, 'arquivos_anexos/' + window.idImagemAtiva)).then(() => { window.fecharModalVisualizacao(); }).catch(err => alert("Erro ao excluir: " + err.message));
             } else {
                 update(dbRef(db, 'arquivos_anexos/' + window.idImagemAtiva), { statusExclusao: "pendente_aprovacao", solicitadoPor: usuarioLogado }).then(() => {
-                    push(dbRef(db, 'notificacoes_sistema'), { titulo: "Exclusão Solicitada", mensagem: `@${usuarioLogado} pediu para excluir "${nomeArquivo}".`, tipo: "alerta", timestamp: Date.now() });
                     window.fecharModalVisualizacao();
                 }).catch(err => alert("Erro ao processar: " + err.message));
             }
@@ -2620,16 +2659,6 @@
             });
         };
 
-        window.abrirModalNotificacoes = function() { 
-            const modal = document.getElementById("modalNotificacoes"); const content = document.getElementById("modalNotificacoesContent"); 
-            if (modal && content) { modal.classList.remove("hidden"); modal.classList.add("flex"); setTimeout(() => { content.classList.remove("scale-95", "opacity-0"); content.classList.add("scale-100", "opacity-100"); }, 10); }
-        };
-
-        window.fecharModalNotificacoes = function() { 
-            const modal = document.getElementById("modalNotificacoes"); const content = document.getElementById("modalNotificacoesContent"); 
-            if (modal && content) { content.classList.remove("scale-100", "opacity-100"); content.classList.add("scale-95", "opacity-0"); setTimeout(() => { modal.classList.remove("flex"); modal.classList.add("hidden"); }, 200); }
-        };
-
         onAuthStateChanged(auth, (user) => {
             const modalLogin = document.getElementById("modalLoginApp");
 
@@ -2655,21 +2684,18 @@
                     if (elSidebarNome) elSidebarNome.innerText = `@${usuarioLogado}`;
                     if (elSidebarPerfil) elSidebarPerfil.innerText = perfilUsuario === "administrador" ? "Administrativo" : "Usuário";
 
-                    const areaSino = document.getElementById("areaSinoAdmin");
-                    const espacador = document.getElementById("espacadorHeader");
                     const btnBancoPacientes = document.getElementById("btnSidebarPacientes");
                     const btnCadastroUsuario = document.getElementById("btnSidebarCadastrarUsuario");
+                    const areaImportacao = document.getElementById("areaImportacaoPacientes");
                     
                     if (perfilUsuario === "administrador") {
-                        if (areaSino) areaSino.classList.remove("hidden");
-                        if (espacador) espacador.classList.add("hidden");
                         if (btnBancoPacientes) { btnBancoPacientes.classList.remove("hidden"); btnBancoPacientes.classList.add("flex"); }
                         if (btnCadastroUsuario) { btnCadastroUsuario.classList.remove("hidden"); btnCadastroUsuario.classList.add("flex"); }
+                        if (areaImportacao) { areaImportacao.classList.remove("hidden"); }
                     } else {
-                        if (areaSino) areaSino.classList.add("hidden");
-                        if (espacador) espacador.classList.remove("hidden");
-                        if (btnBancoPacientes) { btnBancoPacientes.classList.add("hidden"); btnBancoPacientes.classList.remove("flex"); }
+                        if (btnBancoPacientes) { btnBancoPacientes.classList.remove("hidden"); btnBancoPacientes.classList.add("flex"); }
                         if (btnCadastroUsuario) { btnCadastroUsuario.classList.add("hidden"); btnCadastroUsuario.classList.remove("flex"); }
+                        if (areaImportacao) { areaImportacao.classList.add("hidden"); }
                     }
                     
                     carregarPacientesBanco();
@@ -2688,7 +2714,6 @@
         escutarEventoSeguro("inputBuscaAnexo", "input", window.aplicarFiltrosNaGaleria);
         escutarEventoSeguro("dataInicioFiltro", "change", window.aplicarFiltrosNaGaleria);
         escutarEventoSeguro("dataFimFiltro", "change", window.aplicarFiltrosNaGaleria);
-        escutarEventoSeguro("filtroUsuario", "change", window.aplicarFiltrosNaGaleria);
     </script>
 </body>
 </html>
