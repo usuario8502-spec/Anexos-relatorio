@@ -66,8 +66,39 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
         .popup-blur { backdrop-filter: blur(5px); }
         
-        .cropper-view-box { outline: 3px solid rgba(59, 130, 246, 0.9) !important; border-radius: 4px; }
+        /* ========================================================
+           CROPPER CSS (Bordas mais grossas e arrasto para todos os lados)
+           ======================================================== */
+        .cropper-view-box { outline: 4px solid #3b82f6 !important; border-radius: 4px; }
+        .cropper-dashed { border: 1px dashed rgba(255, 255, 255, 0.8) !important; }
+        
+        /* Aumenta a área invisível de clique nas bordas para arrastar no celular */
         .cropper-line { background-color: transparent !important; }
+        .cropper-line.line-e { width: 50px !important; right: -25px !important; cursor: e-resize !important; }
+        .cropper-line.line-w { width: 50px !important; left: -25px !important; cursor: w-resize !important; }
+        .cropper-line.line-n { height: 50px !important; top: -25px !important; cursor: n-resize !important; }
+        .cropper-line.line-s { height: 50px !important; bottom: -25px !important; cursor: s-resize !important; }
+
+        /* Desenha as bolinhas nos cantos e lados (8 pontos de ancoragem) */
+        .cropper-point { width: 50px !important; height: 50px !important; background-color: transparent !important; opacity: 1 !important; }
+        .cropper-point::before {
+            content: ''; position: absolute; width: 18px; height: 18px; background-color: #3b82f6; border-radius: 50%;
+            top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 5px rgba(0,0,0,0.8); border: 2px solid white;
+        }
+        
+        /* Posição dos cantos */
+        .cropper-point.point-nw { top: -25px !important; left: -25px !important; }
+        .cropper-point.point-ne { top: -25px !important; right: -25px !important; }
+        .cropper-point.point-sw { bottom: -25px !important; left: -25px !important; }
+        .cropper-point.point-se { bottom: -25px !important; right: -25px !important; }
+        
+        /* Posição das bordas retas (cima, baixo, esquerda, direita) */
+        .cropper-point.point-n { top: -25px !important; margin-left: -25px !important; }
+        .cropper-point.point-s { bottom: -25px !important; margin-left: -25px !important; }
+        .cropper-point.point-e { right: -25px !important; margin-top: -25px !important; }
+        .cropper-point.point-w { left: -25px !important; margin-top: -25px !important; }
+        .cropper-center { display: none !important; }
+
         input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; background: transparent; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; height: 18px; width: 18px; border-radius: 50%; background: #3b82f6; cursor: pointer; margin-top: -7px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #475569; border-radius: 2px; }
@@ -166,7 +197,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE GERENCIAR PACIENTES (BANCO DE DADOS E IMPORTAÇÃO XLSX) -->
+    <!-- MODAL DE GERENCIAR PACIENTES -->
     <div id="modalGerenciarPacientes" class="fixed inset-0 bg-black/90 popup-blur hidden items-center justify-center p-4 z-[120]">
         <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 w-full max-w-md shadow-2xl flex flex-col gap-4">
             <div class="flex justify-between items-center border-b border-gray-800 pb-3">
@@ -238,7 +269,6 @@
     </header>
 
     <main class="flex-1 max-w-5xl w-full mx-auto p-4 flex flex-col gap-6">
-        <!-- Barra de Filtros -->
         <section class="bg-gray-900 border border-gray-800 p-4 rounded-xl shadow-lg flex flex-col gap-3">
             <div class="relative w-full">
                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500"></i>
@@ -1193,7 +1223,7 @@
                 tempCanvas.height = alturaCrop;
                 const ctx = tempCanvas.getContext('2d');
 
-                // Puxa a imagem limpa (sem carimbos) se existir para não sobrepor
+                // Puxa a imagem limpa (sem carimbos) se existir
                 if (pag.baseDataUrl) {
                     const baseImg = new Image();
                     baseImg.onload = () => {
@@ -1219,7 +1249,6 @@
                     const slB = document.getElementById("sliderBrilho"); if (slB) slB.value = 0;
                     const slC = document.getElementById("sliderContraste"); if (slC) slC.value = 0;
 
-                    // Limpa o carimbo da tela na hora de editar para o usuário posicionar do zero
                     imgAssinaturaElemento = null;
                     imgCarimboElemento = null;
 
@@ -1805,7 +1834,6 @@
             if (!canvasLive) return;
             const imgSalvaDataUrl = canvasLive.toDataURL('image/jpeg', 0.85); 
 
-            // Salva a base original sem as edições (para poder reutilizar se for editada de novo)
             let tempC = document.createElement('canvas');
             tempC.width = larguraCrop; tempC.height = alturaCrop;
             tempC.getContext('2d').putImageData(canvasOriginalContextData, 0, 0);
@@ -1824,7 +1852,7 @@
                 });
             }
 
-            // MÁGICA: DUPLICAR PARA AS PRÓXIMAS PÁGINAS (Se houver páginas pra frente)
+            // DUPLICAR PARA AS PRÓXIMAS PÁGINAS (Se houver páginas pra frente)
             if ((imgAssinaturaElemento || imgCarimboElemento) && indexAtual < arrayPaginasEscaneadas.length - 1) {
                 const btnSalvar = document.querySelector("#modalFiltrosScanner button[onclick='window.confirmarSalvarPaginaScanner()']");
                 let originalText = btnSalvar ? btnSalvar.innerHTML : "";
@@ -1912,6 +1940,7 @@
                 div.className = "relative border border-gray-700 rounded-lg overflow-hidden h-40 bg-gray-900 flex flex-col group shadow-lg"; 
                 div.innerHTML = `
                     <div class="flex-1 relative overflow-hidden group-hover:opacity-90 transition">
+                        <!-- IMAGEM COM FUNÇÃO DE ZOOM AO CLICAR -->
                         <img src="${imgUrl}" onclick="window.abrirZoomPagina(${index})" class="w-full h-full object-cover opacity-80 cursor-zoom-in hover:opacity-100 transition">
                         <div class="absolute bottom-0 left-0 right-0 bg-black/80 text-[9px] text-center py-0.5 font-bold shadow-inner z-10 pointer-events-none">Pág ${index + 1}</div>
                         
@@ -1959,7 +1988,6 @@
             if (input.files && input.files.length > 0) {
                 const file = input.files[0];
                 
-                // NOVO FLUXO: Se o usuário subir um PDF genérico, fatiamos e jogamos no Carrinho de Revisão!
                 if (file.type === 'application/pdf') {
                     modoUploadAtual = 'scanner'; 
                     const areaEscolha = document.getElementById("areaEscolhaModo"); if (areaEscolha) areaEscolha.classList.add("hidden");
@@ -1986,7 +2014,6 @@
                             
                             const imgDataUrl = canvas.toDataURL('image/jpeg', 0.85);
                             
-                            // A IA tenta ler a página atual e cruzar com o banco
                             let nomeSugerido = "";
                             try {
                                 const imgBw = await preProcessarImagemParaOCR(imgDataUrl);
@@ -1997,7 +2024,7 @@
 
                             arrayPaginasEscaneadas.push({
                                 finalDataUrl: imgDataUrl,
-                                baseDataUrl: imgDataUrl, // Guarda a base limpa para o carimbo
+                                baseDataUrl: imgDataUrl,
                                 paciente: nomeSugerido,
                                 arquivoOriginalParaRelatorioGeral: file
                             });
@@ -2013,7 +2040,6 @@
                     return;
                 }
 
-                // Fila normal de imagens
                 modoUploadAtual = tipo; 
                 for (let i = 0; i < input.files.length; i++) { arquivosFilaEnvio.push(input.files[i]); }
                 
@@ -2049,7 +2075,6 @@
             window.renderizarListaFilaEnvio();
         };
 
-        // LÓGICA FINAL DE UPLOAD BASEADO NAS REVISÕES DO USUÁRIO
         window.iniciarUploadStorage = async function() {
             const inNome = document.getElementById("nomeArquivoManual");
             let nomeDigitado = inNome ? inNome.value.trim() : "";
@@ -2067,11 +2092,9 @@
                 const dataAtual = new Date();
                 const pastaData = `${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, '0')}-${String(dataAtual.getDate()).padStart(2, '0')}`;
                 
-                // 1. GERA E SALVA O RELATÓRIO GERAL (Completo)
                 if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Salvando Relatório Geral...`;
                 
                 let arquivoGeralUpload = null;
-                // Se o carimbo/assinatura foi usado, temos que mesclar, senão podemos usar o original PDF
                 let houveEdicaoGlobal = imgCarimboElemento || imgAssinaturaElemento;
                 if (!houveEdicaoGlobal && arrayPaginasEscaneadas[0] && arrayPaginasEscaneadas[0].arquivoOriginalParaRelatorioGeral) {
                     arquivoGeralUpload = arrayPaginasEscaneadas[0].arquivoOriginalParaRelatorioGeral;
@@ -2107,7 +2130,6 @@
                     statusExclusao: "ativo"
                 });
 
-                // 2. AGRUPA E SEPARA PELOS NOMES DO DROPDOWN
                 if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Separando por Paciente...`;
                 
                 let mapaPacientes = {};
@@ -2128,7 +2150,6 @@
                     mapaPacientes[nomeAnteriorLembrado].push(imgBase64);
                 }
 
-                // 3. FAZ O UPLOAD DAS PASTAS INDIVIDUAIS
                 const { jsPDF } = window.jspdf;
                 const docPDF = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
                 const pdfW = docPDF.internal.pageSize.getWidth();
@@ -2243,16 +2264,28 @@
 
             onValue(dbRef(db, 'arquivos_anexos'), (snapshot) => {
                 todosAnexosNaMemoria = [];
+                const selectUsuario = document.getElementById("filtroUsuario");
+                let usuariosUnicos = new Set();
+
                 if (snapshot.exists()) {
                     snapshot.forEach(child => { 
                         const anexo = { id: child.key, ...child.val() };
                         if (!anexo.tipo) anexo.tipo = 'imagem'; 
                         if (perfilUsuario === "administrador" || anexo.statusExclusao !== "pendente_aprovacao") {
                             todosAnexosNaMemoria.push(anexo);
+                            if (anexo.enviadoPor) usuariosUnicos.add(anexo.enviadoPor);
                         }
                     });
                     todosAnexosNaMemoria.sort((a, b) => b.dataEnvio - a.dataEnvio);
                 }
+
+                if (selectUsuario) {
+                    const valorAtualSelect = selectUsuario.value;
+                    selectUsuario.innerHTML = '<option value="todos">Todos os Usuários</option>';
+                    usuariosUnicos.forEach(user => { selectUsuario.innerHTML += `<option value="${user}">@${user}</option>`; });
+                    selectUsuario.value = usuariosUnicos.has(valorAtualSelect) ? valorAtualSelect : "todos";
+                }
+
                 window.aplicarFiltrosNaGaleria();
             });
         }
@@ -2271,17 +2304,21 @@
             const inBusca = document.getElementById("inputBuscaAnexo");
             const inIni = document.getElementById("dataInicioFiltro");
             const inFim = document.getElementById("dataFimFiltro");
+            const selUser = document.getElementById("filtroUsuario");
 
             const termoBusca = inBusca ? inBusca.value.toLowerCase().trim() : "";
             const dataInicio = inIni ? inIni.value : "";
             const dataFim = inFim ? inFim.value : "";
+            const usuarioFiltro = selUser ? selUser.value : "todos";
 
             const container = document.getElementById("listaAnexos");
             const areaBreadcrumb = document.getElementById("areaBreadcrumb");
             if (!container) return;
             container.innerHTML = "";
 
-            let anexosFiltrados = todosAnexosNaMemoria.filter(arq => {
+            let anexosFiltrados = todosAnexosNaMemoria;
+            
+            anexosFiltrados = anexosFiltrados.filter(arq => {
                 const dataObj = new Date(arq.dataEnvio);
                 const dataFormatadaDia = dataObj.toLocaleDateString('pt-BR'); 
                 const mesAnoFormatado = String(dataObj.getMonth() + 1).padStart(2, '0') + '/' + dataObj.getFullYear();
@@ -2294,12 +2331,13 @@
                                  (arq.pastaPaciente && arq.pastaPaciente.toLowerCase().includes(termoBusca));
                 }
 
+                const passaUsuario = usuarioFiltro === "todos" || arq.enviadoPor === usuarioFiltro;
                 let passaData = true;
                 dataObj.setHours(0,0,0,0);
                 if (dataInicio) { const dataIni = new Date(dataInicio + "T00:00:00"); if (dataObj < dataIni) passaData = false; }
                 if (dataFim) { const dataF = new Date(dataFim + "T23:59:59"); if (dataObj > dataF) passaData = false; }
                 
-                return passaTexto && passaData;
+                return passaTexto && passaUsuario && passaData;
             });
 
             const isBuscaAtiva = termoBusca.length > 0;
@@ -2311,7 +2349,6 @@
             const arqsPacientes = anexosFiltrados.filter(a => a.pastaPaciente);
             const arqsDiversos = anexosFiltrados.filter(a => !(a.pasta && a.pasta.startsWith("Relatorio_Geral")) && !a.pastaPaciente);
 
-            // NIVEL 0: RAIZ - Relatório Geral, Pacientes e Arquivos Diversos
             if (window.pastaAbertaAtual === null && !isBuscaAtiva) {
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<span class="text-gray-300 font-bold text-xs">Pastas do Sistema</span>`;
                 if (txtInfo) txtInfo.innerText = "Navegando nas Pastas";
@@ -2323,7 +2360,6 @@
                 if (txtCount) txtCount.innerText = `3 pastas`;
 
             } 
-            // NIVEL 1: DENTRO DE PACIENTES - Subpastas por Nomes Limpos
             else if (window.pastaAbertaAtual === 'pacientes_root' && !isBuscaAtiva) {
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs">Pacientes</span>`;
                 if (txtInfo) txtInfo.innerText = "Selecione o Paciente";
@@ -2345,7 +2381,6 @@
                 });
                 if (txtCount) txtCount.innerText = `${pacientesNomes.length} pacientes`;
             }
-            // NIVEL 1: DENTRO DO RELATÓRIO GERAL
             else if (window.pastaAbertaAtual === 'relatorio_geral' && !isBuscaAtiva) {
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs">Relatório Geral</span>`;
                 if (txtInfo) txtInfo.innerText = "Arquivos Gerais";
@@ -2353,7 +2388,6 @@
                 renderizarArquivosFinais(arqsGeral, container);
                 if (txtCount) txtCount.innerText = `${arqsGeral.length} relatórios`;
             }
-            // NIVEL 1: DENTRO DE ARQUIVOS DIVERSOS (Pastas por Data)
             else if (window.pastaAbertaAtual === 'diversos_root' && !isBuscaAtiva) {
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs">Arquivos Diversos</span>`;
                 if (txtInfo) txtInfo.innerText = "Selecione a Data";
@@ -2377,7 +2411,6 @@
                 });
                 if (txtCount) txtCount.innerText = `${datasNomes.length} pastas`;
             }
-            // NIVEL 2: DENTRO DO NOME DO PACIENTE
             else if (window.pastaAbertaAtual && window.pastaAbertaAtual.startsWith('paciente:') && !isBuscaAtiva) {
                 const nomePac = window.pastaAbertaAtual.split('paciente:')[1];
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.abrirPasta('pacientes_root')" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs truncate max-w-[150px]">${nomePac}</span>`;
@@ -2387,7 +2420,6 @@
                 renderizarArquivosFinais(arqs, container);
                 if (txtCount) txtCount.innerText = `${arqs.length} evoluções`;
             }
-            // NIVEL 2: DENTRO DE UMA DATA ESPECÍFICA DE "ARQUIVOS DIVERSOS"
             else if (window.pastaAbertaAtual && window.pastaAbertaAtual.startsWith('diversos_data:') && !isBuscaAtiva) {
                 const nomeData = window.pastaAbertaAtual.split('diversos_data:')[1];
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.abrirPasta('diversos_root')" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs truncate max-w-[150px]">${nomeData}</span>`;
@@ -2397,7 +2429,6 @@
                 renderizarArquivosFinais(arqs, container);
                 if (txtCount) txtCount.innerText = `${arqs.length} arquivos`;
             }
-            // BUSCA GLOBAL
             else {
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="document.getElementById('inputBuscaAnexo').value=''; window.aplicarFiltrosNaGaleria();" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Limpar Busca</button><span class="text-gray-600 mx-2">/</span><span class="text-blue-400 font-bold text-xs">Resultados</span>`;
                 if (txtInfo) txtInfo.innerText = "Resultados da Pesquisa";
@@ -2406,7 +2437,6 @@
             }
         };
 
-        // RENDERIZAÇÃO DOS CARDS DE PASTAS ADAPTADO PARA TIPOS
         function renderizarCardPasta(container, nomePasta, subtitulo, onclickAction, tipoPasta = 'geral') {
             let iconClass = "fa-folder-open text-blue-500";
             let bgClass = "bg-blue-900/20 border-blue-800/40";
@@ -2438,7 +2468,6 @@
             container.appendChild(card);
         }
 
-        // RENDERIZAÇÃO DOS CARDS DE ARQUIVOS (PDF E FOTOS)
         function renderizarArquivosFinais(lista, container) {
             if (lista.length === 0) { container.innerHTML = `<div class="col-span-full py-8 text-center text-gray-500 text-xs">Nenhum documento encontrado.</div>`; return; }
             lista.forEach(arq => {
@@ -2520,10 +2549,14 @@
                         text: `Confira este documento: ${nomeLimpo}`,
                         url: window.urlImagemAtiva
                     });
-                } catch (err) {}
+                } catch (err) {
+                    console.log("Compartilhamento nativo não concluído:", err);
+                }
             } else {
                 navigator.clipboard.writeText(window.urlImagemAtiva).then(() => {
                     alert("🔗 Link copiado para a área de transferência!");
+                }).catch(() => {
+                    alert("Seu navegador não suporta compartilhamento automático.");
                 });
             }
         };
@@ -2553,6 +2586,7 @@
                 remove(dbRef(db, 'arquivos_anexos/' + window.idImagemAtiva)).then(() => { window.fecharModalVisualizacao(); }).catch(err => alert("Erro ao excluir: " + err.message));
             } else {
                 update(dbRef(db, 'arquivos_anexos/' + window.idImagemAtiva), { statusExclusao: "pendente_aprovacao", solicitadoPor: usuarioLogado }).then(() => {
+                    push(dbRef(db, 'notificacoes_sistema'), { titulo: "Exclusão Solicitada", mensagem: `@${usuarioLogado} pediu para excluir "${nomeArquivo}".`, tipo: "alerta", timestamp: Date.now() });
                     window.fecharModalVisualizacao();
                 }).catch(err => alert("Erro ao processar: " + err.message));
             }
@@ -2586,6 +2620,16 @@
             });
         };
 
+        window.abrirModalNotificacoes = function() { 
+            const modal = document.getElementById("modalNotificacoes"); const content = document.getElementById("modalNotificacoesContent"); 
+            if (modal && content) { modal.classList.remove("hidden"); modal.classList.add("flex"); setTimeout(() => { content.classList.remove("scale-95", "opacity-0"); content.classList.add("scale-100", "opacity-100"); }, 10); }
+        };
+
+        window.fecharModalNotificacoes = function() { 
+            const modal = document.getElementById("modalNotificacoes"); const content = document.getElementById("modalNotificacoesContent"); 
+            if (modal && content) { content.classList.remove("scale-100", "opacity-100"); content.classList.add("scale-95", "opacity-0"); setTimeout(() => { modal.classList.remove("flex"); modal.classList.add("hidden"); }, 200); }
+        };
+
         onAuthStateChanged(auth, (user) => {
             const modalLogin = document.getElementById("modalLoginApp");
 
@@ -2611,13 +2655,19 @@
                     if (elSidebarNome) elSidebarNome.innerText = `@${usuarioLogado}`;
                     if (elSidebarPerfil) elSidebarPerfil.innerText = perfilUsuario === "administrador" ? "Administrativo" : "Usuário";
 
+                    const areaSino = document.getElementById("areaSinoAdmin");
+                    const espacador = document.getElementById("espacadorHeader");
                     const btnBancoPacientes = document.getElementById("btnSidebarPacientes");
                     const btnCadastroUsuario = document.getElementById("btnSidebarCadastrarUsuario");
                     
                     if (perfilUsuario === "administrador") {
+                        if (areaSino) areaSino.classList.remove("hidden");
+                        if (espacador) espacador.classList.add("hidden");
                         if (btnBancoPacientes) { btnBancoPacientes.classList.remove("hidden"); btnBancoPacientes.classList.add("flex"); }
                         if (btnCadastroUsuario) { btnCadastroUsuario.classList.remove("hidden"); btnCadastroUsuario.classList.add("flex"); }
                     } else {
+                        if (areaSino) areaSino.classList.add("hidden");
+                        if (espacador) espacador.classList.remove("hidden");
                         if (btnBancoPacientes) { btnBancoPacientes.classList.add("hidden"); btnBancoPacientes.classList.remove("flex"); }
                         if (btnCadastroUsuario) { btnCadastroUsuario.classList.add("hidden"); btnCadastroUsuario.classList.remove("flex"); }
                     }
@@ -2638,6 +2688,7 @@
         escutarEventoSeguro("inputBuscaAnexo", "input", window.aplicarFiltrosNaGaleria);
         escutarEventoSeguro("dataInicioFiltro", "change", window.aplicarFiltrosNaGaleria);
         escutarEventoSeguro("dataFimFiltro", "change", window.aplicarFiltrosNaGaleria);
+        escutarEventoSeguro("filtroUsuario", "change", window.aplicarFiltrosNaGaleria);
     </script>
 </body>
 </html>
