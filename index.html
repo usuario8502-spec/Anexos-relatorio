@@ -179,7 +179,7 @@
             <div class="flex flex-col gap-2">
                 <form onsubmit="event.preventDefault(); if(window.adicionarPacienteFirebase) window.adicionarPacienteFirebase(event);" class="flex gap-2">
                     <input type="text" id="cadNomePaciente" required placeholder="Adicionar manualmente..." class="flex-1 p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-4 rounded-xl font-bold text-xs transition shadow"><i class="fas fa-plus"></i></button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 rounded-xl font-bold text-xs transition shadow"><i class="fas fa-plus"></i></button>
                 </form>
 
                 <input type="file" id="inputImportXlsx" accept=".xlsx, .xls" class="hidden" onchange="window.importarPacientesXlsx(this)">
@@ -226,7 +226,7 @@
         </div>
     </aside>
 
-    <!-- Cabeçalho (Sino Removido) -->
+    <!-- Cabeçalho -->
     <header class="bg-gray-900 border-b border-gray-800 p-4 sticky top-0 z-40 shadow-md">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <button onclick="window.toggleSidebar && window.toggleSidebar(true)" class="text-gray-300 hover:text-white text-xl p-2 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-700 focus:outline-none w-10 h-10 flex items-center justify-center">
@@ -337,7 +337,7 @@
                         <span class="text-xs font-bold text-red-400"><i class="fas fa-file-pdf"></i> Revisão de Documentos</span>
                         <span id="txtQtdPaginas" class="text-[10px] text-gray-400 bg-gray-800 px-2 py-1 rounded border border-gray-700">0 páginas</span>
                     </div>
-                    <p class="text-[10px] text-yellow-500 mb-1 leading-tight"><i class="fas fa-info-circle"></i> A IA selecionou o nome pelo Banco. Clique na miniatura para dar zoom e ler o conteúdo, ou altere na caixinha de seleção.</p>
+                    <p class="text-[10px] text-yellow-500 mb-1 leading-tight"><i class="fas fa-info-circle"></i> O carimbo inserido em uma página é aplicado nas próximas. A IA seleciona o nome. Clique no Lápis para editar a página.</p>
                     
                     <div id="gridPaginasScanner" class="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto custom-scrollbar p-1"></div>
                     
@@ -1173,6 +1173,76 @@
             }
         };
 
+        // --- SISTEMA DE EDIÇÃO DE PÁGINAS EXISTENTES ---
+        window.editarPaginaScanner = function(index) {
+            indicePaginaSendoEditada = index;
+            const pag = arrayPaginasEscaneadas[index];
+
+            const areaPrev = document.getElementById("areaPreviewScanner");
+            if (areaPrev) { areaPrev.classList.add("hidden"); areaPrev.classList.remove("flex"); }
+            const areaEscolha = document.getElementById("areaEscolhaModo");
+            if (areaEscolha) areaEscolha.classList.add("hidden");
+
+            const img = new Image();
+            img.onload = () => {
+                larguraCrop = img.width;
+                alturaCrop = img.height;
+
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = larguraCrop;
+                tempCanvas.height = alturaCrop;
+                const ctx = tempCanvas.getContext('2d');
+
+                // Puxa a imagem limpa (sem carimbos) se existir para não sobrepor
+                if (pag.baseDataUrl) {
+                    const baseImg = new Image();
+                    baseImg.onload = () => {
+                        ctx.drawImage(baseImg, 0, 0);
+                        canvasOriginalContextData = ctx.getImageData(0, 0, larguraCrop, alturaCrop);
+                        abrirModalsFiltro();
+                    };
+                    baseImg.src = pag.baseDataUrl;
+                } else {
+                    ctx.drawImage(img, 0, 0);
+                    canvasOriginalContextData = ctx.getImageData(0, 0, larguraCrop, alturaCrop);
+                    abrirModalsFiltro();
+                }
+
+                function abrirModalsFiltro() {
+                    const canvasLive = document.getElementById("canvasLivePreview");
+                    if (canvasLive) {
+                        canvasLive.width = larguraCrop;
+                        canvasLive.height = alturaCrop;
+                        configurarEventosArrastoCanvas(canvasLive);
+                    }
+
+                    const slB = document.getElementById("sliderBrilho"); if (slB) slB.value = 0;
+                    const slC = document.getElementById("sliderContraste"); if (slC) slC.value = 0;
+
+                    // Limpa o carimbo da tela na hora de editar para o usuário posicionar do zero
+                    imgAssinaturaElemento = null;
+                    imgCarimboElemento = null;
+
+                    const pAss = document.getElementById("painelControleAssinatura");
+                    if (pAss) { pAss.classList.add("hidden"); pAss.classList.remove("flex"); }
+                    const txtBtnAss = document.getElementById("txtBtnAssinatura");
+                    if (txtBtnAss) txtBtnAss.innerText = "Adicionar Assinatura";
+
+                    const pCar = document.getElementById("painelControleCarimbo");
+                    if (pCar) { pCar.classList.add("hidden"); pCar.classList.remove("flex"); }
+                    const txtB = document.getElementById("txtBtnCarimbo");
+                    if (txtB) txtB.innerText = "Carimbar";
+
+                    const modalFiltros = document.getElementById("modalFiltrosScanner");
+                    if (modalFiltros) { modalFiltros.classList.remove("hidden"); modalFiltros.classList.add("flex"); }
+
+                    sincronizarPainelComCaixaAtiva();
+                    window.renderizarFiltroAtual(true);
+                }
+            };
+            img.src = pag.baseDataUrl || pag.finalDataUrl;
+        };
+
         window.girarCropper = function() {
             if (cropperInstancia) {
                 window.rotacaoBase = (window.rotacaoBase + 90) % 360;
@@ -1229,18 +1299,21 @@
             }];
             indiceCaixaTextoAtiva = 0;
 
-            posicaoAssinatura = { x: larguraCrop - 220, y: alturaCrop - 150 };
-            imgAssinaturaElemento = null;
-            imgCarimboElemento = null;
+            if (!imgAssinaturaElemento) { posicaoAssinatura = { x: larguraCrop - 220, y: alturaCrop - 150 }; }
+            if (!imgCarimboElemento) { posicaoCarimbo = { x: (larguraCrop - 400) / 2, y: (alturaCrop / 2) - 65 }; }
             
             const slB = document.getElementById("sliderBrilho"); if (slB) slB.value = 0;
             const slC = document.getElementById("sliderContraste"); if (slC) slC.value = 0;
             
             const pAss = document.getElementById("painelControleAssinatura");
-            if (pAss) { pAss.classList.add("hidden"); pAss.classList.remove("flex"); }
-            
+            if (pAss) { pAss.classList[imgAssinaturaElemento ? 'remove' : 'add']("hidden"); pAss.classList[imgAssinaturaElemento ? 'add' : 'remove']("flex"); }
             const txtBtnAss = document.getElementById("txtBtnAssinatura");
-            if (txtBtnAss) txtBtnAss.innerText = "Adicionar Assinatura";
+            if (txtBtnAss) txtBtnAss.innerText = imgAssinaturaElemento ? "Refazer Assinatura" : "Adicionar Assinatura";
+
+            const pCar = document.getElementById("painelControleCarimbo");
+            if (pCar) { pCar.classList[imgCarimboElemento ? 'remove' : 'add']("hidden"); pCar.classList[imgCarimboElemento ? 'add' : 'remove']("flex"); }
+            const txtB = document.getElementById("txtBtnCarimbo");
+            if (txtB) txtB.innerText = imgCarimboElemento ? "Reaplicar Carimbo" : "Carimbar";
 
             const slLarg = document.getElementById("sliderLarguraCaixaTexto");
             if (slLarg) {
@@ -1725,17 +1798,83 @@
             window.renderizarFiltroAtual(true);
         };
 
-        // SALVAR PÁGINA NO PREVIEW
-        window.confirmarSalvarPaginaScanner = function() {
+        // SALVAR PÁGINA COM DUPLICAÇÃO AUTOMÁTICA DE CARIMBO
+        window.confirmarSalvarPaginaScanner = async function() {
             window.renderizarFiltroAtual(false);
             const canvasLive = document.getElementById("canvasLivePreview");
             if (!canvasLive) return;
             const imgSalvaDataUrl = canvasLive.toDataURL('image/jpeg', 0.85); 
 
-            arrayPaginasEscaneadas.push({ finalDataUrl: imgSalvaDataUrl, paciente: "" });
-            
-            modoUploadAtual = 'scanner';
+            // Salva a base original sem as edições (para poder reutilizar se for editada de novo)
+            let tempC = document.createElement('canvas');
+            tempC.width = larguraCrop; tempC.height = alturaCrop;
+            tempC.getContext('2d').putImageData(canvasOriginalContextData, 0, 0);
+            const cleanBaseUrl = tempC.toDataURL('image/jpeg', 0.85);
 
+            let indexAtual = indicePaginaSendoEditada !== null ? indicePaginaSendoEditada : arrayPaginasEscaneadas.length;
+
+            if (indicePaginaSendoEditada !== null) {
+                arrayPaginasEscaneadas[indicePaginaSendoEditada].finalDataUrl = imgSalvaDataUrl;
+                arrayPaginasEscaneadas[indicePaginaSendoEditada].baseDataUrl = cleanBaseUrl;
+            } else {
+                arrayPaginasEscaneadas.push({
+                    finalDataUrl: imgSalvaDataUrl,
+                    baseDataUrl: cleanBaseUrl,
+                    paciente: ""
+                });
+            }
+
+            // MÁGICA: DUPLICAR PARA AS PRÓXIMAS PÁGINAS (Se houver páginas pra frente)
+            if ((imgAssinaturaElemento || imgCarimboElemento) && indexAtual < arrayPaginasEscaneadas.length - 1) {
+                const btnSalvar = document.querySelector("#modalFiltrosScanner button[onclick='window.confirmarSalvarPaginaScanner()']");
+                let originalText = btnSalvar ? btnSalvar.innerHTML : "";
+                if(btnSalvar) { btnSalvar.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Aplicando nas seguintes...`; btnSalvar.disabled = true; }
+
+                const refWidth = larguraCrop;
+                const refHeight = alturaCrop;
+
+                for (let i = indexAtual + 1; i < arrayPaginasEscaneadas.length; i++) {
+                    let pag = arrayPaginasEscaneadas[i];
+                    let baseSrc = pag.baseDataUrl || pag.finalDataUrl;
+
+                    await new Promise((resolve) => {
+                        let img = new Image();
+                        img.onload = () => {
+                            let tempCanvas = document.createElement('canvas');
+                            tempCanvas.width = img.width;
+                            tempCanvas.height = img.height;
+                            let tCtx = tempCanvas.getContext('2d');
+                            tCtx.drawImage(img, 0, 0);
+
+                            let scaleX = img.width / refWidth;
+                            let scaleY = img.height / refHeight;
+
+                            if (imgAssinaturaElemento) {
+                                const slEsc = document.getElementById("sliderEscalaAssinatura");
+                                let escala = slEsc ? parseInt(slEsc.value) / 100 : 0.5;
+                                let larguraAss = (refWidth * 0.35) * escala * scaleX;
+                                let alturaAss = (imgAssinaturaElemento.height * (larguraAss / scaleX)) / imgAssinaturaElemento.width * scaleY;
+                                tCtx.drawImage(imgAssinaturaElemento, posicaoAssinatura.x * scaleX, posicaoAssinatura.y * scaleY, larguraAss, alturaAss);
+                            }
+
+                            if (imgCarimboElemento) {
+                                const slCar = document.getElementById("sliderEscalaCarimbo");
+                                let escalaC = slCar ? parseInt(slCar.value) / 100 : 0.85;
+                                let larguraCar = 380 * escalaC * scaleX;
+                                let alturaCar = (imgCarimboElemento.height * (larguraCar / scaleX)) / imgCarimboElemento.width * scaleY;
+                                tCtx.drawImage(imgCarimboElemento, posicaoCarimbo.x * scaleX, posicaoCarimbo.y * scaleY, larguraCar, alturaCar);
+                            }
+
+                            pag.finalDataUrl = tempCanvas.toDataURL('image/jpeg', 0.85);
+                            resolve();
+                        };
+                        img.src = baseSrc;
+                    });
+                }
+                if(btnSalvar) { btnSalvar.innerHTML = originalText; btnSalvar.disabled = false; }
+            }
+
+            modoUploadAtual = 'scanner';
             const modalFiltros = document.getElementById("modalFiltrosScanner");
             if (modalFiltros) { modalFiltros.classList.add("hidden"); modalFiltros.classList.remove("flex"); }
             if (cropperInstancia) cropperInstancia.destroy();
@@ -1763,7 +1902,6 @@
                 let imgUrl = typeof pagData === 'string' ? pagData : pagData.finalDataUrl;
                 let nomePacSugerido = pagData.paciente || "";
 
-                // Dropdown aprimorado
                 let optionsHTML = `<option value="">(Mesmo da Pág. Anterior)</option>`;
                 listaPacientesCadastrados.forEach(pac => {
                     let selected = (nomePacSugerido === pac.nome) ? "selected" : "";
@@ -1778,6 +1916,8 @@
                         <div class="absolute bottom-0 left-0 right-0 bg-black/80 text-[9px] text-center py-0.5 font-bold shadow-inner z-10 pointer-events-none">Pág ${index + 1}</div>
                         
                         <div class="absolute top-1 right-1 flex gap-1 z-20">
+                            <!-- BOTÃO EDITAR DE VOLTA NA TELA -->
+                            <button onclick="window.editarPaginaScanner(${index})" title="Editar (Carimbo/Filtro)" class="bg-blue-600 hover:bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow"><i class="fas fa-pen text-[9px]"></i></button>
                             <button onclick="window.removerPaginaScanner(${index})" title="Remover Página" class="bg-red-600 hover:bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow"><i class="fas fa-times text-[9px]"></i></button>
                         </div>
                     </div>
@@ -1857,6 +1997,7 @@
 
                             arrayPaginasEscaneadas.push({
                                 finalDataUrl: imgDataUrl,
+                                baseDataUrl: imgDataUrl, // Guarda a base limpa para o carimbo
                                 paciente: nomeSugerido,
                                 arquivoOriginalParaRelatorioGeral: file
                             });
@@ -1930,7 +2071,9 @@
                 if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Salvando Relatório Geral...`;
                 
                 let arquivoGeralUpload = null;
-                if (arrayPaginasEscaneadas[0] && arrayPaginasEscaneadas[0].arquivoOriginalParaRelatorioGeral) {
+                // Se o carimbo/assinatura foi usado, temos que mesclar, senão podemos usar o original PDF
+                let houveEdicaoGlobal = imgCarimboElemento || imgAssinaturaElemento;
+                if (!houveEdicaoGlobal && arrayPaginasEscaneadas[0] && arrayPaginasEscaneadas[0].arquivoOriginalParaRelatorioGeral) {
                     arquivoGeralUpload = arrayPaginasEscaneadas[0].arquivoOriginalParaRelatorioGeral;
                 } else {
                     const { jsPDF } = window.jspdf;
@@ -2410,7 +2553,6 @@
                 remove(dbRef(db, 'arquivos_anexos/' + window.idImagemAtiva)).then(() => { window.fecharModalVisualizacao(); }).catch(err => alert("Erro ao excluir: " + err.message));
             } else {
                 update(dbRef(db, 'arquivos_anexos/' + window.idImagemAtiva), { statusExclusao: "pendente_aprovacao", solicitadoPor: usuarioLogado }).then(() => {
-                    push(dbRef(db, 'notificacoes_sistema'), { titulo: "Exclusão Solicitada", mensagem: `@${usuarioLogado} pediu para excluir "${nomeArquivo}".`, tipo: "alerta", timestamp: Date.now() });
                     window.fecharModalVisualizacao();
                 }).catch(err => alert("Erro ao processar: " + err.message));
             }
@@ -2444,16 +2586,6 @@
             });
         };
 
-        window.abrirModalNotificacoes = function() { 
-            const modal = document.getElementById("modalNotificacoes"); const content = document.getElementById("modalNotificacoesContent"); 
-            if (modal && content) { modal.classList.remove("hidden"); modal.classList.add("flex"); setTimeout(() => { content.classList.remove("scale-95", "opacity-0"); content.classList.add("scale-100", "opacity-100"); }, 10); }
-        };
-
-        window.fecharModalNotificacoes = function() { 
-            const modal = document.getElementById("modalNotificacoes"); const content = document.getElementById("modalNotificacoesContent"); 
-            if (modal && content) { content.classList.remove("scale-100", "opacity-100"); content.classList.add("scale-95", "opacity-0"); setTimeout(() => { modal.classList.remove("flex"); modal.classList.add("hidden"); }, 200); }
-        };
-
         onAuthStateChanged(auth, (user) => {
             const modalLogin = document.getElementById("modalLoginApp");
 
@@ -2479,19 +2611,13 @@
                     if (elSidebarNome) elSidebarNome.innerText = `@${usuarioLogado}`;
                     if (elSidebarPerfil) elSidebarPerfil.innerText = perfilUsuario === "administrador" ? "Administrativo" : "Usuário";
 
-                    const areaSino = document.getElementById("areaSinoAdmin");
-                    const espacador = document.getElementById("espacadorHeader");
                     const btnBancoPacientes = document.getElementById("btnSidebarPacientes");
                     const btnCadastroUsuario = document.getElementById("btnSidebarCadastrarUsuario");
                     
                     if (perfilUsuario === "administrador") {
-                        if (areaSino) areaSino.classList.remove("hidden");
-                        if (espacador) espacador.classList.add("hidden");
                         if (btnBancoPacientes) { btnBancoPacientes.classList.remove("hidden"); btnBancoPacientes.classList.add("flex"); }
                         if (btnCadastroUsuario) { btnCadastroUsuario.classList.remove("hidden"); btnCadastroUsuario.classList.add("flex"); }
                     } else {
-                        if (areaSino) areaSino.classList.add("hidden");
-                        if (espacador) espacador.classList.remove("hidden");
                         if (btnBancoPacientes) { btnBancoPacientes.classList.add("hidden"); btnBancoPacientes.classList.remove("flex"); }
                         if (btnCadastroUsuario) { btnCadastroUsuario.classList.add("hidden"); btnCadastroUsuario.classList.remove("flex"); }
                     }
