@@ -14,14 +14,15 @@
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
 
-    <!-- MANIFEST DINÂMICO PARA PWA -->
+    <!-- MANIFEST E SERVICE WORKER DINÂMICOS PARA PWA (INSTALAÇÃO DE APP) -->
     <script>
         (function() {
+            // Gera o Manifest JSON Dinâmico
             const manifest = {
                 name: "Sistema de Anexos",
                 short_name: "Anexos",
                 description: "Gestão e Escaneamento de Anexos e Documentos",
-                start_url: window.location.href,
+                start_url: window.location.href.split('?')[0],
                 display: "standalone",
                 background_color: "#030712",
                 theme_color: "#030712",
@@ -38,6 +39,18 @@
             link.rel = 'manifest';
             link.href = manifestUrl;
             document.head.appendChild(link);
+
+            // Registra um Service Worker Dinâmico para liberar o botão de "Instalar App"
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                    const swCode = "self.addEventListener('fetch', function(e) {});";
+                    const swBlob = new Blob([swCode], {type: 'application/javascript'});
+                    const swUrl = URL.createObjectURL(swBlob);
+                    navigator.serviceWorker.register(swUrl).catch(function(err) {
+                        console.log('Falha ao registrar ServiceWorker: ', err);
+                    });
+                });
+            }
         })();
     </script>
 
@@ -248,7 +261,7 @@
         <section class="bg-gray-900 border border-gray-800 p-4 rounded-xl shadow-lg flex flex-col gap-3">
             <div class="relative w-full">
                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500"></i>
-                <input type="text" id="inputBuscaAnexo" placeholder="Buscar por nome, data (DD/MM) ou mês (MM/AAAA)..." class="w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-blue-500 focus:outline-none text-sm transition-all">
+                <input type="text" id="inputBuscaAnexo" placeholder="Buscar por paciente, relatórios ou mês..." class="w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-blue-500 focus:outline-none text-sm transition-all">
             </div>
             <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
                 <div class="flex flex-col gap-1">
@@ -260,7 +273,7 @@
                     <input type="date" id="dataFimFiltro" class="w-full p-2 rounded-lg bg-gray-800 border border-gray-700 text-sm focus:border-blue-500 focus:outline-none text-gray-300">
                 </div>
                 <div class="flex flex-col gap-1 col-span-2 md:col-span-1">
-                    <label class="text-[10px] text-gray-400 font-bold uppercase">Usuário</label>
+                    <label class="text-[10px] text-gray-400 font-bold uppercase">Enviado por</label>
                     <select id="filtroUsuario" class="w-full p-2 rounded-lg bg-gray-800 border border-gray-700 text-sm focus:border-blue-500 focus:outline-none text-gray-300">
                         <option value="todos">Todos os Usuários</option>
                     </select>
@@ -272,7 +285,7 @@
         <section class="flex flex-col gap-3">
             <div class="flex justify-between items-center text-sm text-gray-400 px-1 border-b border-gray-800 pb-2" id="areaBreadcrumb"></div>
             <div class="flex justify-between items-center text-xs text-gray-500 px-1 pt-1">
-                <span id="txtInfoVista">Visualizando</span>
+                <span id="txtInfoVista">Visualizando Pastas</span>
                 <span id="txtContadorArquivos">0 itens</span>
             </div>
             <div id="listaAnexos" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 custom-scrollbar"></div>
@@ -328,7 +341,7 @@
 
             <div class="flex flex-col gap-3">
                 <label class="text-xs text-gray-400">Nome ou Descrição do Arquivo:</label>
-                <input type="text" id="nomeArquivoManual" placeholder="Ex: Planilha de Custos..." class="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-blue-500">
+                <input type="text" id="nomeArquivoManual" placeholder="Ex: Relatório Evoluções..." class="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-blue-500">
                 
                 <div id="areaEscolhaModo" class="grid grid-cols-2 gap-2 mt-2">
                     <button onclick="document.getElementById('inputArquivoCamera').click()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition"><i class="fas fa-camera text-blue-400"></i><span class="text-[11px] font-bold">Câmera</span></button>
@@ -1736,7 +1749,7 @@
             window.renderizarListaFilaEnvio();
         };
 
-        // FATIAMENTO E PROCESSAMENTO OCR CLIENT-SIDE
+        // FATIAMENTO E PROCESSAMENTO OCR CLIENT-SIDE (CRIANDO PASTAS INTELIGENTES)
         window.iniciarUploadStorage = async function() {
             const inNome = document.getElementById("nomeArquivoManual");
             let nomeDigitado = inNome ? inNome.value.trim() : "";
@@ -1771,7 +1784,7 @@
 
                 const pdfBlobGeral = doc.output('blob');
                 
-                // 1. Salva o PDF completo na pasta da Data Atual
+                // 1. Salva o PDF completo na pasta da Data Atual (Remessa)
                 const dataAtual = new Date();
                 const pastaData = `${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, '0')}-${String(dataAtual.getDate()).padStart(2, '0')}`;
                 const refRemessa = storageRef(storage, `Remessas_Completas/${pastaData}/${Date.now()}_${nomeDigitado}.pdf`);
@@ -1805,7 +1818,8 @@
                         await worker.terminate();
 
                         const texto = ret.data.text;
-                        const match = texto.match(/Nome\s+do\s+paciente\s*:?\s*([^\r\n]+)/i);
+                        // Usa Expressão Regular ajustada para ler o nome do paciente[cite: 1]
+                        const match = texto.match(/Nome\s+do\s+paciente\s*[:\-]*\s*([^\r\n]+)/i);
 
                         if (match && match[1] && match[1].trim().length > 2) {
                             pacienteAtual = match[1].trim();
@@ -1851,7 +1865,7 @@
                         tipo: 'pdf',
                         enviadoPor: usuarioLogado,
                         dataEnvio: Date.now(),
-                        pastaPaciente: nomePac,
+                        pastaPaciente: nomePac, // Salva o nome na pasta dele[cite: 1]
                         statusExclusao: "ativo"
                     });
                 }
@@ -1953,6 +1967,7 @@
             window.aplicarFiltrosNaGaleria();
         };
 
+        // LÓGICA ATUALIZADA PARA DIVIDIR E AGRUPAR PASTAS DOS PACIENTES NA UI
         window.aplicarFiltrosNaGaleria = function() {
             const inBusca = document.getElementById("inputBuscaAnexo");
             const inIni = document.getElementById("dataInicioFiltro");
@@ -1976,7 +1991,8 @@
                 
                 const passaTexto = arq.nome.toLowerCase().includes(termoBusca) || 
                                    dataFormatadaDia.includes(termoBusca) || 
-                                   mesAnoFormatado.includes(termoBusca);
+                                   mesAnoFormatado.includes(termoBusca) ||
+                                   (arq.pastaPaciente && arq.pastaPaciente.toLowerCase().includes(termoBusca));
                 
                 const passaUsuario = usuarioFiltro === "todos" || arq.enviadoPor === usuarioFiltro;
                 let passaData = true;
@@ -1987,27 +2003,25 @@
             });
 
             const isBuscaAtiva = termoBusca.length > 0;
-            let visualizandoSubPastasMensais = false;
-            let nomePastaMensalAtual = null;
-
-            if (window.pastaAbertaAtual && window.pastaAbertaAtual.length === 7 && window.pastaAbertaAtual.includes('/')) {
-                const partes = window.pastaAbertaAtual.split('/');
-                if (partes.length === 2 && partes[0].length === 2 && partes[1].length === 4) {
-                    visualizandoSubPastasMensais = true;
-                    nomePastaMensalAtual = window.pastaAbertaAtual;
-                }
-            }
 
             const txtInfo = document.getElementById("txtInfoVista");
             const txtCount = document.getElementById("txtContadorArquivos");
 
             if (window.pastaAbertaAtual === null && !isBuscaAtiva) {
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<span class="text-gray-300 font-bold"><i class="fas fa-folder text-blue-500 mr-2"></i> Pastas do Sistema</span>`;
-                if (txtInfo) txtInfo.innerText = "Selecionar Data ou Mês";
+                if (txtInfo) txtInfo.innerText = "Navegando nas Pastas";
 
                 const agrupamentoPastas = {};
                 anexosFiltrados.forEach(arq => {
-                    const nomePasta = obterNomePastaInteligente(arq.dataEnvio);
+                    let nomePasta = "";
+                    if (arq.pastaPaciente) {
+                        nomePasta = `📁 Paciente: ${arq.pastaPaciente}`;
+                    } else if (arq.pasta && arq.pasta.startsWith("Remessas_Completas")) {
+                        nomePasta = `📦 Remessas (Gerais)`;
+                    } else {
+                        nomePasta = `📅 ${obterNomePastaInteligente(arq.dataEnvio)}`;
+                    }
+
                     if(!agrupamentoPastas[nomePasta]) { agrupamentoPastas[nomePasta] = { arquivos: [], ultimoTimestamp: 0 }; }
                     agrupamentoPastas[nomePasta].arquivos.push(arq);
                     if (arq.dataEnvio > agrupamentoPastas[nomePasta].ultimoTimestamp) { agrupamentoPastas[nomePasta].ultimoTimestamp = arq.dataEnvio; }
@@ -2020,33 +2034,6 @@
                 pastasOrdenadas.forEach(nomePasta => { renderizarCardPasta(container, nomePasta, agrupamentoPastas[nomePasta].arquivos, `window.abrirPasta('${nomePasta}')`); });
                 if (txtCount) txtCount.innerText = `${pastasOrdenadas.length} pastas`;
 
-            } else if (visualizandoSubPastasMensais && !isBuscaAtiva) {
-                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold"><i class="fas fa-folder-open text-blue-500"></i> ${nomePastaMensalAtual}</span>`;
-                if (txtInfo) txtInfo.innerText = "Selecionar Dia";
-
-                const agrupamentoDias = {};
-                const arquivosDoMes = anexosFiltrados.filter(arq => {
-                    const mes = String(new Date(arq.dataEnvio).getMonth() + 1).padStart(2, '0');
-                    const ano = new Date(arq.dataEnvio).getFullYear();
-                    return `${mes}/${ano}` === nomePastaMensalAtual;
-                });
-
-                arquivosDoMes.forEach(arq => {
-                    const dataBR = new Date(arq.dataEnvio).toLocaleDateString('pt-BR');
-                    if(!agrupamentoDias[dataBR]) agrupamentoDias[dataBR] = [];
-                    agrupamentoDias[dataBR].push(arq);
-                });
-
-                const diasOrdenados = Object.keys(agrupamentoDias).sort((a, b) => {
-                    const partesA = a.split('/'); const partesB = b.split('/');
-                    return new Date(partesB[2], partesB[1]-1, partesB[0]) - new Date(partesA[2], partesA[1]-1, partesA[0]);
-                });
-
-                if (diasOrdenados.length === 0) { container.innerHTML = `<div class="col-span-full p-8 text-center text-gray-600">Nenhum dia encontrado neste mês.</div>`; }
-
-                diasOrdenados.forEach(dataBR => { renderizarCardPasta(container, dataBR, agrupamentoDias[dataBR], `window.abrirPasta('${dataBR}')`); });
-                if (txtCount) txtCount.innerText = `${diasOrdenados.length} dias`;
-
             } else {
                 let arquivosParaExibir = anexosFiltrados;
 
@@ -2054,27 +2041,24 @@
                     if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="document.getElementById('inputBuscaAnexo').value=''; window.aplicarFiltrosNaGaleria();" class="text-gray-400 hover:text-white transition flex items-center gap-2"><i class="fas fa-arrow-left"></i> Limpar Busca</button><span class="text-gray-600 mx-2">/</span><span class="text-blue-400 font-bold"><i class="fas fa-search"></i> Resultados em Todas as Pastas</span>`;
                     if (txtInfo) txtInfo.innerText = "Resultados da Pesquisa";
                 } else {
-                    const dataBR = window.pastaAbertaAtual;
-                    const partesData = dataBR.split('/');
+                    const nomePastaAtual = window.pastaAbertaAtual;
                     
-                    if (partesData.length === 3) {
-                        const mesAno = `${partesData[1]}/${partesData[2]}`;
-                        const hoje = new Date();
-                        const eMesAtual = (parseInt(partesData[1]) === hoje.getMonth() + 1 && parseInt(partesData[2]) === hoje.getFullYear());
-
-                        if (areaBreadcrumb) {
-                            if (eMesAtual) {
-                                areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold"><i class="fas fa-folder-open text-blue-500"></i> ${dataBR}</span>`;
-                            } else {
-                                areaBreadcrumb.innerHTML = `<button onclick="window.abrirPasta('${mesAno}')" class="text-gray-400 hover:text-white transition flex items-center gap-2"><i class="fas fa-arrow-left"></i> Voltar para ${mesAno}</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold"><i class="fas fa-folder-open text-blue-500"></i> ${dataBR}</span>`;
-                            }
-                        }
-                    } else {
-                        window.voltarParaPastas(); return;
+                    if (areaBreadcrumb) {
+                        areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold"><i class="fas fa-folder-open text-blue-500"></i> ${nomePastaAtual}</span>`;
                     }
-                    
                     if (txtInfo) txtInfo.innerText = "Arquivos da Pasta";
-                    arquivosParaExibir = anexosFiltrados.filter(arq => { return new Date(arq.dataEnvio).toLocaleDateString('pt-BR') === dataBR; });
+
+                    arquivosParaExibir = anexosFiltrados.filter(arq => {
+                        let pName = "";
+                        if (arq.pastaPaciente) {
+                            pName = `📁 Paciente: ${arq.pastaPaciente}`;
+                        } else if (arq.pasta && arq.pasta.startsWith("Remessas_Completas")) {
+                            pName = `📦 Remessas (Gerais)`;
+                        } else {
+                            pName = `📅 ${obterNomePastaInteligente(arq.dataEnvio)}`;
+                        }
+                        return pName === nomePastaAtual;
+                    });
                 }
 
                 if (arquivosParaExibir.length === 0) { container.innerHTML = `<div class="col-span-full p-8 text-center text-gray-600">Nenhum arquivo encontrado.</div>`; }
@@ -2100,10 +2084,14 @@
 
         function renderizarCardPasta(container, nomePasta, arquivosDaPasta, onclickAction) {
             const qtd = arquivosDaPasta.length;
+            const isPac = nomePasta.includes("Paciente:");
+            const iconClass = isPac ? "fa-user-injured text-indigo-400" : "fa-folder-open text-blue-500";
+            const bgClass = isPac ? "bg-indigo-900/20 border-indigo-800/40" : "bg-blue-900/20 border-blue-800/40";
+            
             const card = document.createElement("div");
             card.className = "bg-gray-800 border border-gray-700 p-4 rounded-xl shadow-md flex items-center gap-4 hover:border-blue-500/50 hover:bg-gray-700/50 transition cursor-pointer active:scale-95";
             card.setAttribute("onclick", onclickAction);
-            card.innerHTML = `<div class="w-14 h-14 bg-blue-900/20 rounded-lg flex items-center justify-center border border-blue-800/40"><i class="fas fa-folder-open text-3xl text-blue-500"></i></div><div class="flex-1 min-w-0"><h4 class="font-bold text-white text-base truncate flex items-center">${nomePasta}</h4><div class="flex items-center mt-1"><p class="text-xs text-gray-400">${qtd} itens salvos</p></div></div><i class="fas fa-chevron-right text-gray-600"></i>`;
+            card.innerHTML = `<div class="w-14 h-14 ${bgClass} rounded-lg flex items-center justify-center border"><i class="fas ${iconClass} text-3xl"></i></div><div class="flex-1 min-w-0"><h4 class="font-bold text-white text-base truncate flex items-center">${nomePasta}</h4><div class="flex items-center mt-1"><p class="text-xs text-gray-400">${qtd} itens salvos</p></div></div><i class="fas fa-chevron-right text-gray-600"></i>`;
             container.appendChild(card);
         }
 
