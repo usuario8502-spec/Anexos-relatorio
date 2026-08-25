@@ -32,7 +32,6 @@
                 theme_color: "#030712",
                 orientation: "portrait",
                 icons: [
-                    // Trocado de 'any maskable' para 'any' para evitar que o ícone fique gigante e cortado
                     { src: baseUrl + "icon.png", sizes: "192x192", type: "image/png", purpose: "any" },
                     { src: baseUrl + "icon.png", sizes: "512x512", type: "image/png", purpose: "any" }
                 ]
@@ -166,7 +165,6 @@
 
                 <button type="submit" id="btnEntrarLogin" class="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold text-xs transition shadow-lg">Entrar</button>
             </form>
-            <!-- BOTÃO DE CADASTRO REMOVIDO PARA EXCLUSIVIDADE DO ADM -->
         </div>
     </div>
 
@@ -333,8 +331,9 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-3 gap-2">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button onclick="window.abrirEdicaoNome()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-xs sm:text-sm shadow-md"><i class="fas fa-pen text-blue-500"></i> Editar</button>
+                <button onclick="window.compartilharAnexoAtivo()" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-xs sm:text-sm shadow-md"><i class="fas fa-share-nodes"></i> Compartilhar</button>
                 <button id="btnBaixarAnexo" onclick="window.baixarAnexoAtivo()" class="bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-xs sm:text-sm shadow-md"><i class="fas fa-download"></i> Baixar</button>
                 <button id="btnExcluirDisfarce" onclick="window.executarExclusaoDisfarçada()" class="bg-red-950/60 hover:bg-red-900/80 text-red-400 border border-red-800/60 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-xs sm:text-sm shadow-md"><i class="fas fa-trash-alt"></i> Excluir</button>
             </div>
@@ -1757,6 +1756,16 @@
             window.renderizarListaFilaEnvio();
         };
 
+        // FUNÇÃO DE LIMPEZA E PADRONIZAÇÃO DO NOME DO PACIENTE
+        function padronizarNomePaciente(nomeRaw) {
+            if (!nomeRaw) return "Desconhecido";
+            // Remove pontuações, números, caracteres especiais e espaços extras
+            let nomeLimpo = nomeRaw.replace(/[^a-zA-ZÀ-ÿ\s]/g, '').replace(/\s+/g, ' ').trim();
+            // Transforma em Title Case (Primeira letra Maiúscula) para padronizar
+            return nomeLimpo.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+        }
+
+        // FATIAMENTO E PROCESSAMENTO OCR CLIENT-SIDE (CRIANDO PASTAS INTELIGENTES)
         window.iniciarUploadStorage = async function() {
             const inNome = document.getElementById("nomeArquivoManual");
             let nomeDigitado = inNome ? inNome.value.trim() : "";
@@ -1771,7 +1780,7 @@
             if (barraProgresso) barraProgresso.style.width = '0%';
 
             if (modoUploadAtual === 'scanner') {
-                if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Gerando PDF Geral...`;
+                if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Gerando Relatório Geral...`;
                 
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
@@ -1791,9 +1800,10 @@
 
                 const pdfBlobGeral = doc.output('blob');
                 
+                // 1. Salva o PDF completo na pasta da Data Atual (Agora chamado Relatório Geral)
                 const dataAtual = new Date();
                 const pastaData = `${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, '0')}-${String(dataAtual.getDate()).padStart(2, '0')}`;
-                const refRemessa = storageRef(storage, `Remessas_Completas/${pastaData}/${Date.now()}_${nomeDigitado}.pdf`);
+                const refRemessa = storageRef(storage, `Relatorio_Geral/${pastaData}/${Date.now()}_${nomeDigitado}.pdf`);
                 
                 await uploadBytesResumable(refRemessa, pdfBlobGeral, { contentType: 'application/pdf' });
                 const urlGeral = await getDownloadURL(refRemessa);
@@ -1804,11 +1814,13 @@
                     tipo: 'pdf',
                     enviadoPor: usuarioLogado,
                     dataEnvio: Date.now(),
-                    pasta: `Remessas_Completas/${pastaData}`,
+                    pasta: `Relatorio_Geral/${pastaData}`,
                     statusExclusao: "ativo"
                 });
 
+                // 2. Fatiamento por Paciente via OCR no Navegador
                 if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Identificando Pacientes...`;
+                
                 let pacienteAtual = "Desconhecido";
                 let mapaPacientes = {};
 
@@ -1821,16 +1833,23 @@
                         const ret = await worker.recognize(imgBase64);
                         await worker.terminate();
 
-                        const match = ret.data.text.match(/Nome\s+do\s+paciente\s*[:\-]*\s*([^\r\n]+)/i);
-                        if (match && match[1] && match[1].trim().length > 2) {
-                            pacienteAtual = match[1].trim();
-                        }
-                    } catch (err) {}
+                        const texto = ret.data.text;
+                        const match = texto.match(/Nome\s+do\s+paciente\s*[:\-\.]*\s*([A-Za-zÀ-ÿ\s]+)/i);
 
-                    if (!mapaPacientes[pacienteAtual]) mapaPacientes[pacienteAtual] = [];
+                        if (match && match[1] && match[1].trim().length > 2) {
+                            pacienteAtual = padronizarNomePaciente(match[1]);
+                        }
+                    } catch (err) {
+                        console.warn("Erro ao ler OCR na página " + (i + 1), err);
+                    }
+
+                    if (!mapaPacientes[pacienteAtual]) {
+                        mapaPacientes[pacienteAtual] = [];
+                    }
                     mapaPacientes[pacienteAtual].push(imgBase64);
                 }
 
+                // 3. Salva o PDF individual de cada paciente na respectiva pasta
                 const nomesPacientes = Object.keys(mapaPacientes);
                 for (let idx = 0; idx < nomesPacientes.length; idx++) {
                     const nomePac = nomesPacientes[idx];
@@ -1851,6 +1870,7 @@
 
                     const blobPac = docPac.output('blob');
                     const refPac = storageRef(storage, `Pacientes/${nomePac}/Evolucao_${pastaData}_${Date.now()}.pdf`);
+                    
                     await uploadBytesResumable(refPac, blobPac, { contentType: 'application/pdf' });
                     const urlPac = await getDownloadURL(refPac);
 
@@ -1860,18 +1880,19 @@
                         tipo: 'pdf',
                         enviadoPor: usuarioLogado,
                         dataEnvio: Date.now(),
-                        pastaPaciente: nomePac,
+                        pastaPaciente: nomePac, 
                         statusExclusao: "ativo"
                     });
                 }
+
                 window.fecharModalUpload();
                 resetarBotaoAposErro();
-
             } else if (modoUploadAtual === 'camera' || modoUploadAtual === 'galeria' || modoUploadAtual === 'generico') {
                 let concluidos = 0; let totalArquivos = arquivosFilaEnvio.length;
                 for (let i = 0; i < totalArquivos; i++) {
                     const file = arquivosFilaEnvio[i];
                     
+                    // SE FOR PDF E ESTIVER NOS ARQUIVOS GENÉRICOS, ACIONA O FATIAMENTO
                     if (file.type === 'application/pdf') {
                         if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Analisando PDF ${i+1}/${totalArquivos}...`;
                         await processarUploadPdfDireto(file, nomeDigitado);
@@ -1892,11 +1913,13 @@
                 window.fecharModalUpload(); resetarBotaoAposErro();
             }
 
+            // FUNÇÃO PARA TRATAR PDFs ENVIADOS PELO "OUTROS ARQUIVOS"
             async function processarUploadPdfDireto(file, nomeBase) {
                 const dataAtual = new Date();
                 const pastaData = `${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, '0')}-${String(dataAtual.getDate()).padStart(2, '0')}`;
 
-                const refRemessa = storageRef(storage, `Remessas_Completas/${pastaData}/${Date.now()}_${file.name}`);
+                // 1. Salvar o PDF Original como Backup em Relatório Geral
+                const refRemessa = storageRef(storage, `Relatorio_Geral/${pastaData}/${Date.now()}_${file.name}`);
                 await uploadBytesResumable(refRemessa, file, { contentType: 'application/pdf' });
                 const urlGeral = await getDownloadURL(refRemessa);
                 await push(dbRef(db, 'arquivos_anexos'), {
@@ -1905,13 +1928,14 @@
                     tipo: 'pdf',
                     enviadoPor: usuarioLogado,
                     dataEnvio: Date.now(),
-                    pasta: `Remessas_Completas/${pastaData}`,
+                    pasta: `Relatorio_Geral/${pastaData}`,
                     statusExclusao: "ativo"
                 });
 
+                // 2. Extrair Texto e Descobrir Nomes
                 const arrayBuffer = await file.arrayBuffer();
-                const pdfDocLib = await window.PDFLib.PDFDocument.load(arrayBuffer); 
-                const pdfDocJs = await window.pdfjsLib.getDocument({data: arrayBuffer}).promise; 
+                const pdfDocLib = await window.PDFLib.PDFDocument.load(arrayBuffer); // Para cortar
+                const pdfDocJs = await window.pdfjsLib.getDocument({data: arrayBuffer}).promise; // Para ler texto
 
                 let pacienteAtual = "Desconhecido";
                 let paginasPorPaciente = {}; 
@@ -1922,16 +1946,18 @@
                         const textContent = await page.getTextContent();
                         const textoPagina = textContent.items.map(item => item.str).join(' ');
 
-                        const match = textoPagina.match(/Nome\s+do\s+paciente\s*[:\-]*\s*([^\r\n]+)/i);
+                        const match = textoPagina.match(/Nome\s+do\s+paciente\s*[:\-\.]*\s*([A-Za-zÀ-ÿ\s]+)/i);
                         if (match && match[1] && match[1].trim().length > 2) {
-                            pacienteAtual = match[1].trim();
+                            pacienteAtual = padronizarNomePaciente(match[1]);
                         }
                     } catch(e) {}
 
                     if (!paginasPorPaciente[pacienteAtual]) paginasPorPaciente[pacienteAtual] = [];
+                    // PDF-lib usa índice 0 para páginas
                     paginasPorPaciente[pacienteAtual].push(pageNum - 1);
                 }
 
+                // 3. Cortar o PDF usando PDF-Lib e salvar individualmente
                 const nomesPacientes = Object.keys(paginasPorPaciente);
                 for (let idx = 0; idx < nomesPacientes.length; idx++) {
                     const nomePac = nomesPacientes[idx];
@@ -2046,6 +2072,7 @@
             window.aplicarFiltrosNaGaleria();
         };
 
+        // LÓGICA ATUALIZADA PARA DIVIDIR E AGRUPAR PASTAS DOS PACIENTES E RELATÓRIO GERAL
         window.aplicarFiltrosNaGaleria = function() {
             const inBusca = document.getElementById("inputBuscaAnexo");
             const inIni = document.getElementById("dataInicioFiltro");
@@ -2094,8 +2121,8 @@
                     let nomePasta = "";
                     if (arq.pastaPaciente) {
                         nomePasta = `📁 Paciente: ${arq.pastaPaciente}`;
-                    } else if (arq.pasta && arq.pasta.startsWith("Remessas_Completas")) {
-                        nomePasta = `📦 Remessas (Gerais)`;
+                    } else if (arq.pasta && arq.pasta.startsWith("Relatorio_Geral")) {
+                        nomePasta = `📦 Relatório Geral`;
                     } else {
                         nomePasta = `📅 ${obterNomePastaInteligente(arq.dataEnvio)}`;
                     }
@@ -2130,8 +2157,8 @@
                         let pName = "";
                         if (arq.pastaPaciente) {
                             pName = `📁 Paciente: ${arq.pastaPaciente}`;
-                        } else if (arq.pasta && arq.pasta.startsWith("Remessas_Completas")) {
-                            pName = `📦 Remessas (Gerais)`;
+                        } else if (arq.pasta && arq.pasta.startsWith("Relatorio_Geral")) {
+                            pName = `📦 Relatório Geral`;
                         } else {
                             pName = `📅 ${obterNomePastaInteligente(arq.dataEnvio)}`;
                         }
@@ -2232,6 +2259,33 @@
                     const elImg = document.getElementById("imagemEmDestaque"); if (elImg) elImg.src = ""; 
                     const elIf = document.getElementById("iframePreview"); if (elIf) elIf.src = ""; 
                 }, 200);
+            }
+        };
+
+        // LÓGICA DE COMPARTILHAMENTO NATIVO (WEB SHARE API)
+        window.compartilharAnexoAtivo = async function() {
+            if (navigator.share) {
+                try {
+                    const resposta = await fetch(window.urlImagemAtiva);
+                    const blob = await resposta.blob();
+                    const tp = window.tipoAnexoAtivo.toLowerCase(); 
+                    let extensao = `.${tp}`; 
+                    if (tp === 'imagem') extensao = '.jpg';
+                    const tCard = document.getElementById("tituloImagemCard");
+                    let nomeLimpo = tCard ? tCard.innerText.replace(/[^a-zA-Z0-9.\- ()]/g, "") : "arquivo";
+                    
+                    const arquivoParaCompartilhar = new File([blob], nomeLimpo + extensao, { type: blob.type });
+
+                    await navigator.share({
+                        title: nomeLimpo,
+                        text: 'Confira este documento do sistema:',
+                        files: [arquivoParaCompartilhar]
+                    });
+                } catch (err) {
+                    console.log("Compartilhamento cancelado ou não suportado para este tipo de arquivo.", err);
+                }
+            } else {
+                alert("Seu navegador ou dispositivo não suporta a função de compartilhamento direto. Utilize o botão de baixar.");
             }
         };
 
