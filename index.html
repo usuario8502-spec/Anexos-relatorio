@@ -1756,146 +1756,28 @@
             window.renderizarListaFilaEnvio();
         };
 
-        // FUNÇÃO DE LIMPEZA E PADRONIZAÇÃO DO NOME DO PACIENTE
-        function padronizarNomePaciente(nomeRaw) {
-            if (!nomeRaw) return "Desconhecido";
-            // Remove pontuações, números, caracteres especiais e espaços extras
-            let nomeLimpo = nomeRaw.replace(/[^a-zA-ZÀ-ÿ\s]/g, '').replace(/\s+/g, ' ').trim();
-            // Transforma em Title Case (Primeira letra Maiúscula) para padronizar
-            return nomeLimpo.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-        }
-
-        // FATIAMENTO E PROCESSAMENTO OCR CLIENT-SIDE (CRIANDO PASTAS INTELIGENTES)
+        // PROCESSAMENTO DE UPLOAD OCR E FATIAMENTO INTELIGENTE
         window.iniciarUploadStorage = async function() {
             const inNome = document.getElementById("nomeArquivoManual");
             let nomeDigitado = inNome ? inNome.value.trim() : "";
-            if (!nomeDigitado) return alert("⚠️ Digite um nome ou descrição para a remessa!");
+            if (!nomeDigitado) return alert("⚠️ Digite um nome para a remessa!");
 
             const btnSalvar = document.getElementById("btnSalvarUpload");
             const containerProgresso = document.getElementById("containerProgresso");
             const barraProgresso = document.getElementById("barraProgresso");
             
-            if (btnSalvar) { btnSalvar.disabled = true; btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Preparando...`; }
+            if (btnSalvar) { btnSalvar.disabled = true; btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Processando...`; }
             if (containerProgresso) containerProgresso.classList.remove("hidden");
             if (barraProgresso) barraProgresso.style.width = '0%';
 
-            if (modoUploadAtual === 'scanner') {
-                if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Gerando Relatório Geral...`;
-                
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
-                const pdfWidth = doc.internal.pageSize.getWidth();
-                const pdfHeight = doc.internal.pageSize.getHeight();
-
-                arrayPaginasEscaneadas.forEach((pagData, i) => {
-                    let imgBase64 = typeof pagData === 'string' ? pagData : pagData.finalDataUrl;
-                    if (i > 0) doc.addPage();
-                    const imgProps = doc.getImageProperties(imgBase64);
-                    let imgWidth = pdfWidth;
-                    let imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
-                    if (imgHeight > pdfHeight) { imgHeight = pdfHeight; imgWidth = (imgProps.width * pdfHeight) / imgProps.height; }
-                    const x = (pdfWidth - imgWidth) / 2; const y = (pdfHeight - imgHeight) / 2;
-                    doc.addImage(imgBase64, 'JPEG', x, y, imgWidth, imgHeight);
-                });
-
-                const pdfBlobGeral = doc.output('blob');
-                
-                // 1. Salva o PDF completo na pasta da Data Atual (Agora chamado Relatório Geral)
-                const dataAtual = new Date();
-                const pastaData = `${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, '0')}-${String(dataAtual.getDate()).padStart(2, '0')}`;
-                const refRemessa = storageRef(storage, `Relatorio_Geral/${pastaData}/${Date.now()}_${nomeDigitado}.pdf`);
-                
-                await uploadBytesResumable(refRemessa, pdfBlobGeral, { contentType: 'application/pdf' });
-                const urlGeral = await getDownloadURL(refRemessa);
-
-                await push(dbRef(db, 'arquivos_anexos'), {
-                    nome: `${nomeDigitado} (Completo)`,
-                    url: urlGeral,
-                    tipo: 'pdf',
-                    enviadoPor: usuarioLogado,
-                    dataEnvio: Date.now(),
-                    pasta: `Relatorio_Geral/${pastaData}`,
-                    statusExclusao: "ativo"
-                });
-
-                // 2. Fatiamento por Paciente via OCR no Navegador
-                if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Identificando Pacientes...`;
-                
-                let pacienteAtual = "Desconhecido";
-                let mapaPacientes = {};
-
-                for (let i = 0; i < arrayPaginasEscaneadas.length; i++) {
-                    let pagData = arrayPaginasEscaneadas[i];
-                    let imgBase64 = typeof pagData === 'string' ? pagData : pagData.finalDataUrl;
-
-                    try {
-                        const worker = await Tesseract.createWorker('por');
-                        const ret = await worker.recognize(imgBase64);
-                        await worker.terminate();
-
-                        const texto = ret.data.text;
-                        const match = texto.match(/Nome\s+do\s+paciente\s*[:\-\.]*\s*([A-Za-zÀ-ÿ\s]+)/i);
-
-                        if (match && match[1] && match[1].trim().length > 2) {
-                            pacienteAtual = padronizarNomePaciente(match[1]);
-                        }
-                    } catch (err) {
-                        console.warn("Erro ao ler OCR na página " + (i + 1), err);
-                    }
-
-                    if (!mapaPacientes[pacienteAtual]) {
-                        mapaPacientes[pacienteAtual] = [];
-                    }
-                    mapaPacientes[pacienteAtual].push(imgBase64);
-                }
-
-                // 3. Salva o PDF individual de cada paciente na respectiva pasta
-                const nomesPacientes = Object.keys(mapaPacientes);
-                for (let idx = 0; idx < nomesPacientes.length; idx++) {
-                    const nomePac = nomesPacientes[idx];
-                    const imgsPac = mapaPacientes[nomePac];
-
-                    if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Salvando: ${nomePac}...`;
-
-                    const docPac = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
-                    imgsPac.forEach((imgB64, pIdx) => {
-                        if (pIdx > 0) docPac.addPage();
-                        const imgProps = docPac.getImageProperties(imgB64);
-                        let imgWidth = pdfWidth;
-                        let imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
-                        if (imgHeight > pdfHeight) { imgHeight = pdfHeight; imgWidth = (imgProps.width * pdfHeight) / imgProps.height; }
-                        const x = (pdfWidth - imgWidth) / 2; const y = (pdfHeight - imgHeight) / 2;
-                        docPac.addImage(imgB64, 'JPEG', x, y, imgWidth, imgHeight);
-                    });
-
-                    const blobPac = docPac.output('blob');
-                    const refPac = storageRef(storage, `Pacientes/${nomePac}/Evolucao_${pastaData}_${Date.now()}.pdf`);
-                    
-                    await uploadBytesResumable(refPac, blobPac, { contentType: 'application/pdf' });
-                    const urlPac = await getDownloadURL(refPac);
-
-                    await push(dbRef(db, 'arquivos_anexos'), {
-                        nome: `Evolução - ${nomePac}`,
-                        url: urlPac,
-                        tipo: 'pdf',
-                        enviadoPor: usuarioLogado,
-                        dataEnvio: Date.now(),
-                        pastaPaciente: nomePac, 
-                        statusExclusao: "ativo"
-                    });
-                }
-
-                window.fecharModalUpload();
-                resetarBotaoAposErro();
-            } else if (modoUploadAtual === 'camera' || modoUploadAtual === 'galeria' || modoUploadAtual === 'generico') {
+            if (modoUploadAtual === 'generico' || modoUploadAtual === 'galeria' || modoUploadAtual === 'camera') {
                 let concluidos = 0; let totalArquivos = arquivosFilaEnvio.length;
                 for (let i = 0; i < totalArquivos; i++) {
                     const file = arquivosFilaEnvio[i];
                     
-                    // SE FOR PDF E ESTIVER NOS ARQUIVOS GENÉRICOS, ACIONA O FATIAMENTO
                     if (file.type === 'application/pdf') {
-                        if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Analisando PDF ${i+1}/${totalArquivos}...`;
-                        await processarUploadPdfDireto(file, nomeDigitado);
+                        if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Lendo PDF ${i+1}/${totalArquivos}...`;
+                        await processarUploadPdfCompleto(file, nomeDigitado, btnSalvar);
                         concluidos++; if (barraProgresso) barraProgresso.style.width = ((concluidos / totalArquivos) * 100) + '%';
                         continue;
                     }
@@ -1913,12 +1795,10 @@
                 window.fecharModalUpload(); resetarBotaoAposErro();
             }
 
-            // FUNÇÃO PARA TRATAR PDFs ENVIADOS PELO "OUTROS ARQUIVOS"
-            async function processarUploadPdfDireto(file, nomeBase) {
+            async function processarUploadPdfCompleto(file, nomeBase, btnSalvar) {
                 const dataAtual = new Date();
                 const pastaData = `${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, '0')}-${String(dataAtual.getDate()).padStart(2, '0')}`;
 
-                // 1. Salvar o PDF Original como Backup em Relatório Geral
                 const refRemessa = storageRef(storage, `Relatorio_Geral/${pastaData}/${Date.now()}_${file.name}`);
                 await uploadBytesResumable(refRemessa, file, { contentType: 'application/pdf' });
                 const urlGeral = await getDownloadURL(refRemessa);
@@ -1932,38 +1812,52 @@
                     statusExclusao: "ativo"
                 });
 
-                // 2. Extrair Texto e Descobrir Nomes
                 const arrayBuffer = await file.arrayBuffer();
-                const pdfDocLib = await window.PDFLib.PDFDocument.load(arrayBuffer); // Para cortar
-                const pdfDocJs = await window.pdfjsLib.getDocument({data: arrayBuffer}).promise; // Para ler texto
+                const pdfDocLib = await window.PDFLib.PDFDocument.load(arrayBuffer); 
+                const pdfDocJs = await window.pdfjsLib.getDocument({data: arrayBuffer}).promise; 
 
-                let pacienteAtual = "Desconhecido";
+                let pacienteAtual = "Paciente Não Identificado";
                 let paginasPorPaciente = {}; 
+                const worker = await Tesseract.createWorker('por');
 
                 for (let pageNum = 1; pageNum <= pdfDocJs.numPages; pageNum++) {
+                    if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Lendo Pág. ${pageNum}...`;
                     try {
                         const page = await pdfDocJs.getPage(pageNum);
                         const textContent = await page.getTextContent();
-                        const textoPagina = textContent.items.map(item => item.str).join(' ');
+                        let texto = textContent.items.map(item => item.str).join(' ');
 
-                        const match = textoPagina.match(/Nome\s+do\s+paciente\s*[:\-\.]*\s*([A-Za-zÀ-ÿ\s]+)/i);
-                        if (match && match[1] && match[1].trim().length > 2) {
-                            pacienteAtual = padronizarNomePaciente(match[1]);
+                        if (!texto.toLowerCase().includes("nome do paciente")) {
+                            const viewport = page.getViewport({ scale: 2.0 });
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            canvas.height = viewport.height;
+                            canvas.width = viewport.width;
+                            await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                            
+                            const imgBw = await preProcessarImagemParaOCR(canvas.toDataURL('image/jpeg'));
+                            const ret = await worker.recognize(imgBw);
+                            texto = ret.data.text;
+                        }
+                        
+                        const match = texto.match(/(?:Nome|Noma|Mome)\s+d[oa]\s+paciente\s*[:\-\.]*\s*([^\r\n]+)/i);
+                        if (match && match[1]) {
+                            let possivelNome = padronizarNomePaciente(match[1]);
+                            if (possivelNome !== "Desconhecido") pacienteAtual = possivelNome;
                         }
                     } catch(e) {}
 
                     if (!paginasPorPaciente[pacienteAtual]) paginasPorPaciente[pacienteAtual] = [];
-                    // PDF-lib usa índice 0 para páginas
                     paginasPorPaciente[pacienteAtual].push(pageNum - 1);
                 }
+                await worker.terminate();
 
-                // 3. Cortar o PDF usando PDF-Lib e salvar individualmente
                 const nomesPacientes = Object.keys(paginasPorPaciente);
                 for (let idx = 0; idx < nomesPacientes.length; idx++) {
                     const nomePac = nomesPacientes[idx];
                     const indices = paginasPorPaciente[nomePac];
 
-                    if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Separando: ${nomePac}...`;
+                    if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Salvando: ${nomePac}...`;
 
                     const novoPdf = await window.PDFLib.PDFDocument.create();
                     const paginasCopiadas = await novoPdf.copyPages(pdfDocLib, indices);
@@ -2018,24 +1912,8 @@
             }
         };
 
-        function obterNomePastaInteligente(timestamp) {
-            const dataObj = new Date(timestamp);
-            const hoje = new Date();
-            if (dataObj.getMonth() === hoje.getMonth() && dataObj.getFullYear() === hoje.getFullYear()) {
-                return dataObj.toLocaleDateString('pt-BR');
-            } else {
-                const mes = String(dataObj.getMonth() + 1).padStart(2, '0');
-                return `${mes}/${dataObj.getFullYear()}`;
-            }
-        }
-
+        // ESTRUTURA DE PASTAS E RENDERIZAÇÃO
         function carregarGaleriaDeAnexos() {
-            const container = document.getElementById("listaAnexos");
-            if (container && todosAnexosNaMemoria.length === 0) {
-                // ANIMAÇÃO DE CARREGAMENTO INICIAL
-                container.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center py-10"><i class="fas fa-circle-notch fa-spin text-4xl text-blue-500 mb-3"></i><p class="text-gray-400 text-sm animate-pulse">Sincronizando base de dados...</p></div>`;
-            }
-
             onValue(dbRef(db, 'arquivos_anexos'), (snapshot) => {
                 todosAnexosNaMemoria = [];
                 const selectUsuario = document.getElementById("filtroUsuario");
@@ -2062,8 +1940,8 @@
             });
         }
 
-        window.abrirPasta = function(dataSTR) {
-            window.pastaAbertaAtual = dataSTR;
+        window.abrirPasta = function(rota) {
+            window.pastaAbertaAtual = rota;
             window.aplicarFiltrosNaGaleria();
         };
 
@@ -2072,7 +1950,6 @@
             window.aplicarFiltrosNaGaleria();
         };
 
-        // LÓGICA ATUALIZADA PARA DIVIDIR E AGRUPAR PASTAS DOS PACIENTES E RELATÓRIO GERAL
         window.aplicarFiltrosNaGaleria = function() {
             const inBusca = document.getElementById("inputBuscaAnexo");
             const inIni = document.getElementById("dataInicioFiltro");
@@ -2088,127 +1965,116 @@
             const areaBreadcrumb = document.getElementById("areaBreadcrumb");
             if (!container) return;
             container.innerHTML = "";
-            
-            let anexosFiltrados = todosAnexosNaMemoria.filter(arq => {
-                const dataObj = new Date(arq.dataEnvio);
-                const dataFormatadaDia = dataObj.toLocaleDateString('pt-BR'); 
-                const mesAnoFormatado = String(dataObj.getMonth() + 1).padStart(2, '0') + '/' + dataObj.getFullYear();
-                
-                const passaTexto = arq.nome.toLowerCase().includes(termoBusca) || 
-                                   dataFormatadaDia.includes(termoBusca) || 
-                                   mesAnoFormatado.includes(termoBusca) ||
-                                   (arq.pastaPaciente && arq.pastaPaciente.toLowerCase().includes(termoBusca));
-                
-                const passaUsuario = usuarioFiltro === "todos" || arq.enviadoPor === usuarioFiltro;
-                let passaData = true;
-                dataObj.setHours(0,0,0,0);
-                if (dataInicio) { const dataIni = new Date(dataInicio + "T00:00:00"); if (dataObj < dataIni) passaData = false; }
-                if (dataFim) { const dataF = new Date(dataFim + "T23:59:59"); if (dataObj > dataF) passaData = false; }
-                return passaTexto && passaUsuario && passaData;
-            });
 
-            const isBuscaAtiva = termoBusca.length > 0;
+            let anexosFiltrados = todosAnexosNaMemoria;
+            if (isBuscaAtiva) {
+                anexosFiltrados = todosAnexosNaMemoria.filter(arq => 
+                    arq.nome.toLowerCase().includes(termoBusca) || 
+                    (arq.pastaPaciente && arq.pastaPaciente.toLowerCase().includes(termoBusca))
+                );
+            }
 
             const txtInfo = document.getElementById("txtInfoVista");
             const txtCount = document.getElementById("txtContadorArquivos");
 
+            // NIVEL 0: RAIZ - Apenas Relatório Geral e Pacientes
             if (window.pastaAbertaAtual === null && !isBuscaAtiva) {
-                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<span class="text-gray-300 font-bold"><i class="fas fa-folder text-blue-500 mr-2"></i> Pastas do Sistema</span>`;
+                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<span class="text-gray-300 font-bold">Pastas do Sistema</span>`;
                 if (txtInfo) txtInfo.innerText = "Navegando nas Pastas";
 
-                const agrupamentoPastas = {};
+                const arqsGeral = anexosFiltrados.filter(a => a.pasta && a.pasta.startsWith("Relatorio_Geral"));
+                const arqsPacientes = anexosFiltrados.filter(a => a.pastaPaciente);
+
+                // Renderiza o visual limpo, com fonte menor e sem ícones na caixa
+                renderizarCardPasta(container, "Relatório Geral", `${arqsGeral.length} itens salvos`, "window.abrirPasta('relatorio_geral')");
+                renderizarCardPasta(container, "Pacientes", `${arqsPacientes.length} evoluções`, "window.abrirPasta('pacientes_root')");
+
+                if (txtCount) txtCount.innerText = `2 pastas`;
+
+            } 
+            // NIVEL 1: DENTRO DE PACIENTES - Subpastas por Nomes
+            else if (window.pastaAbertaAtual === 'pacientes_root' && !isBuscaAtiva) {
+                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold">Pacientes</span>`;
+                if (txtInfo) txtInfo.innerText = "Selecione o Paciente";
+                
+                const agrupamentoPacientes = {};
                 anexosFiltrados.forEach(arq => {
-                    let nomePasta = "";
                     if (arq.pastaPaciente) {
-                        nomePasta = `📁 Paciente: ${arq.pastaPaciente}`;
-                    } else if (arq.pasta && arq.pasta.startsWith("Relatorio_Geral")) {
-                        nomePasta = `📦 Relatório Geral`;
-                    } else {
-                        nomePasta = `📅 ${obterNomePastaInteligente(arq.dataEnvio)}`;
+                        if(!agrupamentoPacientes[arq.pastaPaciente]) agrupamentoPacientes[arq.pastaPaciente] = [];
+                        agrupamentoPacientes[arq.pastaPaciente].push(arq);
                     }
-
-                    if(!agrupamentoPastas[nomePasta]) { agrupamentoPastas[nomePasta] = { arquivos: [], ultimoTimestamp: 0 }; }
-                    agrupamentoPastas[nomePasta].arquivos.push(arq);
-                    if (arq.dataEnvio > agrupamentoPastas[nomePasta].ultimoTimestamp) { agrupamentoPastas[nomePasta].ultimoTimestamp = arq.dataEnvio; }
                 });
 
-                const pastasOrdenadas = Object.keys(agrupamentoPastas).sort((a, b) => { return agrupamentoPastas[b].ultimoTimestamp - agrupamentoPastas[a].ultimoTimestamp; });
+                const pacientesNomes = Object.keys(agrupamentoPacientes).sort();
+                if(pacientesNomes.length === 0) container.innerHTML = `<div class="col-span-full text-center text-gray-500 py-4 text-sm">Nenhum paciente ainda.</div>`;
 
-                if (pastasOrdenadas.length === 0) { container.innerHTML = `<div class="col-span-full p-8 text-center text-gray-600">Nenhuma pasta gerada ainda.</div>`; }
-
-                pastasOrdenadas.forEach(nomePasta => { renderizarCardPasta(container, nomePasta, agrupamentoPastas[nomePasta].arquivos, `window.abrirPasta('${nomePasta}')`); });
-                if (txtCount) txtCount.innerText = `${pastasOrdenadas.length} pastas`;
-
-            } else {
-                let arquivosParaExibir = anexosFiltrados;
-
-                if (isBuscaAtiva) {
-                    if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="document.getElementById('inputBuscaAnexo').value=''; window.aplicarFiltrosNaGaleria();" class="text-gray-400 hover:text-white transition flex items-center gap-2"><i class="fas fa-arrow-left"></i> Limpar Busca</button><span class="text-gray-600 mx-2">/</span><span class="text-blue-400 font-bold"><i class="fas fa-search"></i> Resultados em Todas as Pastas</span>`;
-                    if (txtInfo) txtInfo.innerText = "Resultados da Pesquisa";
-                } else {
-                    const nomePastaAtual = window.pastaAbertaAtual;
-                    
-                    if (areaBreadcrumb) {
-                        areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold"><i class="fas fa-folder-open text-blue-500"></i> ${nomePastaAtual}</span>`;
-                    }
-                    if (txtInfo) txtInfo.innerText = "Arquivos da Pasta";
-
-                    arquivosParaExibir = anexosFiltrados.filter(arq => {
-                        let pName = "";
-                        if (arq.pastaPaciente) {
-                            pName = `📁 Paciente: ${arq.pastaPaciente}`;
-                        } else if (arq.pasta && arq.pasta.startsWith("Relatorio_Geral")) {
-                            pName = `📦 Relatório Geral`;
-                        } else {
-                            pName = `📅 ${obterNomePastaInteligente(arq.dataEnvio)}`;
-                        }
-                        return pName === nomePastaAtual;
-                    });
-                }
-
-                if (arquivosParaExibir.length === 0) { container.innerHTML = `<div class="col-span-full p-8 text-center text-gray-600">Nenhum arquivo encontrado.</div>`; }
-
-                arquivosParaExibir.forEach(arq => {
-                    const dataObj = new Date(arq.dataEnvio);
-                    const dataFormatada = isBuscaAtiva ? dataObj.toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit', hour: '2-digit', minute:'2-digit'}) : dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-                    const nomeSeguro = arq.nome.replace(/'/g, "\\'").replace(/"/g, "&quot;");
-
-                    let visualConteudo = renderizarVisualArquivo(arq.tipo.toLowerCase(), arq.url);
-
-                    const card = document.createElement("div");
-                    card.className = "bg-gray-900 border border-gray-800 p-3 rounded-xl shadow flex gap-3 items-center hover:border-blue-500/30 transition cursor-pointer active:scale-95";
-                    card.setAttribute("onclick", `window.abrirModalVisualizacao('${arq.id}', '${arq.url}', '${nomeSeguro}', '${arq.tipo}')`);
-                    
-                    card.innerHTML = `${visualConteudo}<div class="flex-1 min-w-0"><div class="flex items-center gap-1"><h4 class="font-bold text-white text-sm truncate uppercase flex-1">${arq.nome}</h4></div><p class="text-[10px] text-gray-400 mt-0.5"><i class="fas fa-user text-blue-500"></i> @${arq.enviadoPor}</p><p class="text-[10px] text-gray-500"><i class="far fa-clock"></i> ${dataFormatada} <span class="uppercase text-[8px] bg-gray-800 px-1 py-0.5 rounded ml-1 border border-gray-700">${arq.tipo}</span></p></div>`;
-                    container.appendChild(card);
+                pacientesNomes.forEach(nome => {
+                    const qtd = agrupamentoPacientes[nome].length;
+                    renderizarCardPasta(container, nome, `${qtd} evoluções`, `window.abrirPasta('paciente:${nome}')`);
                 });
+                if (txtCount) txtCount.innerText = `${pacientesNomes.length} pacientes`;
+            }
+            // NIVEL 1: DENTRO DO RELATÓRIO GERAL
+            else if (window.pastaAbertaAtual === 'relatorio_geral' && !isBuscaAtiva) {
+                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold">Relatório Geral</span>`;
+                if (txtInfo) txtInfo.innerText = "Arquivos Gerais";
+                
+                const arqs = anexosFiltrados.filter(a => a.pasta && a.pasta.startsWith("Relatorio_Geral"));
+                renderizarArquivosFinais(arqs, container);
+                if (txtCount) txtCount.innerText = `${arqs.length} relatórios`;
+            }
+            // NIVEL 2: DENTRO DO NOME DO PACIENTE
+            else if (window.pastaAbertaAtual && window.pastaAbertaAtual.startsWith('paciente:') && !isBuscaAtiva) {
+                const nomePac = window.pastaAbertaAtual.split('paciente:')[1];
+                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.abrirPasta('pacientes_root')" class="text-gray-400 hover:text-white transition flex items-center gap-2"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold truncate max-w-[150px]">${nomePac}</span>`;
+                if (txtInfo) txtInfo.innerText = "Evoluções do Paciente";
 
-                if (txtCount) txtCount.innerText = `${arquivosParaExibir.length} itens`;
+                const arqs = anexosFiltrados.filter(a => a.pastaPaciente === nomePac);
+                renderizarArquivosFinais(arqs, container);
+                if (txtCount) txtCount.innerText = `${arqs.length} evoluções`;
+            }
+            // BUSCA GLOBAL
+            else {
+                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="document.getElementById('inputBuscaAnexo').value=''; window.aplicarFiltrosNaGaleria();" class="text-gray-400 hover:text-white transition flex items-center gap-2"><i class="fas fa-arrow-left"></i> Limpar Busca</button><span class="text-gray-600 mx-2">/</span><span class="text-blue-400 font-bold">Resultados</span>`;
+                if (txtInfo) txtInfo.innerText = "Resultados da Pesquisa";
+                renderizarArquivosFinais(anexosFiltrados, container);
+                if (txtCount) txtCount.innerText = `${anexosFiltrados.length} encontrados`;
             }
         };
 
-        function renderizarCardPasta(container, nomePasta, arquivosDaPasta, onclickAction) {
-            const qtd = arquivosDaPasta.length;
-            const isPac = nomePasta.includes("Paciente:");
-            const iconClass = isPac ? "fa-user-injured text-indigo-400" : "fa-folder-open text-blue-500";
-            const bgClass = isPac ? "bg-indigo-900/20 border-indigo-800/40" : "bg-blue-900/20 border-blue-800/40";
-            
+        // RENDERIZAÇÃO DOS CARDS DE PASTAS
+        function renderizarCardPasta(container, nomePasta, subtitulo, onclickAction) {
             const card = document.createElement("div");
-            card.className = "bg-gray-800 border border-gray-700 p-4 rounded-xl shadow-md flex items-center gap-4 hover:border-blue-500/50 hover:bg-gray-700/50 transition cursor-pointer active:scale-95";
+            card.className = "bg-gray-800 border border-gray-700 p-3 rounded-lg shadow-sm flex items-center justify-between hover:bg-gray-700/50 transition cursor-pointer active:scale-95";
             card.setAttribute("onclick", onclickAction);
-            card.innerHTML = `<div class="w-14 h-14 ${bgClass} rounded-lg flex items-center justify-center border"><i class="fas ${iconClass} text-3xl"></i></div><div class="flex-1 min-w-0"><h4 class="font-bold text-white text-base truncate flex items-center">${nomePasta}</h4><div class="flex items-center mt-1"><p class="text-xs text-gray-400">${qtd} itens salvos</p></div></div><i class="fas fa-chevron-right text-gray-600"></i>`;
+            card.innerHTML = `
+                <div class="flex-1 min-w-0 pl-1">
+                    <span class="font-bold text-gray-200 text-sm truncate uppercase block">${nomePasta}</span>
+                    <p class="text-[10px] text-gray-400 mt-0.5">${subtitulo}</p>
+                </div>
+                <i class="fas fa-chevron-right text-gray-600 text-xs mr-1"></i>
+            `;
             container.appendChild(card);
         }
 
-        function renderizarVisualArquivo(tp, url) {
-            if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'imagem'].includes(tp)) { 
-                // ANIMAÇÃO DE CARREGAMENTO PARA AS IMAGENS (SKELETON FADE-IN)
-                return `<div class="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-700 bg-gray-800 flex-shrink-0"><div class="absolute inset-0 flex items-center justify-center"><i class="fas fa-spinner fa-spin text-gray-500"></i></div><img src="${url}" loading="lazy" class="absolute inset-0 w-full h-full object-cover z-10 transition-opacity duration-500 opacity-0" onload="this.classList.remove('opacity-0')"></div>`; 
-            } 
-            else if (tp === 'pdf') { return `<div class="w-16 h-16 rounded-lg border border-red-900/50 bg-red-950/30 flex items-center justify-center shadow-inner flex-shrink-0"><i class="fas fa-file-pdf text-3xl text-red-500"></i></div>`; } 
-            else if (['xls', 'xlsx', 'csv'].includes(tp)) { return `<div class="w-16 h-16 rounded-lg border border-green-900/50 bg-green-950/30 flex items-center justify-center shadow-inner flex-shrink-0"><i class="fas fa-file-excel text-3xl text-green-500"></i></div>`; } 
-            else if (['doc', 'docx'].includes(tp)) { return `<div class="w-16 h-16 rounded-lg border border-blue-900/50 bg-blue-950/30 flex items-center justify-center shadow-inner flex-shrink-0"><i class="fas fa-file-word text-3xl text-blue-500"></i></div>`; } 
-            else { return `<div class="w-16 h-16 rounded-lg border border-gray-700 bg-gray-800 flex items-center justify-center shadow-inner flex-shrink-0"><i class="fas fa-file-alt text-3xl text-gray-400"></i></div>`; }
+        // RENDERIZAÇÃO DOS CARDS DE ARQUIVOS (PDF E FOTOS)
+        function renderizarArquivosFinais(lista, container) {
+            if (lista.length === 0) { container.innerHTML = `<div class="col-span-full py-8 text-center text-gray-500 text-xs">Nenhum documento encontrado.</div>`; return; }
+            lista.forEach(arq => {
+                const dataObj = new Date(arq.dataEnvio);
+                const dataStr = dataObj.toLocaleDateString('pt-BR');
+                const horaStr = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                const nomeSeguro = arq.nome.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+
+                let icone = `<div class="w-12 h-12 rounded-lg bg-red-950/30 border border-red-900/50 flex items-center justify-center flex-shrink-0"><i class="fas fa-file-pdf text-2xl text-red-500"></i></div>`;
+                if(arq.tipo === 'imagem') icone = `<div class="relative w-12 h-12 rounded-lg border border-gray-700 overflow-hidden flex-shrink-0"><img src="${arq.url}" loading="lazy" class="w-full h-full object-cover"></div>`;
+
+                const card = document.createElement("div");
+                card.className = "bg-gray-900 border border-gray-800 p-2.5 rounded-lg shadow flex gap-3 items-center hover:border-blue-500/30 transition cursor-pointer active:scale-95";
+                card.setAttribute("onclick", `window.abrirModalVisualizacao('${arq.id}', '${arq.url}', '${nomeSeguro}', '${arq.tipo}')`);
+                card.innerHTML = `${icone}<div class="flex-1 min-w-0"><h4 class="font-bold text-white text-[11px] truncate uppercase">${arq.nome}</h4><p class="text-[9px] text-gray-500 mt-1"><i class="far fa-clock"></i> ${dataStr} às ${horaStr}</p></div>`;
+                container.appendChild(card);
+            });
         }
 
         window.abrirModalVisualizacao = function(id, url, nome, tipo) {
@@ -2262,30 +2128,26 @@
             }
         };
 
-        // LÓGICA DE COMPARTILHAMENTO NATIVO (WEB SHARE API)
         window.compartilharAnexoAtivo = async function() {
+            const tCard = document.getElementById("tituloImagemCard");
+            let nomeLimpo = tCard ? tCard.innerText : "Documento do Sistema";
+            
             if (navigator.share) {
                 try {
-                    const resposta = await fetch(window.urlImagemAtiva);
-                    const blob = await resposta.blob();
-                    const tp = window.tipoAnexoAtivo.toLowerCase(); 
-                    let extensao = `.${tp}`; 
-                    if (tp === 'imagem') extensao = '.jpg';
-                    const tCard = document.getElementById("tituloImagemCard");
-                    let nomeLimpo = tCard ? tCard.innerText.replace(/[^a-zA-Z0-9.\- ()]/g, "") : "arquivo";
-                    
-                    const arquivoParaCompartilhar = new File([blob], nomeLimpo + extensao, { type: blob.type });
-
                     await navigator.share({
                         title: nomeLimpo,
-                        text: 'Confira este documento do sistema:',
-                        files: [arquivoParaCompartilhar]
+                        text: `Confira este documento: ${nomeLimpo}`,
+                        url: window.urlImagemAtiva
                     });
                 } catch (err) {
-                    console.log("Compartilhamento cancelado ou não suportado para este tipo de arquivo.", err);
+                    console.log("Compartilhamento nativo não concluído:", err);
                 }
             } else {
-                alert("Seu navegador ou dispositivo não suporta a função de compartilhamento direto. Utilize o botão de baixar.");
+                navigator.clipboard.writeText(window.urlImagemAtiva).then(() => {
+                    alert("🔗 Link copiado para a área de transferência!");
+                }).catch(() => {
+                    alert("Seu navegador não suporta compartilhamento automático.");
+                });
             }
         };
 
@@ -2340,7 +2202,15 @@
             });
         };
 
-        carregarGaleriaDeAnexos();
+        window.abrirModalNotificacoes = function() { 
+            const modal = document.getElementById("modalNotificacoes"); const content = document.getElementById("modalNotificacoesContent"); 
+            if (modal && content) { modal.classList.remove("hidden"); modal.classList.add("flex"); setTimeout(() => { content.classList.remove("scale-95", "opacity-0"); content.classList.add("scale-100", "opacity-100"); }, 10); }
+        };
+
+        window.fecharModalNotificacoes = function() { 
+            const modal = document.getElementById("modalNotificacoes"); const content = document.getElementById("modalNotificacoesContent"); 
+            if (modal && content) { content.classList.remove("scale-100", "opacity-100"); content.classList.add("scale-95", "opacity-0"); setTimeout(() => { modal.classList.remove("flex"); modal.classList.add("hidden"); }, 200); }
+        };
 
         onAuthStateChanged(auth, (user) => {
             const modalLogin = document.getElementById("modalLoginApp");
@@ -2366,6 +2236,18 @@
                     const elSidebarPerfil = document.getElementById("sidebarPerfilUsuario");
                     if (elSidebarNome) elSidebarNome.innerText = `@${usuarioLogado}`;
                     if (elSidebarPerfil) elSidebarPerfil.innerText = perfilUsuario === "administrador" ? "Administrativo" : "Usuário";
+
+                    const areaSino = document.getElementById("areaSinoAdmin");
+                    const espacador = document.getElementById("espacadorHeader");
+                    
+                    if (perfilUsuario === "administrador") {
+                        if (areaSino) areaSino.classList.remove("hidden");
+                        if (espacador) espacador.classList.add("hidden");
+                    } else {
+                        if (areaSino) areaSino.classList.add("hidden");
+                        if (espacador) espacador.classList.remove("hidden");
+                    }
+                    carregarGaleriaDeAnexos();
                 });
             } else {
                 if (modalLogin) modalLogin.classList.remove("hidden");
