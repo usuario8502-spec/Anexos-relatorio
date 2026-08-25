@@ -337,7 +337,7 @@
                         <span class="text-xs font-bold text-red-400"><i class="fas fa-file-pdf"></i> Revisão de Documentos</span>
                         <span id="txtQtdPaginas" class="text-[10px] text-gray-400 bg-gray-800 px-2 py-1 rounded border border-gray-700">0 páginas</span>
                     </div>
-                    <p class="text-[10px] text-yellow-500 mb-1 leading-tight"><i class="fas fa-info-circle"></i> A IA selecionou o nome pelo Banco. Clique na miniatura para dar zoom e ler o conteúdo, ou altere na caixinha de seleção.</p>
+                    <p class="text-[10px] text-yellow-500 mb-1 leading-tight"><i class="fas fa-info-circle"></i> A IA selecionou o nome. Clique na foto para ler o conteúdo ou altere a caixa de seleção abaixo de cada página.</p>
                     
                     <div id="gridPaginasScanner" class="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto custom-scrollbar p-1"></div>
                     
@@ -1731,7 +1731,7 @@
             window.renderizarCarrinhoScanner();
         };
 
-        // --- PREVIEW INTELIGENTE PARA DROPDOWN COM ZOOM (LIGHTBOX) ---
+        // --- PREVIEW INTELIGENTE PARA DROPDOWN ---
         window.renderizarCarrinhoScanner = function() {
             const areaEscolha = document.getElementById("areaEscolhaModo");
             const areaPrev = document.getElementById("areaPreviewScanner");
@@ -1748,10 +1748,9 @@
             if (txtQtd) txtQtd.innerText = `${arrayPaginasEscaneadas.length} páginas`;
 
             arrayPaginasEscaneadas.forEach((pagData, index) => {
-                let imgUrl = pagData.finalDataUrl;
+                let imgUrl = typeof pagData === 'string' ? pagData : pagData.finalDataUrl;
                 let nomePacSugerido = pagData.paciente || "";
 
-                // Dropdown aprimorado
                 let optionsHTML = `<option value="">(Mesmo da Pág. Anterior)</option>`;
                 listaPacientesCadastrados.forEach(pac => {
                     let selected = (nomePacSugerido === pac.nome) ? "selected" : "";
@@ -1762,7 +1761,6 @@
                 div.className = "relative border border-gray-700 rounded-lg overflow-hidden h-40 bg-gray-900 flex flex-col group shadow-lg"; 
                 div.innerHTML = `
                     <div class="flex-1 relative overflow-hidden group-hover:opacity-90 transition">
-                        <!-- IMAGEM COM FUNÇÃO DE ZOOM AO CLICAR -->
                         <img src="${imgUrl}" onclick="window.abrirZoomPagina(${index})" class="w-full h-full object-cover opacity-80 cursor-zoom-in hover:opacity-100 transition">
                         <div class="absolute bottom-0 left-0 right-0 bg-black/80 text-[9px] text-center py-0.5 font-bold shadow-inner z-10 pointer-events-none">Pág ${index + 1}</div>
                         
@@ -2080,7 +2078,7 @@
             }
         }
 
-        // RENDERIZAÇÃO DA GALERIA
+        // RENDERIZAÇÃO DA GALERIA E DO NOVO NÍVEL "ARQUIVOS DIVERSOS"
         function carregarGaleriaDeAnexos() {
             const container = document.getElementById("listaAnexos");
             if (container && todosAnexosNaMemoria.length === 0) {
@@ -2089,16 +2087,28 @@
 
             onValue(dbRef(db, 'arquivos_anexos'), (snapshot) => {
                 todosAnexosNaMemoria = [];
+                const selectUsuario = document.getElementById("filtroUsuario");
+                let usuariosUnicos = new Set();
+
                 if (snapshot.exists()) {
                     snapshot.forEach(child => { 
                         const anexo = { id: child.key, ...child.val() };
                         if (!anexo.tipo) anexo.tipo = 'imagem'; 
                         if (perfilUsuario === "administrador" || anexo.statusExclusao !== "pendente_aprovacao") {
                             todosAnexosNaMemoria.push(anexo);
+                            if (anexo.enviadoPor) usuariosUnicos.add(anexo.enviadoPor);
                         }
                     });
                     todosAnexosNaMemoria.sort((a, b) => b.dataEnvio - a.dataEnvio);
                 }
+
+                if (selectUsuario) {
+                    const valorAtualSelect = selectUsuario.value;
+                    selectUsuario.innerHTML = '<option value="todos">Todos os Usuários</option>';
+                    usuariosUnicos.forEach(user => { selectUsuario.innerHTML += `<option value="${user}">@${user}</option>`; });
+                    selectUsuario.value = usuariosUnicos.has(valorAtualSelect) ? valorAtualSelect : "todos";
+                }
+
                 window.aplicarFiltrosNaGaleria();
             });
         }
@@ -2127,7 +2137,9 @@
             if (!container) return;
             container.innerHTML = "";
 
-            let anexosFiltrados = todosAnexosNaMemoria.filter(arq => {
+            let anexosFiltrados = todosAnexosNaMemoria;
+            
+            anexosFiltrados = anexosFiltrados.filter(arq => {
                 const dataObj = new Date(arq.dataEnvio);
                 const dataFormatadaDia = dataObj.toLocaleDateString('pt-BR'); 
                 const mesAnoFormatado = String(dataObj.getMonth() + 1).padStart(2, '0') + '/' + dataObj.getFullYear();
@@ -2153,19 +2165,23 @@
             const txtInfo = document.getElementById("txtInfoVista");
             const txtCount = document.getElementById("txtContadorArquivos");
 
+            const arqsGeral = anexosFiltrados.filter(a => a.pasta && a.pasta.startsWith("Relatorio_Geral"));
+            const arqsPacientes = anexosFiltrados.filter(a => a.pastaPaciente);
+            const arqsDiversos = anexosFiltrados.filter(a => !(a.pasta && a.pasta.startsWith("Relatorio_Geral")) && !a.pastaPaciente);
+
+            // NIVEL 0: RAIZ - Relatório Geral, Pacientes e Arquivos Diversos
             if (window.pastaAbertaAtual === null && !isBuscaAtiva) {
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<span class="text-gray-300 font-bold text-xs">Pastas do Sistema</span>`;
                 if (txtInfo) txtInfo.innerText = "Navegando nas Pastas";
 
-                const arqsGeral = anexosFiltrados.filter(a => a.pasta && a.pasta.startsWith("Relatorio_Geral"));
-                const arqsPacientes = anexosFiltrados.filter(a => a.pastaPaciente);
+                renderizarCardPasta(container, "Relatório Geral", `${arqsGeral.length} itens salvos`, "window.abrirPasta('relatorio_geral')", 'geral');
+                renderizarCardPasta(container, "Pacientes", `${arqsPacientes.length} evoluções`, "window.abrirPasta('pacientes_root')", 'paciente');
+                renderizarCardPasta(container, "Arquivos Diversos", `${arqsDiversos.length} arquivos`, "window.abrirPasta('diversos_root')", 'diversos');
 
-                renderizarCardPasta(container, "Relatório Geral", `${arqsGeral.length} itens salvos`, "window.abrirPasta('relatorio_geral')", false);
-                renderizarCardPasta(container, "Pacientes", `${arqsPacientes.length} evoluções`, "window.abrirPasta('pacientes_root')", true);
-
-                if (txtCount) txtCount.innerText = `2 pastas`;
+                if (txtCount) txtCount.innerText = `3 pastas`;
 
             } 
+            // NIVEL 1: DENTRO DE PACIENTES - Subpastas por Nomes Limpos
             else if (window.pastaAbertaAtual === 'pacientes_root' && !isBuscaAtiva) {
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs">Pacientes</span>`;
                 if (txtInfo) txtInfo.innerText = "Selecione o Paciente";
@@ -2183,18 +2199,43 @@
 
                 pacientesNomes.forEach(nome => {
                     const qtd = agrupamentoPacientes[nome].length;
-                    renderizarCardPasta(container, nome, `${qtd} evoluções`, `window.abrirPasta('paciente:${nome}')`, true);
+                    renderizarCardPasta(container, nome, `${qtd} evoluções`, `window.abrirPasta('paciente:${nome}')`, 'paciente');
                 });
                 if (txtCount) txtCount.innerText = `${pacientesNomes.length} pacientes`;
             }
+            // NIVEL 1: DENTRO DO RELATÓRIO GERAL
             else if (window.pastaAbertaAtual === 'relatorio_geral' && !isBuscaAtiva) {
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs">Relatório Geral</span>`;
                 if (txtInfo) txtInfo.innerText = "Arquivos Gerais";
                 
-                const arqs = anexosFiltrados.filter(a => a.pasta && a.pasta.startsWith("Relatorio_Geral"));
-                renderizarArquivosFinais(arqs, container);
-                if (txtCount) txtCount.innerText = `${arqs.length} relatórios`;
+                renderizarArquivosFinais(arqsGeral, container);
+                if (txtCount) txtCount.innerText = `${arqsGeral.length} relatórios`;
             }
+            // NIVEL 1: DENTRO DE ARQUIVOS DIVERSOS (Pastas por Data)
+            else if (window.pastaAbertaAtual === 'diversos_root' && !isBuscaAtiva) {
+                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs">Arquivos Diversos</span>`;
+                if (txtInfo) txtInfo.innerText = "Selecione a Data";
+
+                const agrupamentoDatas = {};
+                arqsDiversos.forEach(arq => {
+                    const nomeData = obterNomePastaInteligente(arq.dataEnvio);
+                    if (!agrupamentoDatas[nomeData]) agrupamentoDatas[nomeData] = [];
+                    agrupamentoDatas[nomeData].push(arq);
+                });
+
+                const datasNomes = Object.keys(agrupamentoDatas).sort((a,b) => {
+                    return agrupamentoDatas[b][0].dataEnvio - agrupamentoDatas[a][0].dataEnvio;
+                });
+
+                if (datasNomes.length === 0) container.innerHTML = `<div class="col-span-full text-center text-gray-500 py-4 text-xs">Nenhum arquivo diverso encontrado.</div>`;
+
+                datasNomes.forEach(nomeData => {
+                    const qtd = agrupamentoDatas[nomeData].length;
+                    renderizarCardPasta(container, nomeData, `${qtd} arquivos`, `window.abrirPasta('diversos_data:${nomeData}')`, 'data');
+                });
+                if (txtCount) txtCount.innerText = `${datasNomes.length} pastas`;
+            }
+            // NIVEL 2: DENTRO DO NOME DO PACIENTE
             else if (window.pastaAbertaAtual && window.pastaAbertaAtual.startsWith('paciente:') && !isBuscaAtiva) {
                 const nomePac = window.pastaAbertaAtual.split('paciente:')[1];
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.abrirPasta('pacientes_root')" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs truncate max-w-[150px]">${nomePac}</span>`;
@@ -2204,6 +2245,17 @@
                 renderizarArquivosFinais(arqs, container);
                 if (txtCount) txtCount.innerText = `${arqs.length} evoluções`;
             }
+            // NIVEL 2: DENTRO DE UMA DATA ESPECÍFICA DE "ARQUIVOS DIVERSOS"
+            else if (window.pastaAbertaAtual && window.pastaAbertaAtual.startsWith('diversos_data:') && !isBuscaAtiva) {
+                const nomeData = window.pastaAbertaAtual.split('diversos_data:')[1];
+                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.abrirPasta('diversos_root')" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs truncate max-w-[150px]">${nomeData}</span>`;
+                if (txtInfo) txtInfo.innerText = "Arquivos da Data";
+
+                const arqs = arqsDiversos.filter(a => obterNomePastaInteligente(a.dataEnvio) === nomeData);
+                renderizarArquivosFinais(arqs, container);
+                if (txtCount) txtCount.innerText = `${arqs.length} arquivos`;
+            }
+            // BUSCA GLOBAL
             else {
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="document.getElementById('inputBuscaAnexo').value=''; window.aplicarFiltrosNaGaleria();" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Limpar Busca</button><span class="text-gray-600 mx-2">/</span><span class="text-blue-400 font-bold text-xs">Resultados</span>`;
                 if (txtInfo) txtInfo.innerText = "Resultados da Pesquisa";
@@ -2212,10 +2264,21 @@
             }
         };
 
-        // RENDERIZAÇÃO DOS CARDS DE PASTAS
-        function renderizarCardPasta(container, nomePasta, subtitulo, onclickAction, isPaciente = false) {
-            const iconClass = isPaciente ? "fa-user-injured text-indigo-400" : "fa-folder-open text-blue-500";
-            const bgClass = isPaciente ? "bg-indigo-900/20 border-indigo-800/40" : "bg-blue-900/20 border-blue-800/40";
+        // RENDERIZAÇÃO DOS CARDS DE PASTAS ADAPTADO PARA TIPOS
+        function renderizarCardPasta(container, nomePasta, subtitulo, onclickAction, tipoPasta = 'geral') {
+            let iconClass = "fa-folder-open text-blue-500";
+            let bgClass = "bg-blue-900/20 border-blue-800/40";
+            
+            if (tipoPasta === 'paciente') {
+                iconClass = "fa-user-injured text-indigo-400";
+                bgClass = "bg-indigo-900/20 border-indigo-800/40";
+            } else if (tipoPasta === 'diversos') {
+                iconClass = "fa-layer-group text-purple-400";
+                bgClass = "bg-purple-900/20 border-purple-800/40";
+            } else if (tipoPasta === 'data') {
+                iconClass = "fa-calendar-day text-orange-400";
+                bgClass = "bg-orange-900/20 border-orange-800/40";
+            }
             
             const card = document.createElement("div");
             card.className = "bg-gray-800 border border-gray-700 p-3 rounded-lg shadow-sm flex items-center gap-3 hover:border-blue-500/50 hover:bg-gray-700/50 transition cursor-pointer active:scale-95";
