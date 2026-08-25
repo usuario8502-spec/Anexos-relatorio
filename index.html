@@ -12,16 +12,13 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Anexos">
     
-    <!-- Força a busca do ícone pelo caminho real do repositório -->
     <link rel="icon" type="image/png" href="./icon.png">
     <link rel="apple-touch-icon" href="./icon.png">
 
-    <!-- MANIFEST E SERVICE WORKER DINÂMICOS PARA PWA (INSTALAÇÃO DE APP) -->
+    <!-- MANIFEST DINÂMICO PARA PWA -->
     <script>
         (function() {
-            // Captura a URL base real do projeto no GitHub Pages
             const baseUrl = window.location.href.split('?')[0].replace(/\/[^\/]*$/, '/');
-            
             const manifest = {
                 name: "Sistema de Anexos",
                 short_name: "Anexos",
@@ -43,31 +40,20 @@
             link.rel = 'manifest';
             link.href = manifestUrl;
             document.head.appendChild(link);
-
-            if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                    const swCode = "self.addEventListener('fetch', function(e) {});";
-                    const swBlob = new Blob([swCode], {type: 'application/javascript'});
-                    const swUrl = URL.createObjectURL(swBlob);
-                    navigator.serviceWorker.register(swUrl).catch(function(err) {
-                        console.log('Falha ao registrar ServiceWorker: ', err);
-                    });
-                });
-            }
         })();
     </script>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Bibliotecas para Scanner, Manipulação de PDF, OCR e Leitura de Texto em PDF -->
+    <!-- Bibliotecas para Scanner, Manipulação de PDF, OCR -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://unpkg.com/tesseract.js@5.0.5/dist/tesseract.min.js"></script>
     
-    <!-- PDF.JS para extrair texto de PDFs upados pelo "Outros Arquivos" -->
+    <!-- PDF.JS para extrair texto de PDFs -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
@@ -78,68 +64,16 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
         .popup-blur { backdrop-filter: blur(5px); }
-        
         .cropper-view-box { outline: 3px solid rgba(59, 130, 246, 0.9) !important; border-radius: 4px; }
         .cropper-line { background-color: transparent !important; }
-        .cropper-line.line-e { width: 40px !important; right: -20px !important; }
-        .cropper-line.line-w { width: 40px !important; left: -20px !important; }
-        .cropper-line.line-n { height: 40px !important; top: -20px !important; }
-        .cropper-line.line-s { height: 40px !important; bottom: -20px !important; }
-
-        .cropper-point {
-            width: 44px !important;
-            height: 44px !important;
-            background-color: transparent !important;
-            opacity: 1 !important;
-        }
-        .cropper-point::before {
-            content: '';
-            position: absolute;
-            width: 16px; height: 16px;
-            background-color: #3b82f6;
-            border-radius: 50%;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 5px rgba(0,0,0,0.8);
-        }
-        .cropper-point.point-nw { top: -22px !important; left: -22px !important; }
-        .cropper-point.point-ne { top: -22px !important; right: -22px !important; }
-        .cropper-point.point-sw { bottom: -22px !important; left: -22px !important; }
-        .cropper-point.point-se { bottom: -22px !important; right: -22px !important; }
-        .cropper-point.point-n { top: -22px !important; margin-left: -22px !important; }
-        .cropper-point.point-s { bottom: -22px !important; margin-left: -22px !important; }
-        .cropper-point.point-e { right: -22px !important; margin-top: -22px !important; }
-        .cropper-point.point-w { left: -22px !important; margin-top: -22px !important; }
-
-        .filtro-ativo { border-color: #3b82f6 !important; background-color: #1e3a8a !important; color: #60a5fa !important; }
-
-        input[type=range] {
-            -webkit-appearance: none;
-            appearance: none; 
-            width: 100%;
-            background: transparent;
-        }
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none; 
-            height: 18px; width: 18px;
-            border-radius: 50%;
-            background: #3b82f6;
-            cursor: pointer;
-            margin-top: -7px;
-            box-shadow: 0 0 5px rgba(0,0,0,0.5);
-        }
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%; height: 4px;
-            cursor: pointer;
-            background: #475569;
-            border-radius: 2px;
-        }
+        input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; height: 18px; width: 18px; border-radius: 50%; background: #3b82f6; cursor: pointer; margin-top: -7px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #475569; border-radius: 2px; }
     </style>
 </head>
 <body class="bg-gray-950 text-gray-100 font-sans min-h-screen flex flex-col relative pb-24">
 
-    <!-- MODAL DE LOGIN EMBUTIDO -->
+    <!-- MODAL DE LOGIN -->
     <div id="modalLoginApp" class="fixed inset-0 bg-black/95 popup-blur z-[100] flex items-center justify-center p-4">
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl flex flex-col gap-4">
             <div class="text-center flex flex-col items-center gap-2">
@@ -175,7 +109,7 @@
                 <i class="fas fa-key"></i>
             </div>
             <h3 class="text-sm font-bold text-white">Recuperar Senha</h3>
-            <p class="text-xs text-gray-400">Digite seu nome de usuário. O sistema localizará seu e-mail e enviará o link de redefinição.</p>
+            <p class="text-xs text-gray-400">Digite seu nome de usuário para enviarmos o link.</p>
             
             <form onsubmit="window.confirmarRecuperacaoSenha(event)" class="flex flex-col gap-3">
                 <input type="text" id="recUsuario" required placeholder="Digite o nome de usuário..." class="p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
@@ -478,7 +412,6 @@
                 </div>
             </div>
 
-            <!-- FILTROS BASE -->
             <div class="flex overflow-x-auto gap-3 px-4 custom-scrollbar pb-1 mt-1">
                 <button id="btnFiltro_original" onclick="window.aplicarFiltroBase('original')" class="flex flex-col items-center gap-1.5 min-w-[70px]">
                     <div class="w-10 h-10 bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center text-gray-400 transition" id="iconFiltro_original"><i class="fas fa-image text-sm"></i></div>
@@ -502,7 +435,6 @@
                 </button>
             </div>
 
-            <!-- CONTROLE DE CAIXAS DE TEXTO MÚLTIPLAS COM BOTÃO NEGRITO -->
             <div class="px-4 mt-2">
                 <div class="bg-gray-800/60 p-3 rounded-xl border border-gray-700/60 flex flex-col gap-3">
                     <div class="flex justify-between items-center">
@@ -606,7 +538,7 @@
         </div>
     </div>
 
-    <!-- SCRIPT PRINCIPAL E FIREBASE COM SUPORTE AO FATIAMENTO E LEITURA DE PDFS -->
+    <!-- SCRIPT PRINCIPAL E FIREBASE COM SUPORTE AO FATIAMENTO, OCR E AUTENTICAÇÃO RESTAURADA -->
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, setPersistence, browserSessionPersistence, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -757,6 +689,7 @@
             window.renderizarFiltroAtual(true);
         };
 
+        // --- SISTEMA DE AUTENTICAÇÃO RESTAURADO ---
         window.executarLoginFirebase = async function(e) {
             e.preventDefault();
             const usernameDigitado = document.getElementById("loginUsuario")?.value.trim();
@@ -1912,7 +1845,21 @@
             }
         };
 
-        // ESTRUTURA DE PASTAS E RENDERIZAÇÃO
+        // ESTRUTURA DE PASTAS
+        function renderizarCardPasta(container, nomePasta, subtitulo, onclickAction) {
+            const card = document.createElement("div");
+            card.className = "bg-gray-800 border border-gray-700 p-3 rounded-xl shadow-md flex items-center justify-between hover:bg-gray-700/50 transition cursor-pointer active:scale-95";
+            card.setAttribute("onclick", onclickAction);
+            card.innerHTML = `
+                <div class="flex-1 min-w-0 pl-1">
+                    <span class="font-bold text-gray-200 text-sm truncate uppercase block">${nomePasta}</span>
+                    <p class="text-[10px] text-gray-400 mt-0.5">${subtitulo}</p>
+                </div>
+                <i class="fas fa-chevron-right text-gray-600 text-xs mr-1"></i>
+            `;
+            container.appendChild(card);
+        }
+
         function carregarGaleriaDeAnexos() {
             onValue(dbRef(db, 'arquivos_anexos'), (snapshot) => {
                 todosAnexosNaMemoria = [];
@@ -1940,8 +1887,8 @@
             });
         }
 
-        window.abrirPasta = function(rota) {
-            window.pastaAbertaAtual = rota;
+        window.abrirPasta = function(dataSTR) {
+            window.pastaAbertaAtual = dataSTR;
             window.aplicarFiltrosNaGaleria();
         };
 
@@ -1952,11 +1899,13 @@
 
         window.aplicarFiltrosNaGaleria = function() {
             const inBusca = document.getElementById("inputBuscaAnexo");
+            const termoBusca = inBusca ? inBusca.value.toLowerCase().trim() : "";
+            const isBuscaAtiva = termoBusca.length > 0;
+
             const inIni = document.getElementById("dataInicioFiltro");
             const inFim = document.getElementById("dataFimFiltro");
             const selUser = document.getElementById("filtroUsuario");
 
-            const termoBusca = inBusca ? inBusca.value.toLowerCase().trim() : "";
             const dataInicio = inIni ? inIni.value : "";
             const dataFim = inFim ? inFim.value : "";
             const usuarioFiltro = selUser ? selUser.value : "todos";
@@ -1967,34 +1916,48 @@
             container.innerHTML = "";
 
             let anexosFiltrados = todosAnexosNaMemoria;
-            if (isBuscaAtiva) {
-                anexosFiltrados = todosAnexosNaMemoria.filter(arq => 
-                    arq.nome.toLowerCase().includes(termoBusca) || 
-                    (arq.pastaPaciente && arq.pastaPaciente.toLowerCase().includes(termoBusca))
-                );
-            }
+            
+            // Applica Filtros de Texto, Usuario e Data se necessário
+            anexosFiltrados = anexosFiltrados.filter(arq => {
+                const dataObj = new Date(arq.dataEnvio);
+                const dataFormatadaDia = dataObj.toLocaleDateString('pt-BR'); 
+                const mesAnoFormatado = String(dataObj.getMonth() + 1).padStart(2, '0') + '/' + dataObj.getFullYear();
+                
+                let passaTexto = true;
+                if (isBuscaAtiva) {
+                    passaTexto = arq.nome.toLowerCase().includes(termoBusca) || 
+                                 dataFormatadaDia.includes(termoBusca) || 
+                                 mesAnoFormatado.includes(termoBusca) ||
+                                 (arq.pastaPaciente && arq.pastaPaciente.toLowerCase().includes(termoBusca));
+                }
+
+                const passaUsuario = usuarioFiltro === "todos" || arq.enviadoPor === usuarioFiltro;
+                let passaData = true;
+                dataObj.setHours(0,0,0,0);
+                if (dataInicio) { const dataIni = new Date(dataInicio + "T00:00:00"); if (dataObj < dataIni) passaData = false; }
+                if (dataFim) { const dataF = new Date(dataFim + "T23:59:59"); if (dataObj > dataF) passaData = false; }
+                
+                return passaTexto && passaUsuario && passaData;
+            });
 
             const txtInfo = document.getElementById("txtInfoVista");
             const txtCount = document.getElementById("txtContadorArquivos");
 
-            // NIVEL 0: RAIZ - Apenas Relatório Geral e Pacientes
             if (window.pastaAbertaAtual === null && !isBuscaAtiva) {
-                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<span class="text-gray-300 font-bold">Pastas do Sistema</span>`;
+                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<span class="text-gray-300 font-bold text-xs">Pastas do Sistema</span>`;
                 if (txtInfo) txtInfo.innerText = "Navegando nas Pastas";
 
                 const arqsGeral = anexosFiltrados.filter(a => a.pasta && a.pasta.startsWith("Relatorio_Geral"));
                 const arqsPacientes = anexosFiltrados.filter(a => a.pastaPaciente);
 
-                // Renderiza o visual limpo, com fonte menor e sem ícones na caixa
                 renderizarCardPasta(container, "Relatório Geral", `${arqsGeral.length} itens salvos`, "window.abrirPasta('relatorio_geral')");
                 renderizarCardPasta(container, "Pacientes", `${arqsPacientes.length} evoluções`, "window.abrirPasta('pacientes_root')");
 
                 if (txtCount) txtCount.innerText = `2 pastas`;
 
             } 
-            // NIVEL 1: DENTRO DE PACIENTES - Subpastas por Nomes
             else if (window.pastaAbertaAtual === 'pacientes_root' && !isBuscaAtiva) {
-                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold">Pacientes</span>`;
+                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs">Pacientes</span>`;
                 if (txtInfo) txtInfo.innerText = "Selecione o Paciente";
                 
                 const agrupamentoPacientes = {};
@@ -2006,7 +1969,7 @@
                 });
 
                 const pacientesNomes = Object.keys(agrupamentoPacientes).sort();
-                if(pacientesNomes.length === 0) container.innerHTML = `<div class="col-span-full text-center text-gray-500 py-4 text-sm">Nenhum paciente ainda.</div>`;
+                if(pacientesNomes.length === 0) container.innerHTML = `<div class="col-span-full text-center text-gray-500 py-4 text-xs">Nenhum paciente encontrado.</div>`;
 
                 pacientesNomes.forEach(nome => {
                     const qtd = agrupamentoPacientes[nome].length;
@@ -2014,50 +1977,31 @@
                 });
                 if (txtCount) txtCount.innerText = `${pacientesNomes.length} pacientes`;
             }
-            // NIVEL 1: DENTRO DO RELATÓRIO GERAL
             else if (window.pastaAbertaAtual === 'relatorio_geral' && !isBuscaAtiva) {
-                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold">Relatório Geral</span>`;
+                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs">Relatório Geral</span>`;
                 if (txtInfo) txtInfo.innerText = "Arquivos Gerais";
                 
                 const arqs = anexosFiltrados.filter(a => a.pasta && a.pasta.startsWith("Relatorio_Geral"));
                 renderizarArquivosFinais(arqs, container);
                 if (txtCount) txtCount.innerText = `${arqs.length} relatórios`;
             }
-            // NIVEL 2: DENTRO DO NOME DO PACIENTE
             else if (window.pastaAbertaAtual && window.pastaAbertaAtual.startsWith('paciente:') && !isBuscaAtiva) {
                 const nomePac = window.pastaAbertaAtual.split('paciente:')[1];
-                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.abrirPasta('pacientes_root')" class="text-gray-400 hover:text-white transition flex items-center gap-2"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold truncate max-w-[150px]">${nomePac}</span>`;
+                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.abrirPasta('pacientes_root')" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs truncate max-w-[150px]">${nomePac}</span>`;
                 if (txtInfo) txtInfo.innerText = "Evoluções do Paciente";
 
                 const arqs = anexosFiltrados.filter(a => a.pastaPaciente === nomePac);
                 renderizarArquivosFinais(arqs, container);
                 if (txtCount) txtCount.innerText = `${arqs.length} evoluções`;
             }
-            // BUSCA GLOBAL
             else {
-                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="document.getElementById('inputBuscaAnexo').value=''; window.aplicarFiltrosNaGaleria();" class="text-gray-400 hover:text-white transition flex items-center gap-2"><i class="fas fa-arrow-left"></i> Limpar Busca</button><span class="text-gray-600 mx-2">/</span><span class="text-blue-400 font-bold">Resultados</span>`;
+                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="document.getElementById('inputBuscaAnexo').value=''; window.aplicarFiltrosNaGaleria();" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Limpar Busca</button><span class="text-gray-600 mx-2">/</span><span class="text-blue-400 font-bold text-xs">Resultados</span>`;
                 if (txtInfo) txtInfo.innerText = "Resultados da Pesquisa";
                 renderizarArquivosFinais(anexosFiltrados, container);
                 if (txtCount) txtCount.innerText = `${anexosFiltrados.length} encontrados`;
             }
         };
 
-        // RENDERIZAÇÃO DOS CARDS DE PASTAS
-        function renderizarCardPasta(container, nomePasta, subtitulo, onclickAction) {
-            const card = document.createElement("div");
-            card.className = "bg-gray-800 border border-gray-700 p-3 rounded-lg shadow-sm flex items-center justify-between hover:bg-gray-700/50 transition cursor-pointer active:scale-95";
-            card.setAttribute("onclick", onclickAction);
-            card.innerHTML = `
-                <div class="flex-1 min-w-0 pl-1">
-                    <span class="font-bold text-gray-200 text-sm truncate uppercase block">${nomePasta}</span>
-                    <p class="text-[10px] text-gray-400 mt-0.5">${subtitulo}</p>
-                </div>
-                <i class="fas fa-chevron-right text-gray-600 text-xs mr-1"></i>
-            `;
-            container.appendChild(card);
-        }
-
-        // RENDERIZAÇÃO DOS CARDS DE ARQUIVOS (PDF E FOTOS)
         function renderizarArquivosFinais(lista, container) {
             if (lista.length === 0) { container.innerHTML = `<div class="col-span-full py-8 text-center text-gray-500 text-xs">Nenhum documento encontrado.</div>`; return; }
             lista.forEach(arq => {
@@ -2066,8 +2010,8 @@
                 const horaStr = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
                 const nomeSeguro = arq.nome.replace(/'/g, "\\'").replace(/"/g, "&quot;");
 
-                let icone = `<div class="w-12 h-12 rounded-lg bg-red-950/30 border border-red-900/50 flex items-center justify-center flex-shrink-0"><i class="fas fa-file-pdf text-2xl text-red-500"></i></div>`;
-                if(arq.tipo === 'imagem') icone = `<div class="relative w-12 h-12 rounded-lg border border-gray-700 overflow-hidden flex-shrink-0"><img src="${arq.url}" loading="lazy" class="w-full h-full object-cover"></div>`;
+                let icone = `<div class="w-12 h-12 rounded bg-gray-800 border border-gray-700 flex items-center justify-center flex-shrink-0"><i class="fas fa-file-pdf text-xl text-red-500"></i></div>`;
+                if(arq.tipo === 'imagem') icone = `<div class="relative w-12 h-12 rounded bg-gray-800 border border-gray-700 overflow-hidden flex-shrink-0"><img src="${arq.url}" loading="lazy" class="w-full h-full object-cover"></div>`;
 
                 const card = document.createElement("div");
                 card.className = "bg-gray-900 border border-gray-800 p-2.5 rounded-lg shadow flex gap-3 items-center hover:border-blue-500/30 transition cursor-pointer active:scale-95";
@@ -2139,14 +2083,10 @@
                         text: `Confira este documento: ${nomeLimpo}`,
                         url: window.urlImagemAtiva
                     });
-                } catch (err) {
-                    console.log("Compartilhamento nativo não concluído:", err);
-                }
+                } catch (err) {}
             } else {
                 navigator.clipboard.writeText(window.urlImagemAtiva).then(() => {
                     alert("🔗 Link copiado para a área de transferência!");
-                }).catch(() => {
-                    alert("Seu navegador não suporta compartilhamento automático.");
                 });
             }
         };
@@ -2168,10 +2108,8 @@
         };
 
         window.executarExclusaoDisfarçada = function() {
-            const tCard = document.getElementById("tituloImagemCard");
-            const nomeArquivo = tCard ? tCard.innerText : "";
-            if (!confirm(`⚠️ Tem certeza de que deseja excluir o anexo "${nomeArquivo}"?`)) return;
-            remove(dbRef(db, 'arquivos_anexos/' + window.idImagemAtiva)).then(() => { window.fecharModalVisualizacao(); }).catch(err => alert("Erro ao excluir: " + err.message));
+            if (!confirm(`⚠️ Deseja excluir este anexo?`)) return;
+            remove(dbRef(db, 'arquivos_anexos/' + window.idImagemAtiva)).then(() => { window.fecharModalVisualizacao(); });
         };
 
         window.abrirEdicaoNome = function() {
