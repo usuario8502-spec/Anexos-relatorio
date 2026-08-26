@@ -371,16 +371,22 @@
                     <span id="txtDestaqueExt" class="text-sm font-bold uppercase">Arquivo</span>
                 </div>
             </div>
+
+            <!-- BOTÕES NORMAIS DA GALERIA -->
             <div id="gridAcoesNormal" class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button onclick="window.abrirEdicaoNome()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-pen text-blue-500"></i> Editar</button>
                 <button onclick="window.compartilharAnexoAtivo()" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-share-nodes"></i> Enviar</button>
                 <button id="btnBaixarAnexo" onclick="window.baixarAnexoAtivo()" class="bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-download"></i> Baixar</button>
                 <button onclick="window.iniciarExclusaoArquivo()" class="bg-red-950/60 hover:bg-red-900/80 text-red-400 border border-red-800/60 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-trash-alt"></i> Excluir</button>
             </div>
+
+            <!-- BOTÕES DA LIXEIRA -->
             <div id="gridAcoesLixeira" class="hidden grid grid-cols-2 gap-2">
                 <button onclick="window.restaurarDaLixeira([window.idImagemAtiva])" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[11px] sm:text-xs shadow-md"><i class="fas fa-undo"></i> Restaurar</button>
                 <button onclick="window.acaoDefinitivaLixeira([window.idImagemAtiva])" class="bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[11px] sm:text-xs shadow-md"><i class="fas fa-trash-alt"></i> Apagar Definitivamente</button>
             </div>
+            
+            <!-- BOTÃO MODO PREVIEW EXPORTAÇÃO -->
             <div id="gridAcoesExportacao" class="hidden grid grid-cols-1 gap-2">
                 <button onclick="window.fecharModalVisualizacao()" class="bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-xs shadow-md"><i class="fas fa-arrow-left"></i> Voltar à Seleção</button>
             </div>
@@ -425,7 +431,6 @@
     <!-- MODAL DE UPLOAD -->
     <div id="modalUpload" class="fixed inset-0 bg-black/80 popup-blur hidden items-center justify-center p-4 z-[150] overflow-y-auto">
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 w-full max-w-md shadow-2xl flex flex-col gap-4 transform transition-all scale-95 opacity-0 my-auto" id="modalUploadContent">
-            <!-- Conteúdo do Upload -->
             <div class="flex justify-between items-center border-b border-gray-800 pb-3">
                 <h3 class="text-lg font-bold text-white"><i class="fas fa-cloud-upload-alt text-blue-500"></i> Enviar Arquivos</h3>
                 <button onclick="window.fecharModalUpload()" class="text-gray-500 hover:text-white transition text-xl"><i class="fas fa-times"></i></button>
@@ -457,7 +462,6 @@
                 <input type="file" id="inputArquivoScannerGaleria" accept="image/*" class="hidden" onchange="window.abrirModoScanner(this)">
                 <input type="file" id="inputArquivoGenerico" class="hidden" accept="*/*" multiple onchange="window.processarArquivosLote(this, 'generico')">
 
-                <!-- PREVIEW SCANNER E REVISÃO INTELIGENTE -->
                 <div id="areaPreviewScanner" class="hidden flex-col gap-3 mt-2">
                     <div class="flex justify-between items-center border-b border-gray-800 pb-2">
                         <span class="text-xs font-bold text-red-400"><i class="fas fa-file-pdf"></i> Revisão de Documentos</span>
@@ -473,7 +477,6 @@
                     </div>
                 </div>
 
-                <!-- PREVIEW DIVERSOS -->
                 <div id="areaPreviewArquivos" class="hidden flex-col gap-3 mt-2">
                     <div class="flex justify-between items-center border-b border-gray-800 pb-2">
                         <span class="text-xs font-bold text-blue-400"><i class="fas fa-layer-group"></i> Fila de Envio</span>
@@ -485,11 +488,11 @@
                     </button>
                 </div>
             </div>
-
+            
             <div id="containerProgresso" class="hidden w-full bg-gray-950 rounded-full h-3 border border-gray-800 mt-2">
                 <div id="barraProgresso" class="bg-blue-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
             </div>
-
+            
             <button id="btnSalvarUpload" onclick="window.iniciarUploadStorage()" class="hidden w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition shadow-md flex items-center justify-center gap-2">
                 <i class="fas fa-cloud-upload-alt"></i> Salvar e Enviar
             </button>
@@ -756,7 +759,7 @@
         let alturaCrop = 0;
         
         window.filtroAtivo = 'pb'; 
-        window.rotacaoBase = 90; 
+        window.rotacaoBase = 0; // CORREÇÃO GALERIA DEITADA
         let caixasTexto = [];
         let indiceCaixaTextoAtiva = null;
         let posicaoAssinatura = { x: 50, y: 150 };
@@ -1174,13 +1177,12 @@
             });
         }
 
-        // --- OCR INTELIGENTE OTIMIZADO ---
+        // --- OCR INTELIGENTE OTIMIZADO E DESCOMPRIMIDO ---
         function encontrarPacienteNoBanco(textoRaw) {
             if (!textoRaw || textoRaw.trim().length < 3) return "Desconhecido";
             
-            // Tira acentos, joga pra minúsculo
+            // Tira acentos, joga pra minúsculo e limpa mantendo letras
             let textoLimpo = textoRaw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-            // Mantém só letras e números
             textoLimpo = textoLimpo.replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
 
             let melhorMatch = "Desconhecido";
@@ -1192,14 +1194,14 @@
                 let pacNomeLimpo = pac.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
                 pacNomeLimpo = pacNomeLimpo.replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
 
-                // 1. Busca Exata (Ideal para letra de forma)
+                // 1. Busca Exata Absoluta
                 if (textoLimpo.includes(pacNomeLimpo) && pacNomeLimpo.length > 3) {
                     maiorScore = 999;
                     melhorMatch = pac.nome;
                     return;
                 }
 
-                // 2. Busca Híbrida/Fuzzy
+                // 2. Busca Híbrida/Fuzzy (Caso tenha erros de digitalização)
                 let tokensLidos = textoLimpo.split(' ').filter(w => w.length > 2);
                 let tokensPac = pacNomeLimpo.split(' ').filter(w => w.length > 2);
 
@@ -1212,9 +1214,9 @@
                     }
                 });
 
-                let threshold = Math.max(1, tokensPac.length * 0.5);
+                let threshold = Math.max(1, tokensPac.length * 0.6);
 
-                if (score > maiorScore && score >= threshold && score !== 999) { 
+                if (score > maiorScore && score >= threshold && maiorScore !== 999) { 
                     maiorScore = score; 
                     melhorMatch = pac.nome; 
                 }
@@ -1227,17 +1229,20 @@
                 const img = new Image(); 
                 img.onload = () => {
                     const canvas = document.createElement('canvas'); 
-                    // SEM MULTIPLICAÇÃO DE ZOOM AQUI PARA NÃO BORRAR!
+                    // SEM ZOOM! LER NO TAMANHO NATIVO PARA NÃO BORRAR A LETRA!
                     canvas.width = img.width; 
                     canvas.height = img.height;
+                    
                     const ctx = canvas.getContext('2d'); 
                     
-                    // Fundo branco obrigatório para o OCR não se perder em fundos transparentes de PDF
+                    // Garante um fundo 100% branco para matar as transparências de PDF
                     ctx.fillStyle = '#ffffff'; 
                     ctx.fillRect(0, 0, canvas.width, canvas.height); 
+                    
+                    // Desenha a imagem por cima do branco
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     
-                    // Envia a imagem pura (com fundo branco garantido) para a IA
+                    // Envia a imagem pura, sem os filtros binarizadores destrutivos
                     resolve(canvas.toDataURL('image/jpeg', 1.0));
                 }; 
                 img.src = imgBase64;
@@ -1299,7 +1304,6 @@
             }
         };
 
-        // --- SISTEMA DE PROXY DUPLO PARA EVITAR ERRO CORS (FAILED TO FETCH) ---
         window.fetchComProxyFallback = async function(url) {
             try {
                 const res = await fetch(url);
@@ -1354,6 +1358,7 @@
             });
         };
 
+        // --- CROPPER COM PROPORÇÃO A4 EXATA ---
         window.abrirModoScanner = function(input) {
             if (input.files && input.files[0]) {
                 const file = input.files[0];
@@ -1369,7 +1374,8 @@
                         modalCrop.classList.add("flex"); 
                     }
                     
-                    window.rotacaoBase = 90; 
+                    // ZERA A ROTAÇÃO BASE PARA NÃO DEITAR A GALERIA!
+                    window.rotacaoBase = 0; 
                     const slNiv = document.getElementById("sliderNivelamento");
                     const lblNiv = document.getElementById("lblNivelamento");
                     if (slNiv) slNiv.value = 0; 
@@ -1379,8 +1385,9 @@
                     
                     cropperInstancia = new Cropper(img, { 
                         viewMode: 1, 
-                        dragMode: 'move', 
-                        autoCropArea: 0.75, 
+                        dragMode: 'move',
+                        aspectRatio: 210 / 297, // PROPORÇÃO A4 EXATA (Bloqueia o quadrado)
+                        autoCropArea: 0.9, 
                         restore: false, 
                         guides: true, 
                         center: true, 
