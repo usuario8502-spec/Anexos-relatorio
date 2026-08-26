@@ -209,7 +209,7 @@
             <div class="flex flex-col gap-2">
                 <form onsubmit="event.preventDefault(); if(window.adicionarPacienteFirebase) window.adicionarPacienteFirebase(event);" class="flex gap-2">
                     <input type="text" id="cadNomePaciente" required placeholder="Adicionar manualmente..." class="flex-1 p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-4 rounded-xl font-bold text-xs transition shadow"><i class="fas fa-plus"></i></button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 rounded-xl font-bold text-xs transition shadow"><i class="fas fa-plus"></i></button>
                 </form>
 
                 <!-- BOTÃO DE IMPORTAÇÃO (SÓ APARECE PARA ADMIN VIA JS) -->
@@ -247,7 +247,7 @@
             <button id="btnSidebarCadastrarUsuario" onclick="window.abrirModalCadastroUsuario()" class="hidden w-full bg-blue-900/40 hover:bg-blue-800/60 border border-blue-700/60 text-blue-300 p-3 rounded-xl font-bold text-xs transition flex items-center gap-2.5">
                 <i class="fas fa-user-plus text-blue-400"></i> Cadastrar Novo Usuário
             </button>
-            <button id="btnSidebarPacientes" onclick="window.abrirModalPacientes()" class="w-full bg-indigo-900/40 hover:bg-indigo-800/60 border border-indigo-700/60 text-indigo-300 p-3 rounded-xl font-bold text-xs transition flex items-center gap-2.5">
+            <button id="btnSidebarPacientes" onclick="window.abrirModalPacientes()" class="hidden w-full bg-indigo-900/40 hover:bg-indigo-800/60 border border-indigo-700/60 text-indigo-300 p-3 rounded-xl font-bold text-xs transition flex items-center gap-2.5">
                 <i class="fas fa-address-book text-indigo-400"></i> Banco de Pacientes
             </button>
         </div>
@@ -259,7 +259,7 @@
         </div>
     </aside>
 
-    <!-- Cabeçalho -->
+    <!-- Cabeçalho (Sino Removido) -->
     <header class="bg-gray-900 border-b border-gray-800 p-4 sticky top-0 z-40 shadow-md">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <button onclick="window.toggleSidebar && window.toggleSidebar(true)" class="text-gray-300 hover:text-white text-xl p-2 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-700 focus:outline-none w-10 h-10 flex items-center justify-center">
@@ -370,7 +370,7 @@
                         <span class="text-xs font-bold text-red-400"><i class="fas fa-file-pdf"></i> Revisão de Documentos</span>
                         <span id="txtQtdPaginas" class="text-[10px] text-gray-400 bg-gray-800 px-2 py-1 rounded border border-gray-700">0 páginas</span>
                     </div>
-                    <p class="text-[10px] text-yellow-500 mb-1 leading-tight"><i class="fas fa-info-circle"></i> O carimbo inserido em uma página é aplicado nas próximas. A IA seleciona o nome. Clique no Lápis para editar a página.</p>
+                    <p class="text-[10px] text-yellow-500 mb-1 leading-tight"><i class="fas fa-info-circle"></i> O carimbo inserido em uma página é aplicado nas próximas automaticamente. A IA seleciona o nome. Clique no Lápis para editar a página.</p>
                     
                     <div id="gridPaginasScanner" class="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto custom-scrollbar p-1"></div>
                     
@@ -555,9 +555,13 @@
                 <div id="painelControleAssinatura" class="hidden bg-indigo-950/40 p-2 rounded-xl border border-indigo-800/60 flex-col gap-1">
                     <div class="flex justify-between items-center">
                         <span class="text-[10px] font-bold text-indigo-400 flex items-center gap-1"><i class="fas fa-pen-nib"></i> Assinatura</span>
-                        <button onclick="window.removerAssinaturaCanvas()" class="text-red-400 hover:text-red-300 text-[10px] p-1"><i class="fas fa-trash-alt"></i></button>
+                        <div class="flex gap-1">
+                            <button onclick="window.alterarOrdemAssinatura('tras')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-[8px] font-bold px-1 py-1 rounded shadow" title="Enviar para Trás">Atrás</button>
+                            <button onclick="window.alterarOrdemAssinatura('frente')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-[8px] font-bold px-1 py-1 rounded shadow" title="Trazer para Frente">Frente</button>
+                        </div>
+                        <button onclick="window.removerAssinaturaCanvas()" class="text-red-400 hover:text-red-300 text-[10px] p-1" title="Remover Assinatura"><i class="fas fa-trash-alt"></i></button>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 mt-1">
                         <label class="text-[9px] text-gray-400 font-bold uppercase">Escala:</label>
                         <input type="range" id="sliderEscalaAssinatura" min="30" max="300" value="120" oninput="window.renderizarFiltroAtual(true)">
                     </div>
@@ -567,9 +571,13 @@
                 <div id="painelControleCarimbo" class="hidden bg-red-950/40 p-2 rounded-xl border border-red-800/60 flex-col gap-1">
                     <div class="flex justify-between items-center">
                         <span class="text-[10px] font-bold text-red-400 flex items-center gap-1"><i class="fas fa-stamp"></i> Carimbo</span>
-                        <button onclick="window.removerCarimboCanvas()" class="text-red-400 hover:text-red-300 text-[10px] p-1"><i class="fas fa-trash-alt"></i></button>
+                        <div class="flex gap-1">
+                            <button onclick="window.alterarOrdemCarimbo('tras')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-[8px] font-bold px-1 py-1 rounded shadow" title="Enviar para Trás">Atrás</button>
+                            <button onclick="window.alterarOrdemCarimbo('frente')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-[8px] font-bold px-1 py-1 rounded shadow" title="Trazer para Frente">Frente</button>
+                        </div>
+                        <button onclick="window.removerCarimboCanvas()" class="text-red-400 hover:text-red-300 text-[10px] p-1" title="Remover Carimbo"><i class="fas fa-trash-alt"></i></button>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 mt-1">
                         <label class="text-[9px] text-gray-400 font-bold uppercase">Escala:</label>
                         <input type="range" id="sliderEscalaCarimbo" min="20" max="250" value="85" oninput="window.renderizarFiltroAtual(true)">
                     </div>
@@ -740,6 +748,16 @@
                 ordemCamadas.unshift('carimbo');
             } else {
                 ordemCamadas.push('carimbo');
+            }
+            window.renderizarFiltroAtual(true);
+        };
+
+        window.alterarOrdemAssinatura = function(direcao) {
+            ordemCamadas = ordemCamadas.filter(c => c !== 'assinatura');
+            if (direcao === 'tras') {
+                ordemCamadas.unshift('assinatura');
+            } else {
+                ordemCamadas.push('assinatura');
             }
             window.renderizarFiltroAtual(true);
         };
@@ -1702,46 +1720,46 @@
                 ctxLive.putImageData(imgData, 0, 0);
             }
 
-            caixasTexto.forEach((caixa, index) => {
-                if (caixa.texto.trim() !== "") {
-                    caixa.dimensaoCalculada = desenharTextoEstiloDocumentoAutoAjustavel(
-                        ctxLive, caixa.texto, caixa.posicao.x, caixa.posicao.y, caixa.larguraCaixa, caixa.tamanhoFonte, caixa.cor
-                    );
+            ordemCamadas.forEach(camada => {
+                if (camada === 'texto') {
+                    caixasTexto.forEach((caixa, index) => {
+                        if (caixa.texto.trim() !== "") {
+                            caixa.dimensaoCalculada = desenharTextoEstiloDocumentoAutoAjustavel(
+                                ctxLive, caixa.texto, caixa.posicao.x, caixa.posicao.y, caixa.larguraCaixa, caixa.tamanhoFonte, caixa.cor
+                            );
+
+                            if (mostrarGuias) {
+                                let eSelecionada = (index === indiceCaixaTextoAtiva);
+                                ctxLive.strokeStyle = eSelecionada ? "rgba(59, 130, 246, 0.9)" : "rgba(156, 163, 175, 0.4)";
+                                ctxLive.lineWidth = eSelecionada ? 2 : 1;
+                                ctxLive.setLineDash([4, 4]);
+                                ctxLive.strokeRect(caixa.posicao.x - 4, caixa.posicao.y - 4, caixa.dimensaoCalculada.w + 8, caixa.dimensaoCalculada.h + 8);
+                                ctxLive.setLineDash([]);
+                            }
+                        }
+                    });
+                } else if (camada === 'assinatura' && imgAssinaturaElemento) {
+                    const slEsc = document.getElementById("sliderEscalaAssinatura");
+                    let escala = slEsc ? parseInt(slEsc.value) / 100 : 0.5;
+                    let larguraAss = (larguraCrop * 0.35) * escala;
+                    let alturaAss = (imgAssinaturaElemento.height * larguraAss) / imgAssinaturaElemento.width;
+                    ctxLive.drawImage(imgAssinaturaElemento, posicaoAssinatura.x, posicaoAssinatura.y, larguraAss, alturaAss);
+                } else if (camada === 'carimbo' && imgCarimboElemento) {
+                    const slCar = document.getElementById("sliderEscalaCarimbo");
+                    let escalaC = slCar ? parseInt(slCar.value) / 100 : 0.85;
+                    let larguraCar = 380 * escalaC;
+                    let alturaCar = (imgCarimboElemento.height * larguraCar) / imgCarimboElemento.width;
+                    ctxLive.drawImage(imgCarimboElemento, posicaoCarimbo.x, posicaoCarimbo.y, larguraCar, alturaCar);
 
                     if (mostrarGuias) {
-                        let eSelecionada = (index === indiceCaixaTextoAtiva);
-                        ctxLive.strokeStyle = eSelecionada ? "rgba(59, 130, 246, 0.9)" : "rgba(156, 163, 175, 0.4)";
-                        ctxLive.lineWidth = eSelecionada ? 2 : 1;
+                        ctxLive.strokeStyle = "rgba(220, 38, 38, 0.8)";
+                        ctxLive.lineWidth = 2;
                         ctxLive.setLineDash([4, 4]);
-                        ctxLive.strokeRect(caixa.posicao.x - 4, caixa.posicao.y - 4, caixa.dimensaoCalculada.w + 8, caixa.dimensaoCalculada.h + 8);
+                        ctxLive.strokeRect(posicaoCarimbo.x - 4, posicaoCarimbo.y - 4, larguraCar + 8, alturaCar + 8);
                         ctxLive.setLineDash([]);
                     }
                 }
             });
-
-            if (imgAssinaturaElemento) {
-                const slEsc = document.getElementById("sliderEscalaAssinatura");
-                let escala = slEsc ? parseInt(slEsc.value) / 100 : 0.5;
-                let larguraAss = (larguraCrop * 0.35) * escala;
-                let alturaAss = (imgAssinaturaElemento.height * larguraAss) / imgAssinaturaElemento.width;
-                ctxLive.drawImage(imgAssinaturaElemento, posicaoAssinatura.x, posicaoAssinatura.y, larguraAss, alturaAss);
-            }
-
-            if (imgCarimboElemento) {
-                const slCar = document.getElementById("sliderEscalaCarimbo");
-                let escalaC = slCar ? parseInt(slCar.value) / 100 : 0.85;
-                let larguraCar = 380 * escalaC;
-                let alturaCar = (imgCarimboElemento.height * larguraCar) / imgCarimboElemento.width;
-                ctxLive.drawImage(imgCarimboElemento, posicaoCarimbo.x, posicaoCarimbo.y, larguraCar, alturaCar);
-
-                if (mostrarGuias) {
-                    ctxLive.strokeStyle = "rgba(220, 38, 38, 0.8)";
-                    ctxLive.lineWidth = 2;
-                    ctxLive.setLineDash([4, 4]);
-                    ctxLive.strokeRect(posicaoCarimbo.x - 4, posicaoCarimbo.y - 4, larguraCar + 8, alturaCar + 8);
-                    ctxLive.setLineDash([]);
-                }
-            }
         };
 
         function configurarEventosArrastoCanvas(canvas) {
@@ -1859,10 +1877,7 @@
                 const rect = canvasAss.getBoundingClientRect();
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                 const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                return { 
-                    x: (clientX - rect.left) * (canvasAss.width / rect.width), 
-                    y: (clientY - rect.top) * (canvasAss.height / rect.height) 
-                };
+                return { x: clientX - rect.left, y: clientY - rect.top };
             };
 
             const iniciar = (e) => { 
@@ -1897,7 +1912,8 @@
         window.limparAssinaturaPad = function() {
             const canvasAss = document.getElementById("canvasAssinatura");
             if (ctxAssinaturaPad && canvasAss) {
-                ctxAssinaturaPad.clearRect(0, 0, canvasAss.width, canvasAss.height);
+                const ratio = window.devicePixelRatio || 1;
+                ctxAssinaturaPad.clearRect(0, 0, canvasAss.width / ratio, canvasAss.height / ratio);
                 pontosTraçoAssinatura = [];
             }
         };
@@ -1936,7 +1952,7 @@
             if (pAss) { pAss.classList.add("hidden"); pAss.classList.remove("flex"); }
             
             const txtBtnAss = document.getElementById("txtBtnAssinatura");
-            if (txtBtnAss) txtBtnAss.innerText = "Assinar";
+            if (txtBtnAss) txtBtnAss.innerText = "Adicionar Assinatura";
             
             window.renderizarFiltroAtual(true);
         };
@@ -2058,7 +2074,7 @@
             window.renderizarCarrinhoScanner();
         };
 
-        // --- PREVIEW INTELIGENTE PARA DROPDOWN ---
+        // --- PREVIEW INTELIGENTE PARA DROPDOWN COM ZOOM (LIGHTBOX) ---
         window.renderizarCarrinhoScanner = function() {
             const areaEscolha = document.getElementById("areaEscolhaModo");
             const areaPrev = document.getElementById("areaPreviewScanner");
@@ -2078,6 +2094,7 @@
                 let imgUrl = typeof pagData === 'string' ? pagData : pagData.finalDataUrl;
                 let nomePacSugerido = pagData.paciente || "";
 
+                // Dropdown aprimorado: texto mais curto para caber na tela do celular
                 let optionsHTML = `<option value="">(Mesmo da Pág. Anterior)</option>`;
                 listaPacientesCadastrados.forEach(pac => {
                     let selected = (nomePacSugerido === pac.nome) ? "selected" : "";
@@ -2136,6 +2153,7 @@
             if (input.files && input.files.length > 0) {
                 const file = input.files[0];
                 
+                // NOVO FLUXO: Se o usuário subir um PDF genérico, fatiamos e jogamos no Carrinho de Revisão!
                 if (file.type === 'application/pdf') {
                     modoUploadAtual = 'scanner'; 
                     const areaEscolha = document.getElementById("areaEscolhaModo"); if (areaEscolha) areaEscolha.classList.add("hidden");
@@ -2162,6 +2180,7 @@
                             
                             const imgDataUrl = canvas.toDataURL('image/jpeg', 0.85);
                             
+                            // A IA tenta ler a página atual e cruzar com o banco
                             let nomeSugerido = "";
                             try {
                                 const imgBw = await preProcessarImagemParaOCR(imgDataUrl);
@@ -2172,7 +2191,7 @@
 
                             arrayPaginasEscaneadas.push({
                                 finalDataUrl: imgDataUrl,
-                                baseDataUrl: imgDataUrl,
+                                baseDataUrl: imgDataUrl, // Guarda a base limpa para o carimbo
                                 paciente: nomeSugerido,
                                 arquivoOriginalParaRelatorioGeral: file
                             });
@@ -2188,6 +2207,7 @@
                     return;
                 }
 
+                // Fila normal de imagens
                 modoUploadAtual = tipo; 
                 for (let i = 0; i < input.files.length; i++) { arquivosFilaEnvio.push(input.files[i]); }
                 
@@ -2223,6 +2243,7 @@
             window.renderizarListaFilaEnvio();
         };
 
+        // LÓGICA FINAL DE UPLOAD BASEADO NAS REVISÕES DO USUÁRIO
         window.iniciarUploadStorage = async function() {
             const inNome = document.getElementById("nomeArquivoManual");
             let nomeDigitado = inNome ? inNome.value.trim() : "";
@@ -2240,6 +2261,7 @@
                 const dataAtual = new Date();
                 const pastaData = `${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, '0')}-${String(dataAtual.getDate()).padStart(2, '0')}`;
                 
+                // 1. GERA E SALVA O RELATÓRIO GERAL (Completo)
                 if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Salvando Relatório Geral...`;
                 
                 let arquivoGeralUpload = null;
@@ -2280,6 +2302,7 @@
                     statusExclusao: "ativo"
                 });
 
+                // 2. AGRUPA E SEPARA PELOS NOMES DO DROPDOWN
                 if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Separando por Paciente...`;
                 
                 let mapaPacientes = {};
@@ -2300,6 +2323,7 @@
                     mapaPacientes[nomeAnteriorLembrado].push(imgBase64);
                 }
 
+                // 3. FAZ O UPLOAD DAS PASTAS INDIVIDUAIS
                 const { jsPDF } = window.jspdf;
                 const docPDF = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
                 const pdfW = docPDF.internal.pageSize.getWidth();
@@ -2405,6 +2429,7 @@
             }
         }
 
+        // RENDERIZAÇÃO DA GALERIA
         function carregarGaleriaDeAnexos() {
             const container = document.getElementById("listaAnexos");
             if (container && todosAnexosNaMemoria.length === 0) {
@@ -2498,6 +2523,7 @@
             const arqsPacientes = anexosFiltrados.filter(a => a.pastaPaciente);
             const arqsDiversos = anexosFiltrados.filter(a => !(a.pasta && a.pasta.startsWith("Relatorio_Geral")) && !a.pastaPaciente);
 
+            // NIVEL 0: RAIZ - Relatório Geral, Pacientes e Arquivos Diversos
             if (window.pastaAbertaAtual === null && !isBuscaAtiva) {
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<span class="text-gray-300 font-bold text-xs">Pastas do Sistema</span>`;
                 if (txtInfo) txtInfo.innerText = "Navegando nas Pastas";
@@ -2509,6 +2535,7 @@
                 if (txtCount) txtCount.innerText = `3 pastas`;
 
             } 
+            // NIVEL 1: DENTRO DE PACIENTES - Subpastas por Nomes Limpos
             else if (window.pastaAbertaAtual === 'pacientes_root' && !isBuscaAtiva) {
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs">Pacientes</span>`;
                 if (txtInfo) txtInfo.innerText = "Selecione o Paciente";
@@ -2530,6 +2557,7 @@
                 });
                 if (txtCount) txtCount.innerText = `${pacientesNomes.length} pacientes`;
             }
+            // NIVEL 1: DENTRO DO RELATÓRIO GERAL
             else if (window.pastaAbertaAtual === 'relatorio_geral' && !isBuscaAtiva) {
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs">Relatório Geral</span>`;
                 if (txtInfo) txtInfo.innerText = "Arquivos Gerais";
@@ -2537,6 +2565,7 @@
                 renderizarArquivosFinais(arqsGeral, container);
                 if (txtCount) txtCount.innerText = `${arqsGeral.length} relatórios`;
             }
+            // NIVEL 1: DENTRO DE ARQUIVOS DIVERSOS (Pastas por Data)
             else if (window.pastaAbertaAtual === 'diversos_root' && !isBuscaAtiva) {
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs">Arquivos Diversos</span>`;
                 if (txtInfo) txtInfo.innerText = "Selecione a Data";
@@ -2560,6 +2589,7 @@
                 });
                 if (txtCount) txtCount.innerText = `${datasNomes.length} pastas`;
             }
+            // NIVEL 2: DENTRO DO NOME DO PACIENTE
             else if (window.pastaAbertaAtual && window.pastaAbertaAtual.startsWith('paciente:') && !isBuscaAtiva) {
                 const nomePac = window.pastaAbertaAtual.split('paciente:')[1];
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.abrirPasta('pacientes_root')" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs truncate max-w-[150px]">${nomePac}</span>`;
@@ -2569,6 +2599,7 @@
                 renderizarArquivosFinais(arqs, container);
                 if (txtCount) txtCount.innerText = `${arqs.length} evoluções`;
             }
+            // NIVEL 2: DENTRO DE UMA DATA ESPECÍFICA DE "ARQUIVOS DIVERSOS"
             else if (window.pastaAbertaAtual && window.pastaAbertaAtual.startsWith('diversos_data:') && !isBuscaAtiva) {
                 const nomeData = window.pastaAbertaAtual.split('diversos_data:')[1];
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.abrirPasta('diversos_root')" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs truncate max-w-[150px]">${nomeData}</span>`;
@@ -2578,6 +2609,7 @@
                 renderizarArquivosFinais(arqs, container);
                 if (txtCount) txtCount.innerText = `${arqs.length} arquivos`;
             }
+            // BUSCA GLOBAL
             else {
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="document.getElementById('inputBuscaAnexo').value=''; window.aplicarFiltrosNaGaleria();" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Limpar Busca</button><span class="text-gray-600 mx-2">/</span><span class="text-blue-400 font-bold text-xs">Resultados</span>`;
                 if (txtInfo) txtInfo.innerText = "Resultados da Pesquisa";
@@ -2586,6 +2618,7 @@
             }
         };
 
+        // RENDERIZAÇÃO DOS CARDS DE PASTAS ADAPTADO PARA TIPOS
         function renderizarCardPasta(container, nomePasta, subtitulo, onclickAction, tipoPasta = 'geral') {
             let iconClass = "fa-folder-open text-blue-500";
             let bgClass = "bg-blue-900/20 border-blue-800/40";
@@ -2617,6 +2650,7 @@
             container.appendChild(card);
         }
 
+        // RENDERIZAÇÃO DOS CARDS DE ARQUIVOS (PDF E FOTOS)
         function renderizarArquivosFinais(lista, container) {
             if (lista.length === 0) { container.innerHTML = `<div class="col-span-full py-8 text-center text-gray-500 text-xs">Nenhum documento encontrado.</div>`; return; }
             lista.forEach(arq => {
@@ -2698,10 +2732,14 @@
                         text: `Confira este documento: ${nomeLimpo}`,
                         url: window.urlImagemAtiva
                     });
-                } catch (err) {}
+                } catch (err) {
+                    console.log("Compartilhamento nativo não concluído:", err);
+                }
             } else {
                 navigator.clipboard.writeText(window.urlImagemAtiva).then(() => {
                     alert("🔗 Link copiado para a área de transferência!");
+                }).catch(() => {
+                    alert("Seu navegador não suporta compartilhamento automático.");
                 });
             }
         };
