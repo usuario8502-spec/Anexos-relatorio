@@ -371,22 +371,16 @@
                     <span id="txtDestaqueExt" class="text-sm font-bold uppercase">Arquivo</span>
                 </div>
             </div>
-
-            <!-- BOTÕES NORMAIS DA GALERIA -->
             <div id="gridAcoesNormal" class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button onclick="window.abrirEdicaoNome()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-pen text-blue-500"></i> Editar</button>
                 <button onclick="window.compartilharAnexoAtivo()" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-share-nodes"></i> Enviar</button>
                 <button id="btnBaixarAnexo" onclick="window.baixarAnexoAtivo()" class="bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-download"></i> Baixar</button>
                 <button onclick="window.iniciarExclusaoArquivo()" class="bg-red-950/60 hover:bg-red-900/80 text-red-400 border border-red-800/60 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-trash-alt"></i> Excluir</button>
             </div>
-
-            <!-- BOTÕES DA LIXEIRA -->
             <div id="gridAcoesLixeira" class="hidden grid grid-cols-2 gap-2">
                 <button onclick="window.restaurarDaLixeira([window.idImagemAtiva])" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[11px] sm:text-xs shadow-md"><i class="fas fa-undo"></i> Restaurar</button>
                 <button onclick="window.acaoDefinitivaLixeira([window.idImagemAtiva])" class="bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[11px] sm:text-xs shadow-md"><i class="fas fa-trash-alt"></i> Apagar Definitivamente</button>
             </div>
-            
-            <!-- BOTÃO MODO PREVIEW EXPORTAÇÃO -->
             <div id="gridAcoesExportacao" class="hidden grid grid-cols-1 gap-2">
                 <button onclick="window.fecharModalVisualizacao()" class="bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-xs shadow-md"><i class="fas fa-arrow-left"></i> Voltar à Seleção</button>
             </div>
@@ -462,6 +456,7 @@
                 <input type="file" id="inputArquivoScannerGaleria" accept="image/*" class="hidden" onchange="window.abrirModoScanner(this)">
                 <input type="file" id="inputArquivoGenerico" class="hidden" accept="*/*" multiple onchange="window.processarArquivosLote(this, 'generico')">
 
+                <!-- PREVIEW SCANNER E REVISÃO INTELIGENTE -->
                 <div id="areaPreviewScanner" class="hidden flex-col gap-3 mt-2">
                     <div class="flex justify-between items-center border-b border-gray-800 pb-2">
                         <span class="text-xs font-bold text-red-400"><i class="fas fa-file-pdf"></i> Revisão de Documentos</span>
@@ -477,6 +472,7 @@
                     </div>
                 </div>
 
+                <!-- PREVIEW DIVERSOS -->
                 <div id="areaPreviewArquivos" class="hidden flex-col gap-3 mt-2">
                     <div class="flex justify-between items-center border-b border-gray-800 pb-2">
                         <span class="text-xs font-bold text-blue-400"><i class="fas fa-layer-group"></i> Fila de Envio</span>
@@ -529,7 +525,8 @@
             <button onclick="window.cancelarScannerTotal()" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
         </div>
         <div class="flex-1 w-full bg-black relative overflow-hidden flex items-center justify-center p-4">
-            <img id="imgParaCortar" src="" class="max-w-full max-h-full">
+            <!-- AQUI: "block max-w-full" GARANTE QUE A IMAGEM NÃO ABRA GIGANTE E CAIBA NA TELA -->
+            <img id="imgParaCortar" src="" class="block max-w-full">
         </div>
         <div class="bg-gray-900 px-5 pt-4 border-t border-gray-800 flex flex-col gap-2">
             <div class="flex items-center gap-4">
@@ -759,7 +756,7 @@
         let alturaCrop = 0;
         
         window.filtroAtivo = 'pb'; 
-        window.rotacaoBase = 0; // CORREÇÃO GALERIA DEITADA
+        window.rotacaoBase = 0; 
         let caixasTexto = [];
         let indiceCaixaTextoAtiva = null;
         let posicaoAssinatura = { x: 50, y: 150 };
@@ -1177,11 +1174,11 @@
             });
         }
 
-        // --- OCR INTELIGENTE OTIMIZADO E DESCOMPRIMIDO ---
+        // --- OCR INTELIGENTE OTIMIZADO ---
         function encontrarPacienteNoBanco(textoRaw) {
             if (!textoRaw || textoRaw.trim().length < 3) return "Desconhecido";
             
-            // Tira acentos, joga pra minúsculo e limpa mantendo letras
+            // Tira acentos, joga pra minúsculo e limpa caracteres estranhos deixando só letras e números
             let textoLimpo = textoRaw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
             textoLimpo = textoLimpo.replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
 
@@ -1194,14 +1191,14 @@
                 let pacNomeLimpo = pac.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
                 pacNomeLimpo = pacNomeLimpo.replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
 
-                // 1. Busca Exata Absoluta
+                // 1. Busca Exata (Ideal para letra de forma, não precisa cortar a palavra "paciente")
                 if (textoLimpo.includes(pacNomeLimpo) && pacNomeLimpo.length > 3) {
                     maiorScore = 999;
                     melhorMatch = pac.nome;
                     return;
                 }
 
-                // 2. Busca Híbrida/Fuzzy (Caso tenha erros de digitalização)
+                // 2. Busca Híbrida/Fuzzy
                 let tokensLidos = textoLimpo.split(' ').filter(w => w.length > 2);
                 let tokensPac = pacNomeLimpo.split(' ').filter(w => w.length > 2);
 
@@ -1214,9 +1211,9 @@
                     }
                 });
 
-                let threshold = Math.max(1, tokensPac.length * 0.6);
+                let threshold = Math.max(1, tokensPac.length * 0.5);
 
-                if (score > maiorScore && score >= threshold && maiorScore !== 999) { 
+                if (score > maiorScore && score >= threshold && score !== 999) { 
                     maiorScore = score; 
                     melhorMatch = pac.nome; 
                 }
@@ -1235,14 +1232,12 @@
                     
                     const ctx = canvas.getContext('2d'); 
                     
-                    // Garante um fundo 100% branco para matar as transparências de PDF
+                    // Fundo branco obrigatório para o OCR não se perder em fundos transparentes de PDF
                     ctx.fillStyle = '#ffffff'; 
                     ctx.fillRect(0, 0, canvas.width, canvas.height); 
-                    
-                    // Desenha a imagem por cima do branco
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     
-                    // Envia a imagem pura, sem os filtros binarizadores destrutivos
+                    // Envia a imagem pura (com fundo branco garantido) para a IA
                     resolve(canvas.toDataURL('image/jpeg', 1.0));
                 }; 
                 img.src = imgBase64;
@@ -1304,6 +1299,7 @@
             }
         };
 
+        // --- SISTEMA DE PROXY DUPLO PARA EVITAR ERRO CORS (FAILED TO FETCH) ---
         window.fetchComProxyFallback = async function(url) {
             try {
                 const res = await fetch(url);
@@ -1358,7 +1354,7 @@
             });
         };
 
-        // --- CROPPER COM PROPORÇÃO A4 EXATA ---
+        // --- CROPPER COM PROPORÇÃO A4 EXATA E AJUSTE DE ZOOM ---
         window.abrirModoScanner = function(input) {
             if (input.files && input.files[0]) {
                 const file = input.files[0];
@@ -1374,7 +1370,7 @@
                         modalCrop.classList.add("flex"); 
                     }
                     
-                    // ZERA A ROTAÇÃO BASE PARA NÃO DEITAR A GALERIA!
+                    // ZERA A ROTAÇÃO BASE PARA NÃO DEITAR A GALERIA
                     window.rotacaoBase = 0; 
                     const slNiv = document.getElementById("sliderNivelamento");
                     const lblNiv = document.getElementById("lblNivelamento");
@@ -1397,6 +1393,7 @@
                         toggleDragModeOnDblclick: false, 
                         ready: function() { 
                             this.cropper.rotateTo(window.rotacaoBase); 
+                            this.cropper.zoomTo(0); // <-- Força a imagem a caber na tela sem precisar diminuir o zoom
                         } 
                     });
                 }; 
@@ -1548,6 +1545,7 @@
                 let slNiv = document.getElementById("sliderNivelamento"); 
                 let ajusteFino = slNiv ? parseFloat(slNiv.value) : 0; 
                 cropperInstancia.rotateTo(window.rotacaoBase + ajusteFino); 
+                cropperInstancia.zoomTo(0); // Reajusta o tamanho na tela ao girar
             } 
         };
         
