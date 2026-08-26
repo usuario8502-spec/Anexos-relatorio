@@ -111,77 +111,169 @@
                     <i class="fas fa-user-lock"></i>
                 </div>
                 <h2 class="text-lg font-bold text-white">Acessar o Sistema</h2>
+                <p class="text-xs text-gray-400">Digite seu usuário e senha para continuar.</p>
             </div>
             <form id="formLogin" onsubmit="event.preventDefault(); if(window.executarLoginFirebase) window.executarLoginFirebase(event);" class="flex flex-col gap-3">
-                <input type="text" id="loginUsuario" required placeholder="Usuário..." class="p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
-                <div class="relative w-full">
-                    <input type="password" id="loginSenha" required placeholder="Senha..." class="w-full p-3 pr-10 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
-                    <button type="button" onclick="window.toggleVisibilidadeSenha('loginSenha', 'iconLoginSenha')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white">
-                        <i class="fas fa-eye" id="iconLoginSenha"></i>
-                    </button>
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] text-gray-400 font-bold uppercase">Usuário</label>
+                    <input type="text" id="loginUsuario" required placeholder="Digite seu usuário..." class="p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
                 </div>
-                <button type="submit" id="btnEntrarLogin" class="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold text-xs transition">Entrar</button>
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] text-gray-400 font-bold uppercase">Senha</label>
+                    <div class="relative w-full">
+                        <input type="password" id="loginSenha" required placeholder="******" class="w-full p-3 pr-10 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
+                        <button type="button" onclick="window.toggleVisibilidadeSenha('loginSenha', 'iconLoginSenha')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition focus:outline-none">
+                            <i class="fas fa-eye" id="iconLoginSenha"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" id="btnEntrarLogin" class="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold text-xs transition shadow-lg">Entrar</button>
             </form>
         </div>
     </div>
 
-    <!-- MODAL DE EXPORTAÇÃO -->
+    <div id="modalRecuperarSenha" class="fixed inset-0 bg-black/90 popup-blur hidden items-center justify-center p-4 z-[110]">
+        <div class="bg-gray-900 rounded-2xl border border-gray-800 p-5 w-full max-w-xs shadow-2xl flex flex-col gap-4 text-center">
+            <div class="w-10 h-10 rounded-full bg-yellow-500/20 text-yellow-400 flex items-center justify-center mx-auto text-lg border border-yellow-500/30">
+                <i class="fas fa-key"></i>
+            </div>
+            <h3 class="text-sm font-bold text-white">Recuperar Senha</h3>
+            <p class="text-xs text-gray-400">Digite seu nome de usuário. O sistema localizará seu e-mail e enviará o link de redefinição.</p>
+            <form onsubmit="event.preventDefault(); if(window.confirmarRecuperacaoSenha) window.confirmarRecuperacaoSenha(event);" class="flex flex-col gap-3">
+                <input type="text" id="recUsuario" required placeholder="Digite o nome de usuário..." class="p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
+                <div class="flex gap-2">
+                    <button type="button" onclick="window.fecharModalRecuperarSenha()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2.5 rounded-xl text-xs font-bold border border-gray-700 transition">Cancelar</button>
+                    <button type="submit" id="btnEnviarRecuperacao" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl text-xs font-bold transition">Enviar Link</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalCadastroUsuario" class="fixed inset-0 bg-black/90 popup-blur hidden items-center justify-center p-4 z-[120]">
+        <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 w-full max-w-sm shadow-2xl flex flex-col gap-4">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fas fa-user-plus text-blue-500"></i> Cadastrar Novo Usuário</h3>
+                <button onclick="window.fecharModalCadastroUsuario()" class="text-gray-500 hover:text-white"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            <form onsubmit="event.preventDefault(); if(window.executarCadastroFirebase) window.executarCadastroFirebase(event);" class="flex flex-col gap-3">
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] text-gray-400 font-bold uppercase">Tipo de Conta / Perfil</label>
+                    <select id="cadPerfil" required class="p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
+                        <option value="executor">Executor</option>
+                        <option value="administrador">Administrador</option>
+                    </select>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] text-gray-400 font-bold uppercase">Nome de Usuário (Para Login)</label>
+                    <input type="text" id="cadUsuario" required placeholder="Ex: joao_silva" class="p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] text-gray-400 font-bold uppercase">E-mail Real (Apenas Recuperação)</label>
+                    <input type="email" id="cadEmail" required placeholder="joao@email.com" class="p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] text-gray-400 font-bold uppercase">Senha</label>
+                    <div class="relative w-full">
+                        <input type="password" id="cadSenha" required placeholder="Mínimo 6 caracteres..." class="w-full p-3 pr-10 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
+                        <button type="button" onclick="window.toggleVisibilidadeSenha('cadSenha', 'iconCadSenha')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition focus:outline-none">
+                            <i class="fas fa-eye" id="iconCadSenha"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex gap-2 mt-2">
+                    <button type="button" onclick="window.fecharModalCadastroUsuario()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 py-3 rounded-xl font-bold text-xs transition">Cancelar</button>
+                    <button type="submit" id="btnSalvarCadastro" class="flex-1 bg-green-600 hover:bg-green-500 text-white py-3 rounded-xl font-bold text-xs transition">Salvar Cadastro</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE GERENCIAR PACIENTES -->
+    <div id="modalGerenciarPacientes" class="fixed inset-0 bg-black/90 popup-blur hidden items-center justify-center p-4 z-[120]">
+        <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 w-full max-w-md shadow-2xl flex flex-col gap-4">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fas fa-users text-blue-500"></i> Banco de Pacientes</h3>
+                <button onclick="window.fecharModalPacientes()" class="text-gray-500 hover:text-white"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            
+            <p class="text-xs text-gray-400 leading-tight">A IA usará esses nomes de referência. Administradores podem importar listas inteiras (.xlsx).</p>
+
+            <div class="flex flex-col gap-2">
+                <form onsubmit="event.preventDefault(); if(window.adicionarPacienteFirebase) window.adicionarPacienteFirebase(event);" class="flex gap-2">
+                    <input type="text" id="cadNomePaciente" required placeholder="Adicionar manualmente..." class="flex-1 p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 rounded-xl font-bold text-xs transition shadow"><i class="fas fa-plus"></i></button>
+                </form>
+
+                <div id="areaImportacaoPacientes" class="hidden w-full">
+                    <input type="file" id="inputImportXlsx" accept=".xlsx, .xls" class="hidden" onchange="window.importarPacientesXlsx(this)">
+                    <button type="button" onclick="document.getElementById('inputImportXlsx').click()" class="w-full bg-green-600/20 hover:bg-green-600/40 border border-green-500/40 text-green-400 py-2.5 rounded-xl font-bold text-xs transition flex items-center justify-center gap-2">
+                        <i class="fas fa-file-excel"></i> Importar Lote (.xlsx)
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-2 max-h-56 overflow-y-auto custom-scrollbar pr-1 mt-1" id="listaPacientesBanco"></div>
+        </div>
+    </div>
+
+    <!-- MODAL DE REVISÃO DA EXPORTAÇÃO -->
     <div id="modalRevisaoExportacao" class="fixed inset-0 bg-black/95 popup-blur hidden flex-col items-center justify-center p-4 z-[400]">
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-2xl shadow-2xl flex flex-col gap-4 max-h-[90vh]">
             <div class="flex justify-between items-center border-b border-gray-800 pb-3">
-                <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                    <i class="fas fa-file-export text-blue-500"></i> Gerar Dossiê / Relatório
-                </h3>
-                <button onclick="window.fecharModalRevisaoExportacao()" class="text-gray-500 hover:text-white text-xl">
-                    <i class="fas fa-times"></i>
-                </button>
+                <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fas fa-file-export text-blue-500"></i> Gerar Dossiê / Relatório</h3>
+                <button onclick="window.fecharModalRevisaoExportacao()" class="text-gray-500 hover:text-white text-xl"><i class="fas fa-times"></i></button>
             </div>
-            <p class="text-xs text-gray-400">Arquivos em <strong class="text-white">Ordem Alfabética</strong> e <strong class="text-white">Cronológica</strong>.</p>
-            <input type="text" id="inputNomeExportacao" placeholder="Nome do Arquivo Final..." class="w-full p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm focus:border-blue-500">
-            <div class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-2 pr-1" id="listaRevisaoExportacao"></div>
+            
+            <p class="text-xs text-gray-400">Os arquivos selecionados foram organizados em <strong class="text-white">Ordem Alfabética (Paciente)</strong> e <strong class="text-white">Ordem Cronológica (Data)</strong>.</p>
+            
+            <input type="text" id="inputNomeExportacao" placeholder="Digite o nome do Dossiê/Arquivo Final..." class="w-full p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm focus:outline-none focus:border-blue-500">
+            
+            <div class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-2 pr-1" id="listaRevisaoExportacao">
+                <!-- Injetado via JS -->
+            </div>
+
             <div class="flex gap-2 pt-2 border-t border-gray-800 mt-2">
-                <button onclick="window.fecharModalRevisaoExportacao()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
-                    <i class="fas fa-pen"></i> Selecionar Mais
-                </button>
-                <button id="btnConfirmarExportacao" onclick="window.gerarPdfExportacao()" class="flex-[2] bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">
-                    <i class="fas fa-cogs"></i> Gerar PDF
-                </button>
+                <button onclick="window.fecharModalRevisaoExportacao()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2"><i class="fas fa-pen"></i> Selecionar Mais</button>
+                <button id="btnConfirmarExportacao" onclick="window.gerarPdfExportacao()" class="flex-[2] bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl text-sm font-bold transition shadow-lg flex items-center justify-center gap-2"><i class="fas fa-cogs"></i> Gerar e Salvar PDF</button>
             </div>
         </div>
     </div>
 
-    <!-- SIDEBAR -->
+    <!-- OVERLAY E MENU LATERAL -->
     <div id="overlaySidebar" onclick="window.toggleSidebar(false)" class="fixed inset-0 bg-black/70 popup-blur z-50 hidden transition-opacity"></div>
     <aside id="sidebar" class="fixed top-0 left-0 w-72 h-full bg-gray-900 border-r border-gray-800 z-50 transform -translate-x-full transition-transform duration-300 flex flex-col justify-between shadow-2xl">
         <div class="p-5 border-b border-gray-800 flex items-center justify-between">
             <div class="flex items-center gap-3 min-w-0">
-                <div class="w-11 h-11 rounded-full bg-blue-600/30 border border-blue-500/50 flex items-center justify-center text-blue-400 text-lg font-bold">
+                <div class="w-11 h-11 rounded-full bg-blue-600/30 border border-blue-500/50 flex items-center justify-center text-blue-400 text-lg font-bold flex-shrink-0">
                     <i class="fas fa-user"></i>
                 </div>
                 <div class="min-w-0 flex-1">
                     <h3 id="sidebarNomeUsuario" class="text-sm font-bold text-white truncate">Carregando...</h3>
-                    <p id="sidebarPerfilUsuario" class="text-[10px] text-gray-400 uppercase font-semibold">...</p>
+                    <p id="sidebarPerfilUsuario" class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold truncate">...</p>
                 </div>
             </div>
-            <button onclick="window.toggleSidebar(false)" class="text-gray-400 hover:text-white text-xl p-1">
-                <i class="fas fa-times"></i>
-            </button>
+            <button onclick="window.toggleSidebar(false)" class="text-gray-400 hover:text-white text-xl p-1"><i class="fas fa-times"></i></button>
         </div>
+        
         <div class="p-4 flex flex-col gap-2 flex-1">
-            <button onclick="window.abrirExportacao()" class="w-full bg-blue-900/40 hover:bg-blue-800/60 border border-blue-700/60 text-blue-300 p-3 rounded-xl font-bold text-xs transition flex items-center gap-2.5 mb-2">
+            <button onclick="window.abrirExportacao()" class="w-full bg-blue-900/40 hover:bg-blue-800/60 border border-blue-700/60 text-blue-300 p-3 rounded-xl font-bold text-xs transition flex items-center gap-2.5 mb-2 shadow-sm">
                 <i class="fas fa-file-export text-blue-400"></i> Exportar Dados
             </button>
-            <button id="btnSidebarCadastrarUsuario" onclick="window.abrirModalCadastroUsuario()" class="hidden w-full bg-gray-800 hover:bg-gray-700 text-gray-300 p-3 rounded-xl font-bold text-xs transition items-center gap-2.5">
+
+            <button id="btnSidebarCadastrarUsuario" onclick="window.abrirModalCadastroUsuario()" class="hidden w-full bg-gray-800 hover:bg-gray-700 text-gray-300 p-3 rounded-xl font-bold text-xs transition flex items-center gap-2.5">
                 <i class="fas fa-user-plus text-gray-400"></i> Cadastrar Novo Usuário
             </button>
             <button id="btnSidebarPacientes" onclick="window.abrirModalPacientes()" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 p-3 rounded-xl font-bold text-xs transition flex items-center gap-2.5">
                 <i class="fas fa-address-book text-gray-400"></i> Banco de Pacientes
             </button>
+            
             <div class="border-t border-gray-800 my-2"></div>
+            
             <button onclick="window.abrirLixeira()" class="w-full bg-red-900/20 hover:bg-red-900/40 border border-red-800/40 text-red-400 p-3 rounded-xl font-bold text-xs transition flex items-center gap-2.5">
                 <i class="fas fa-trash"></i> Lixeira
             </button>
         </div>
+
         <div class="p-4 border-t border-gray-800">
             <button onclick="window.fazerLogout()" class="w-full bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 py-3 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2">
                 <i class="fas fa-sign-out-alt"></i> Sair do Sistema
@@ -189,10 +281,10 @@
         </div>
     </aside>
 
-    <!-- HEADER E MAIN -->
+    <!-- CABEÇALHO -->
     <header class="bg-gray-900 border-b border-gray-800 p-4 sticky top-0 z-40 shadow-md">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <button onclick="window.toggleSidebar(true)" class="text-gray-300 hover:text-white text-xl p-2 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-700 w-10 h-10 flex items-center justify-center">
+            <button onclick="window.toggleSidebar && window.toggleSidebar(true)" class="text-gray-300 hover:text-white text-xl p-2 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-700 focus:outline-none w-10 h-10 flex items-center justify-center">
                 <i class="fas fa-bars"></i>
             </button> 
             <h1 class="text-xl sm:text-2xl font-bold text-blue-500 tracking-wide text-center flex-1 cursor-pointer hover:text-blue-400 transition" onclick="window.voltarParaPastas()">Anexos</h1>
@@ -206,6 +298,7 @@
                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500"></i>
                 <input type="text" id="inputBuscaAnexo" placeholder="Buscar por paciente, relatórios ou data..." class="w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-blue-500 focus:outline-none text-sm transition-all">
             </div>
+            
             <div class="grid grid-cols-2 gap-3">
                 <div class="flex flex-col gap-1">
                     <label class="text-[10px] text-gray-400 font-bold uppercase">Data Início</label>
@@ -218,6 +311,7 @@
             </div>
         </section>
 
+        <!-- Galeria Principal Dinâmica -->
         <section class="flex flex-col gap-3 relative">
             <div id="barraSelecao" class="hidden justify-between items-center bg-blue-600 border border-blue-500 p-3 rounded-xl mb-1 shadow-lg sticky top-20 z-30">
                 <button onclick="window.cancelarModoSelecao()" class="text-white font-bold text-xs flex items-center gap-1.5 hover:text-gray-200 transition">
@@ -228,12 +322,15 @@
                     <i class="fas fa-trash"></i> Apagar
                 </button>
             </div>
+
             <div class="flex justify-between items-center text-sm text-gray-400 px-1 border-b border-gray-800 pb-2" id="areaBreadcrumb"></div>
             <div class="flex justify-between items-center text-xs text-gray-500 px-1 pt-1">
                 <span id="txtInfoVista">Visualizando Pastas</span>
                 <span id="txtContadorArquivos">0 itens</span>
             </div>
+            
             <div id="listaAnexos" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 custom-scrollbar select-none"></div>
+
             <div id="areaEsvaziarLixeira" class="hidden w-full mt-4">
                 <button onclick="window.esvaziarLixeira()" class="w-full bg-red-950/60 hover:bg-red-900 border border-red-800/60 text-red-400 py-3 rounded-xl font-bold text-sm transition shadow">
                     <i class="fas fa-dumpster"></i> Esvaziar Lixeira
@@ -251,15 +348,14 @@
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 w-full max-w-lg shadow-2xl flex flex-col gap-4 transform transition-all scale-95 opacity-0" id="modalVisualizacaoContent">
             <div class="flex justify-between items-start border-b border-gray-800 pb-3 gap-3">
                 <h3 class="text-lg font-bold text-white flex-1 leading-tight break-words" id="tituloImagemCard">Carregando...</h3>
-                <button onclick="window.fecharModalVisualizacao()" class="text-gray-500 hover:text-white transition text-2xl p-1 leading-none">
-                    <i class="fas fa-times"></i>
-                </button>
+                <button onclick="window.fecharModalVisualizacao()" class="text-gray-500 hover:text-white transition text-2xl p-1 leading-none"><i class="fas fa-times"></i></button>
             </div>
             <div id="areaEdicaoNome" class="hidden flex-col gap-2 bg-gray-800/50 p-3 rounded-lg border border-gray-700">
-                <input type="text" id="inputEdicaoNome" class="w-full p-2 rounded-lg bg-gray-900 border border-gray-600 text-white text-sm">
+                <label class="text-[10px] text-gray-400 font-bold uppercase">Editar Nome do Arquivo</label>
+                <input type="text" id="inputEdicaoNome" class="w-full p-2 rounded-lg bg-gray-900 border border-gray-600 text-white focus:outline-none focus:border-blue-500 text-sm">
                 <div class="flex gap-2 mt-1">
-                    <button id="btnSalvarEdicao" onclick="window.salvarNovoNome()" class="flex-1 bg-green-600 text-white py-2 rounded-lg text-xs">Salvar</button>
-                    <button onclick="window.cancelarEdicaoNome()" class="flex-1 bg-red-600/20 text-red-500 py-2 rounded-lg text-xs">Cancelar</button>
+                    <button id="btnSalvarEdicao" onclick="window.salvarNovoNome()" class="flex-1 bg-green-600 hover:bg-green-500 text-white py-2 rounded-lg font-bold text-xs transition"><i class="fas fa-save"></i> Salvar</button>
+                    <button onclick="window.cancelarEdicaoNome()" class="flex-1 bg-red-600/20 hover:bg-red-600/40 text-red-500 py-2 rounded-lg font-bold text-xs transition border border-red-900/50"><i class="fas fa-times"></i> Cancelar</button>
                 </div>
             </div>
             <div class="w-full h-64 sm:h-80 bg-gray-950 rounded-lg border border-gray-800 flex items-center justify-center overflow-hidden relative shadow-inner">
@@ -271,31 +367,17 @@
                 </div>
             </div>
             <div id="gridAcoesNormal" class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <button onclick="window.abrirEdicaoNome()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-lg font-bold text-[10px] sm:text-xs">
-                    <i class="fas fa-pen text-blue-500"></i> Editar
-                </button>
-                <button onclick="window.compartilharAnexoAtivo()" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold text-[10px] sm:text-xs">
-                    <i class="fas fa-share-nodes"></i> Enviar
-                </button>
-                <button id="btnBaixarAnexo" onclick="window.baixarAnexoAtivo()" class="bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold text-[10px] sm:text-xs">
-                    <i class="fas fa-download"></i> Baixar
-                </button>
-                <button onclick="window.iniciarExclusaoArquivo()" class="bg-red-950/60 hover:bg-red-900/80 text-red-400 py-3 rounded-lg font-bold text-[10px] sm:text-xs">
-                    <i class="fas fa-trash-alt"></i> Excluir
-                </button>
+                <button onclick="window.abrirEdicaoNome()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-pen text-blue-500"></i> Editar</button>
+                <button onclick="window.compartilharAnexoAtivo()" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-share-nodes"></i> Enviar</button>
+                <button id="btnBaixarAnexo" onclick="window.baixarAnexoAtivo()" class="bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-download"></i> Baixar</button>
+                <button onclick="window.iniciarExclusaoArquivo()" class="bg-red-950/60 hover:bg-red-900/80 text-red-400 border border-red-800/60 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-trash-alt"></i> Excluir</button>
             </div>
             <div id="gridAcoesLixeira" class="hidden grid grid-cols-2 gap-2">
-                <button onclick="window.restaurarDaLixeira([window.idImagemAtiva])" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold text-[11px] sm:text-xs">
-                    <i class="fas fa-undo"></i> Restaurar
-                </button>
-                <button onclick="window.acaoDefinitivaLixeira([window.idImagemAtiva])" class="bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold text-[11px] sm:text-xs">
-                    <i class="fas fa-trash-alt"></i> Apagar
-                </button>
+                <button onclick="window.restaurarDaLixeira([window.idImagemAtiva])" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[11px] sm:text-xs shadow-md"><i class="fas fa-undo"></i> Restaurar</button>
+                <button onclick="window.acaoDefinitivaLixeira([window.idImagemAtiva])" class="bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[11px] sm:text-xs shadow-md"><i class="fas fa-trash-alt"></i> Apagar Definitivamente</button>
             </div>
             <div id="gridAcoesExportacao" class="hidden grid grid-cols-1 gap-2">
-                <button onclick="window.fecharModalVisualizacao()" class="bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-lg font-bold text-xs">
-                    <i class="fas fa-arrow-left"></i> Voltar à Seleção
-                </button>
+                <button onclick="window.fecharModalVisualizacao()" class="bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-xs shadow-md"><i class="fas fa-arrow-left"></i> Voltar à Seleção</button>
             </div>
         </div>
     </div>
@@ -303,52 +385,39 @@
     <!-- MÚLTIPLOS MODAIS AUXILIARES OCULTOS -->
     <div id="modalPerguntaSelecao" class="fixed inset-0 bg-black/90 popup-blur hidden items-center justify-center p-4 z-[300]">
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-5 w-full max-w-xs shadow-2xl flex flex-col gap-4 text-center">
-            <h3 class="text-sm font-bold text-white flex items-center justify-center gap-2" id="txtTituloPerguntaSelecao">
-                <i class="fas fa-question-circle text-blue-500"></i> Deseja apagar mais itens?
-            </h3>
+            <h3 class="text-sm font-bold text-white flex items-center justify-center gap-2" id="txtTituloPerguntaSelecao"><i class="fas fa-question-circle text-blue-500"></i> Deseja apagar mais itens?</h3>
+            <p class="text-xs text-gray-400" id="txtDescPerguntaSelecao">Você pode selecionar vários itens para apagar de uma vez só.</p>
             <div class="flex gap-2 mt-2">
-                <button onclick="window.responderPerguntaSelecao(false)" class="flex-1 bg-gray-800 text-gray-300 py-2.5 rounded-xl text-xs font-bold transition">Não</button>
-                <button onclick="window.responderPerguntaSelecao(true)" class="flex-1 bg-blue-600 text-white py-2.5 rounded-xl text-xs font-bold transition">Sim</button>
+                <button onclick="window.responderPerguntaSelecao(false)" class="flex-1 bg-gray-800 text-gray-300 py-2.5 rounded-xl text-xs font-bold transition shadow">Não, só este</button>
+                <button onclick="window.responderPerguntaSelecao(true)" class="flex-1 bg-blue-600 text-white py-2.5 rounded-xl text-xs font-bold transition shadow">Sim, selecionar</button>
             </div>
         </div>
     </div>
     
     <div id="modalAcoesLoteLixeira" class="fixed inset-0 bg-black/90 popup-blur hidden items-center justify-center p-4 z-[250]">
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 w-full max-w-sm shadow-2xl flex flex-col gap-4 text-center">
-            <h3 class="text-sm font-bold text-white flex items-center justify-center gap-2">
-                <i class="fas fa-folder text-orange-400"></i> Pasta Excluída
-            </h3>
+            <h3 class="text-sm font-bold text-white flex items-center justify-center gap-2"><i class="fas fa-folder text-orange-400"></i> Pasta Excluída</h3>
             <p class="text-xs text-gray-300 font-bold" id="txtNomeLoteLixeira"></p>
             <div class="flex flex-col gap-2 mt-2">
-                <button onclick="window.processarLoteLixeira('restaurar')" class="w-full bg-green-600 hover:bg-green-500 text-white py-3 rounded-xl text-xs font-bold transition">
-                    <i class="fas fa-undo"></i> Restaurar Pasta
-                </button>
-                <button onclick="window.processarLoteLixeira('apagar')" class="w-full bg-red-600 hover:bg-red-500 text-white py-3 rounded-xl text-xs font-bold transition">
-                    <i class="fas fa-trash-alt"></i> Apagar
-                </button>
-                <button onclick="window.fecharModalAcaoLoteLixeira()" class="w-full bg-gray-800 text-gray-300 py-2 rounded-xl text-xs font-bold mt-1">Cancelar</button>
+                <button onclick="window.processarLoteLixeira('restaurar')" class="w-full bg-green-600 hover:bg-green-500 text-white py-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2"><i class="fas fa-undo"></i> Restaurar Pasta Inteira</button>
+                <button onclick="window.processarLoteLixeira('apagar')" class="w-full bg-red-600 hover:bg-red-500 text-white py-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2"><i class="fas fa-trash-alt"></i> Apagar Definitivamente</button>
+                <button onclick="window.fecharModalAcaoLoteLixeira()" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded-xl text-xs font-bold border border-gray-700 transition mt-1">Cancelar</button>
             </div>
         </div>
     </div>
 
     <div id="modalAcoesSelecaoLixeira" class="fixed inset-0 bg-black/90 popup-blur hidden items-center justify-center p-4 z-[300]">
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 w-full max-w-sm shadow-2xl flex flex-col gap-4 text-center">
-            <h3 class="text-sm font-bold text-white flex items-center justify-center gap-2">
-                <i class="fas fa-check-double text-blue-500"></i> Ações em Lote
-            </h3>
+            <h3 class="text-sm font-bold text-white flex items-center justify-center gap-2"><i class="fas fa-check-double text-blue-500"></i> Ações em Lote (Lixeira)</h3>
             <div class="flex flex-col gap-2 mt-1">
-                <button onclick="window.executarLoteLixeiraFinal('restaurar')" class="w-full bg-green-600 text-white py-3 rounded-xl text-xs font-bold">
-                    <i class="fas fa-undo"></i> Restaurar
-                </button>
-                <button onclick="window.executarLoteLixeiraFinal('apagar')" class="w-full bg-red-600 text-white py-3 rounded-xl text-xs font-bold">
-                    <i class="fas fa-trash-alt"></i> Apagar
-                </button>
-                <button onclick="document.getElementById('modalAcoesSelecaoLixeira').classList.add('hidden'); document.getElementById('modalAcoesSelecaoLixeira').classList.remove('flex');" class="w-full bg-gray-800 text-gray-300 py-2 rounded-xl text-xs font-bold mt-1">Cancelar</button>
+                <button onclick="window.executarLoteLixeiraFinal('restaurar')" class="w-full bg-green-600 hover:bg-green-500 text-white py-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow"><i class="fas fa-undo"></i> Restaurar Itens</button>
+                <button onclick="window.executarLoteLixeiraFinal('apagar')" class="w-full bg-red-600 hover:bg-red-500 text-white py-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow"><i class="fas fa-trash-alt"></i> Apagar Definitivamente</button>
+                <button onclick="document.getElementById('modalAcoesSelecaoLixeira').classList.add('hidden'); document.getElementById('modalAcoesSelecaoLixeira').classList.remove('flex');" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded-xl text-xs font-bold border border-gray-700 transition mt-1">Cancelar</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DE UPLOAD OCULTOS -->
+    <!-- MODAL DE UPLOAD -->
     <div id="modalUpload" class="fixed inset-0 bg-black/80 popup-blur hidden items-center justify-center p-4 z-[150] overflow-y-auto">
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 w-full max-w-md shadow-2xl flex flex-col gap-4 transform transition-all scale-95 opacity-0 my-auto" id="modalUploadContent">
             <div class="flex justify-between items-center border-b border-gray-800 pb-3">
@@ -357,20 +426,22 @@
             </div>
 
             <div class="flex flex-col gap-3">
-                <input type="text" id="nomeArquivoManual" placeholder="Nome ou Descrição..." class="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-blue-500">
+                <label class="text-xs text-gray-400">Nome ou Descrição do Arquivo Base:</label>
+                <input type="text" id="nomeArquivoManual" placeholder="Ex: Relatório Evoluções..." class="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-blue-500">
+                
                 <div id="areaEscolhaModo" class="grid grid-cols-2 gap-2 mt-2">
-                    <button onclick="document.getElementById('inputArquivoCamera').click()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl text-[11px] font-bold">
-                        <i class="fas fa-camera text-blue-400"></i> Câmera
+                    <button onclick="document.getElementById('inputArquivoCamera').click()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition">
+                        <i class="fas fa-camera text-blue-400"></i><span class="text-[11px] font-bold">Câmera</span>
                     </button>
-                    <button onclick="document.getElementById('inputArquivoGaleria').click()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl text-[11px] font-bold">
-                        <i class="fas fa-images text-blue-400"></i> Fotos
+                    <button onclick="document.getElementById('inputArquivoGaleria').click()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition">
+                        <i class="fas fa-images text-blue-400"></i><span class="text-[11px] font-bold">Múltiplas Fotos</span>
                     </button>
-                    <button onclick="window.abrirModalOrigemScanner()" class="col-span-2 sm:col-span-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl text-[11px] font-bold relative overflow-hidden">
+                    <button onclick="window.abrirModalOrigemScanner()" class="col-span-2 sm:col-span-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition relative overflow-hidden">
                         <div class="absolute inset-0 bg-red-500/10 opacity-50"></div>
-                        <i class="fas fa-file-pdf text-red-500"></i> Escanear
+                        <i class="fas fa-file-pdf text-red-500"></i><span class="text-[11px] font-bold">Escanear Documento</span>
                     </button>
-                    <button onclick="document.getElementById('inputArquivoGenerico').click()" class="col-span-2 sm:col-span-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl text-[11px] font-bold">
-                        <i class="fas fa-file-upload text-purple-400"></i> PDF / Outros
+                    <button onclick="document.getElementById('inputArquivoGenerico').click()" class="col-span-2 sm:col-span-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition">
+                        <i class="fas fa-file-upload text-purple-400"></i><span class="text-[11px] font-bold">PDF / Outros</span>
                     </button>
                 </div>
 
@@ -383,12 +454,13 @@
                 <div id="areaPreviewScanner" class="hidden flex-col gap-3 mt-2">
                     <div class="flex justify-between items-center border-b border-gray-800 pb-2">
                         <span class="text-xs font-bold text-red-400"><i class="fas fa-file-pdf"></i> Revisão de Documentos</span>
-                        <span id="txtQtdPaginas" class="text-[10px] text-gray-400">0 páginas</span>
+                        <span id="txtQtdPaginas" class="text-[10px] text-gray-400 bg-gray-800 px-2 py-1 rounded border border-gray-700">0 páginas</span>
                     </div>
+                    <p class="text-[10px] text-yellow-500 mb-1 leading-tight"><i class="fas fa-info-circle"></i> O carimbo inserido em uma página é aplicado nas próximas automaticamente. A IA seleciona o nome. Clique no Lápis para editar a página.</p>
                     <div id="gridPaginasScanner" class="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto custom-scrollbar p-1"></div>
                     <div class="grid grid-cols-2 gap-2 mt-1">
-                        <button onclick="window.limparModosUpload()" class="bg-red-950/50 hover:bg-red-900/60 text-red-400 py-2.5 rounded-lg text-xs font-bold">Cancelar</button>
-                        <button onclick="window.abrirModalOrigemScanner()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 py-2.5 rounded-lg text-xs font-bold">
+                        <button onclick="window.limparModosUpload()" class="bg-red-950/50 hover:bg-red-900/60 border border-red-900/50 text-red-400 py-2.5 rounded-lg text-xs font-bold transition">Cancelar</button>
+                        <button onclick="window.abrirModalOrigemScanner()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition">
                             <i class="fas fa-plus"></i> Add Pág.
                         </button>
                     </div>
@@ -397,41 +469,42 @@
                 <div id="areaPreviewArquivos" class="hidden flex-col gap-3 mt-2">
                     <div class="flex justify-between items-center border-b border-gray-800 pb-2">
                         <span class="text-xs font-bold text-blue-400"><i class="fas fa-layer-group"></i> Fila de Envio</span>
-                        <span id="txtQtdFila" class="text-[10px] text-gray-400">0 itens</span>
+                        <span id="txtQtdFila" class="text-[10px] text-gray-400 bg-gray-800 px-2 py-1 rounded border border-gray-700">0 itens</span>
                     </div>
                     <div id="listaArquivosFila" class="flex flex-col gap-2 max-h-40 overflow-y-auto custom-scrollbar pr-1"></div>
-                    <button onclick="window.acionarMaisItens()" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-lg text-xs font-bold">
+                    <button onclick="window.acionarMaisItens()" class="w-full bg-gray-800 hover:bg-gray-700 border border-dashed border-gray-600 text-gray-300 py-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition">
                         <i class="fas fa-plus"></i> Adicionar Mais Itens
                     </button>
                 </div>
             </div>
-            
+
             <div id="containerProgresso" class="hidden w-full bg-gray-950 rounded-full h-3 border border-gray-800 mt-2">
                 <div id="barraProgresso" class="bg-blue-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
             </div>
-            
-            <button id="btnSalvarUpload" onclick="window.iniciarUploadStorage()" class="hidden w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2">
+
+            <button id="btnSalvarUpload" onclick="window.iniciarUploadStorage()" class="hidden w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition shadow-md flex items-center justify-center gap-2">
                 <i class="fas fa-cloud-upload-alt"></i> Salvar e Enviar
             </button>
         </div>
     </div>
 
-    <!-- MODAL ORIGEM SCANNER (Z-INDEX 350 PARA FICAR NA FRENTE DO UPLOAD) -->
+    <!-- MODAL ORIGEM SCANNER (Z-INDEX 350) -->
     <div id="modalZoomPagina" onclick="window.fecharZoomPagina()" class="fixed inset-0 bg-black/95 popup-blur hidden items-center justify-center p-4 z-[200] cursor-zoom-out">
         <img id="imgZoomPagina" src="" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
+        <button onclick="window.fecharZoomPagina()" class="absolute top-4 right-4 text-white hover:text-red-400 transition text-3xl"><i class="fas fa-times"></i></button>
     </div>
     
     <div id="modalOrigemScanner" class="fixed inset-0 bg-black/85 popup-blur hidden items-center justify-center p-4 z-[350]">
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-5 w-full max-w-xs shadow-2xl flex flex-col gap-4 text-center">
-            <h3 class="text-sm font-bold text-white"><i class="fas fa-file-pdf text-red-500"></i> Escanear de onde?</h3>
+            <h3 class="text-sm font-bold text-white flex items-center justify-center gap-2"><i class="fas fa-file-pdf text-red-500"></i> Escanear de onde?</h3>
             <div class="flex flex-col gap-2">
-                <button onclick="window.escolherOrigemScanner('camera')" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-xs">
+                <button onclick="window.escolherOrigemScanner('camera')" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold text-xs transition">
                     <i class="fas fa-camera"></i> Usar Câmera
                 </button>
-                <button onclick="window.escolherOrigemScanner('galeria')" class="w-full bg-gray-800 text-gray-300 py-3 rounded-xl font-bold text-xs">
+                <button onclick="window.escolherOrigemScanner('galeria')" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-xl font-bold text-xs transition">
                     <i class="fas fa-images"></i> Da Galeria
                 </button>
-                <button onclick="window.fecharModalOrigemScanner()" class="w-full bg-red-950/40 text-red-400 py-2 rounded-xl font-bold text-xs mt-1">
+                <button onclick="window.fecharModalOrigemScanner()" class="w-full bg-red-950/40 hover:bg-red-900/60 border border-red-900/50 text-red-400 py-2 rounded-xl font-bold text-xs transition mt-1">
                     Cancelar
                 </button>
             </div>
@@ -441,23 +514,23 @@
     <!-- CROPPER E FILTROS -->
     <div id="modalCropperScanner" class="fixed inset-0 bg-gray-950 z-[60] hidden flex-col">
         <div class="flex justify-between items-center bg-gray-900 border-b border-gray-800 p-4 shadow-md">
-            <h3 class="text-white font-bold text-sm"><i class="fas fa-crop-alt text-blue-500"></i> Ajustar Bordas</h3>
+            <h3 class="text-white font-bold text-sm flex items-center gap-2"><i class="fas fa-crop-alt text-blue-500"></i> Ajustar Bordas</h3>
             <button onclick="window.cancelarScannerTotal()" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
         </div>
-        <div class="flex-1 w-full bg-black relative flex items-center justify-center p-4">
+        <div class="flex-1 w-full bg-black relative overflow-hidden flex items-center justify-center p-4">
             <img id="imgParaCortar" src="" class="max-w-full max-h-full">
         </div>
         <div class="bg-gray-900 px-5 pt-4 border-t border-gray-800 flex flex-col gap-2">
             <div class="flex items-center gap-4">
-                <button onclick="window.ajustarNivelamento(-1)" class="text-gray-400 bg-gray-800 border w-8 h-8 rounded-full"><i class="fas fa-minus text-xs"></i></button>
+                <button onclick="window.ajustarNivelamento(-1)" class="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 border border-gray-700 w-8 h-8 rounded-full flex items-center justify-center transition shadow-md"><i class="fas fa-minus text-xs"></i></button>
                 <input type="range" id="sliderNivelamento" min="-180" max="180" value="0" class="flex-1" oninput="window.nivelarCropper(this.value)">
-                <button onclick="window.ajustarNivelamento(1)" class="text-gray-400 bg-gray-800 border w-8 h-8 rounded-full"><i class="fas fa-plus text-xs"></i></button>
+                <button onclick="window.ajustarNivelamento(1)" class="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 border border-gray-700 w-8 h-8 rounded-full flex items-center justify-center transition shadow-md"><i class="fas fa-plus text-xs"></i></button>
             </div>
         </div>
         <div class="bg-gray-900 p-4 pb-8 flex gap-3">
-            <button onclick="window.cancelarScannerTotal()" class="flex-1 bg-gray-800 text-white py-3.5 rounded-xl font-bold text-sm">Cancelar</button>
-            <button onclick="window.girarCropper()" class="bg-gray-700 text-white w-14 rounded-xl font-bold text-lg"><i class="fas fa-rotate-right"></i></button>
-            <button onclick="window.avancarParaFiltros()" class="flex-1 bg-blue-600 text-white py-3.5 rounded-xl font-bold text-sm">Avançar <i class="fas fa-arrow-right"></i></button>
+            <button onclick="window.cancelarScannerTotal()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-3.5 rounded-xl font-bold text-sm">Cancelar</button>
+            <button onclick="window.girarCropper()" class="bg-gray-700 hover:bg-gray-600 text-white w-14 rounded-xl font-bold text-lg flex items-center justify-center transition shadow-md"><i class="fas fa-rotate-right"></i></button>
+            <button onclick="window.avancarParaFiltros()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2">Avançar <i class="fas fa-arrow-right"></i></button>
         </div>
     </div>
 
@@ -465,20 +538,20 @@
     <div id="modalFiltrosScanner" class="fixed inset-0 bg-gray-950 z-[70] hidden flex-col overflow-y-auto">
         <div class="flex justify-between items-center bg-gray-900 border-b border-gray-800 p-4 shadow-md">
             <button onclick="window.voltarParaCropper()" class="text-gray-400 hover:text-white"><i class="fas fa-arrow-left text-xl"></i></button>
-            <h3 class="text-white font-bold text-sm flex items-center gap-2"><i class="fas fa-magic text-blue-500"></i> Edição</h3>
+            <h3 class="text-white font-bold text-sm flex items-center gap-2"><i class="fas fa-magic text-blue-500"></i> Passo 2: Edição e Assinatura</h3>
             <div class="w-6"></div> 
         </div>
         <div class="flex-1 w-full bg-gray-950 relative overflow-hidden flex items-center justify-center p-2 min-h-[300px]">
-            <canvas id="canvasLivePreview" class="max-w-full max-h-full object-contain shadow-2xl cursor-grab"></canvas>
+            <canvas id="canvasLivePreview" class="max-w-full max-h-full object-contain shadow-2xl cursor-grab active:cursor-grabbing"></canvas>
         </div>
         <div class="bg-gray-900 border-t border-gray-800 pt-4 pb-6 flex flex-col gap-3">
             <div class="px-5 flex flex-col gap-3">
                 <div class="flex flex-col gap-1">
-                    <div class="flex justify-between text-[10px] text-gray-400 font-bold uppercase tracking-wide"><span><i class="fas fa-sun text-yellow-500"></i> Brilho</span></div>
+                    <div class="flex justify-between text-[10px] text-gray-400 font-bold uppercase tracking-wide"><span><i class="fas fa-sun text-yellow-500"></i> Clarear Fundo</span></div>
                     <input type="range" id="sliderBrilho" min="-100" max="150" value="0" oninput="window.aplicarFiltroNoBackground(); window.renderizarFiltroAtual(true);">
                 </div>
                 <div class="flex flex-col gap-1">
-                    <div class="flex justify-between text-[10px] text-gray-400 font-bold uppercase tracking-wide"><span><i class="fas fa-adjust text-gray-300"></i> Contraste</span></div>
+                    <div class="flex justify-between text-[10px] text-gray-400 font-bold uppercase tracking-wide"><span><i class="fas fa-adjust text-gray-300"></i> Escurecer Texto</span></div>
                     <input type="range" id="sliderContraste" min="-100" max="150" value="0" oninput="window.aplicarFiltroNoBackground(); window.renderizarFiltroAtual(true);">
                 </div>
             </div>
@@ -490,7 +563,7 @@
                 </button>
                 <button id="btnFiltro_auto" onclick="window.aplicarFiltroBase('auto')" class="flex flex-col items-center gap-1.5 min-w-[70px]">
                     <div class="w-10 h-10 bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center text-yellow-500 transition" id="iconFiltro_auto"><i class="fas fa-wand-magic-sparkles text-sm"></i></div>
-                    <span class="text-[9px] font-bold text-gray-400" id="txtFiltro_auto">Auto</span>
+                    <span class="text-[9px] font-bold text-gray-400" id="txtFiltro_auto">Automático</span>
                 </button>
                 <button id="btnFiltro_cor" onclick="window.aplicarFiltroBase('cor')" class="flex flex-col items-center gap-1.5 min-w-[70px]">
                     <div class="w-10 h-10 bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center text-blue-400 transition" id="iconFiltro_cor"><i class="fas fa-palette text-sm"></i></div>
@@ -510,12 +583,14 @@
                 <div class="bg-gray-800/60 p-3 rounded-xl border border-gray-700/60 flex flex-col gap-3">
                     <div class="flex justify-between items-center">
                         <span class="text-xs font-bold text-blue-400 flex items-center gap-1.5"><i class="fas fa-align-left"></i> Caixas de Texto</span>
-                        <button onclick="window.adicionarNovaCaixaTexto()" class="bg-blue-600/80 hover:bg-blue-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-lg"><i class="fas fa-plus"></i> Nova</button>
+                        <button onclick="window.adicionarNovaCaixaTexto()" class="bg-blue-600/80 hover:bg-blue-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-lg transition flex items-center gap-1"><i class="fas fa-plus"></i> Nova Caixa</button>
                     </div>
+
                     <div id="painelEdicaoCaixaAtiva" class="flex flex-col gap-3">
                         <div class="flex gap-2 items-center">
-                            <textarea id="inputTextoCanvas" rows="2" placeholder="Digite seu texto..." oninput="window.atualizarTextoCaixaAtiva()" class="w-full p-2.5 rounded-lg bg-gray-900 border border-gray-700 text-white text-xs resize-none"></textarea>
-                            <button onclick="window.removerCaixaTextoAtiva()" class="bg-red-950/60 text-red-400 p-2.5 rounded-lg"><i class="fas fa-trash-alt text-xs"></i></button>
+                            <textarea id="inputTextoCanvas" rows="2" placeholder="Digite seu texto..." oninput="window.atualizarTextoCaixaAtiva()" class="w-full p-2.5 rounded-lg bg-gray-900 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500 resize-none custom-scrollbar"></textarea>
+                            <button id="btnNegritoTexto" onclick="window.alternarNegritoCaixaAtiva()" title="Negrito" class="bg-gray-900 hover:bg-gray-700 border border-gray-700 text-gray-300 font-black px-3 py-2.5 rounded-lg transition"><i class="fas fa-bold"></i></button>
+                            <button onclick="window.removerCaixaTextoAtiva()" title="Excluir Caixa Selecionada" class="bg-red-950/60 hover:bg-red-900 border border-red-800/60 text-red-400 p-2.5 rounded-lg transition"><i class="fas fa-trash-alt text-xs"></i></button>
                         </div>
                         <div class="grid grid-cols-2 gap-3 items-center">
                             <div class="flex items-center gap-2">
@@ -523,18 +598,29 @@
                                 <input type="color" id="corTextoCanvas" value="#000000" oninput="window.atualizarCorCaixaAtiva()" class="w-8 h-8 p-0.5 rounded bg-gray-900 border border-gray-700 cursor-pointer">
                             </div>
                             <div class="flex items-center gap-2">
-                                <label class="text-[10px] text-gray-400 font-bold uppercase whitespace-nowrap">Tam:</label>
+                                <label class="text-[10px] text-gray-400 font-bold uppercase whitespace-nowrap">Tamanho:</label>
                                 <input type="range" id="sliderTamanhoFonte" min="12" max="100" value="36" oninput="window.atualizarTamanhoCaixaAtiva()">
+                                <span id="lblTamanhoFonte" class="text-xs font-bold text-white w-8">36px</span>
                             </div>
                         </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-[10px] text-gray-400 font-bold uppercase whitespace-nowrap">Largura Caixa:</label>
+                            <input type="range" id="sliderLarguraCaixaTexto" min="100" max="1000" value="400" oninput="window.atualizarLarguraCaixaAtiva()">
+                            <span id="lblLarguraCaixaTexto" class="text-xs font-bold text-white w-10">400px</span>
+                        </div>
                     </div>
+                    <div id="msgSemCaixaTexto" class="hidden text-center py-3 text-xs text-gray-500 italic">Nenhuma caixa de texto selecionada. Clique em "Nova Caixa" ou selecione uma no Canvas.</div>
                 </div>
             </div>
 
             <div class="px-4 mt-2 grid grid-cols-2 gap-2" id="gridControlesExtras">
                 <div id="painelControleAssinatura" class="hidden bg-indigo-950/40 p-2 rounded-xl border border-indigo-800/60 flex-col gap-1">
                     <div class="flex justify-between items-center">
-                        <span class="text-[10px] font-bold text-indigo-400"><i class="fas fa-pen-nib"></i> Assinatura</span>
+                        <span class="text-[10px] font-bold text-indigo-400 flex items-center gap-1"><i class="fas fa-pen-nib"></i> Assinatura</span>
+                        <div class="flex gap-1">
+                            <button onclick="window.alterarOrdemAssinatura('tras')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-[8px] font-bold px-1 rounded shadow">Atrás</button>
+                            <button onclick="window.alterarOrdemAssinatura('frente')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-[8px] font-bold px-1 rounded shadow">Frente</button>
+                        </div>
                         <button onclick="window.removerAssinaturaCanvas()" class="text-red-400 hover:text-red-300 text-[10px] p-1"><i class="fas fa-trash-alt"></i></button>
                     </div>
                     <div class="flex items-center gap-2 mt-1">
@@ -542,9 +628,14 @@
                         <input type="range" id="sliderEscalaAssinatura" min="30" max="300" value="120" oninput="window.renderizarFiltroAtual(true)">
                     </div>
                 </div>
+
                 <div id="painelControleCarimbo" class="hidden bg-red-950/40 p-2 rounded-xl border border-red-800/60 flex-col gap-1">
                     <div class="flex justify-between items-center">
-                        <span class="text-[10px] font-bold text-red-400"><i class="fas fa-stamp"></i> Carimbo</span>
+                        <span class="text-[10px] font-bold text-red-400 flex items-center gap-1"><i class="fas fa-stamp"></i> Carimbo</span>
+                        <div class="flex gap-1">
+                            <button onclick="window.alterarOrdemCarimbo('tras')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-[8px] font-bold px-1 rounded shadow">Atrás</button>
+                            <button onclick="window.alterarOrdemCarimbo('frente')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-[8px] font-bold px-1 rounded shadow">Frente</button>
+                        </div>
                         <button onclick="window.removerCarimboCanvas()" class="text-red-400 hover:text-red-300 text-[10px] p-1"><i class="fas fa-trash-alt"></i></button>
                     </div>
                     <div class="flex items-center gap-2 mt-1">
@@ -555,15 +646,9 @@
             </div>
 
             <div class="px-4 mt-2 flex gap-2">
-                <button onclick="window.adicionarCarimboEmpresa()" class="bg-red-600 hover:bg-red-500 text-white py-3.5 rounded-xl font-bold text-xs sm:text-sm flex-1 flex items-center justify-center gap-2 transition shadow-lg">
-                    <i class="fas fa-stamp"></i> <span id="txtBtnCarimbo">Carimbar</span>
-                </button>
-                <button onclick="window.abrirModalAssinatura()" class="bg-indigo-600 hover:bg-indigo-500 text-white py-3.5 rounded-xl font-bold text-xs sm:text-sm flex-1 flex items-center justify-center gap-2 transition shadow-lg">
-                    <i class="fas fa-signature"></i> <span id="txtBtnAssinatura">Assinar</span>
-                </button>
-                <button onclick="window.confirmarSalvarPaginaScanner()" class="bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-xl font-bold text-xs sm:text-sm flex-1 flex items-center justify-center gap-2 shadow-lg">
-                    <i class="fas fa-check"></i> Salvar
-                </button>
+                <button onclick="window.adicionarCarimboEmpresa()" class="bg-red-600 hover:bg-red-500 text-white py-3.5 rounded-xl font-bold text-xs sm:text-sm flex-1 flex items-center justify-center gap-2 transition shadow-lg"><i class="fas fa-stamp"></i> <span id="txtBtnCarimbo">Carimbar</span></button>
+                <button onclick="window.abrirModalAssinatura()" class="bg-indigo-600 hover:bg-indigo-500 text-white py-3.5 rounded-xl font-bold text-xs sm:text-sm flex-1 flex items-center justify-center gap-2 transition shadow-lg"><i class="fas fa-signature"></i> <span id="txtBtnAssinatura">Assinar</span></button>
+                <button onclick="window.confirmarSalvarPaginaScanner()" class="bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-xl font-bold text-xs sm:text-sm flex-1 flex items-center justify-center gap-2 shadow-lg"><i class="fas fa-check"></i> Salvar</button>
             </div>
         </div>
     </div>
@@ -579,8 +664,8 @@
                 <canvas id="canvasAssinatura" class="w-full h-full cursor-crosshair"></canvas>
             </div>
             <div class="flex gap-3 mt-1">
-                <button onclick="window.limparAssinaturaPad()" class="flex-1 bg-gray-800 text-white py-3 rounded-xl text-xs font-bold transition">Limpar</button>
-                <button onclick="window.salvarAssinaturaParaCanvas()" class="flex-1 bg-blue-600 text-white py-3 rounded-xl text-xs font-bold transition">Inserir</button>
+                <button onclick="window.limparAssinaturaPad()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-xl text-xs font-bold transition">Limpar</button>
+                <button onclick="window.salvarAssinaturaParaCanvas()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl text-xs font-bold transition">Inserir</button>
             </div>
         </div>
     </div>
@@ -1045,13 +1130,13 @@
                             let acoesHtml = "";
                             if (perfilUsuario === "administrador" && p.excluidoPorExecutor) {
                                 acoesHtml = `
-                                    <button onclick="window.restaurarPacienteFirebase('${p.id}', '${p.nome.replace(/'/g, "\\'")}')" class="text-green-400 p-1.5"><i class="fas fa-recycle"></i></button>
-                                    <button onclick="window.removerPacienteFirebase('${p.id}', '${p.nome.replace(/'/g, "\\'")}')" class="text-red-600 p-1.5"><i class="fas fa-trash"></i></button>
+                                    <button onclick="window.restaurarPacienteFirebase('${p.id}', '${p.nome.replace(/'/g, "\\'")}')" class="text-green-400 hover:text-green-300 p-1.5 transition"><i class="fas fa-recycle"></i></button>
+                                    <button onclick="window.removerPacienteFirebase('${p.id}', '${p.nome.replace(/'/g, "\\'")}')" class="text-red-600 hover:text-red-500 p-1.5 transition"><i class="fas fa-trash"></i></button>
                                 `;
                             } else {
                                 acoesHtml = `
-                                    <button onclick="window.editarPacienteFirebase('${p.id}', '${p.nome.replace(/'/g, "\\'")}')" class="text-blue-400 p-1.5"><i class="fas fa-pen"></i></button>
-                                    <button onclick="window.removerPacienteFirebase('${p.id}', '${p.nome.replace(/'/g, "\\'")}')" class="text-red-400 p-1.5"><i class="fas fa-trash"></i></button>
+                                    <button onclick="window.editarPacienteFirebase('${p.id}', '${p.nome.replace(/'/g, "\\'")}')" class="text-blue-400 hover:text-blue-300 p-1.5 transition"><i class="fas fa-pen"></i></button>
+                                    <button onclick="window.removerPacienteFirebase('${p.id}', '${p.nome.replace(/'/g, "\\'")}')" class="text-red-400 hover:text-red-300 p-1.5 transition"><i class="fas fa-trash"></i></button>
                                 `;
                             }
                             const textColor = p.excluidoPorExecutor ? "text-gray-500 line-through" : "text-white";
@@ -1073,8 +1158,9 @@
         function encontrarPacienteNoBanco(textoRaw) {
             if (!textoRaw || textoRaw.trim().length < 3) return "Desconhecido";
             
-            // Tira acentos, joga pra minúsculo e limpa caracteres estranhos deixando só letras e números
+            // Tira acentos, joga pra minúsculo
             let textoLimpo = textoRaw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+            // Mantém só letras e números
             textoLimpo = textoLimpo.replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
 
             let melhorMatch = "Desconhecido";
@@ -1086,7 +1172,7 @@
                 let pacNomeLimpo = pac.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
                 pacNomeLimpo = pacNomeLimpo.replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
 
-                // 1. Busca Exata (Ideal para letra de forma, não precisa cortar a palavra "paciente")
+                // 1. Busca Exata (Ideal para letra de forma)
                 if (textoLimpo.includes(pacNomeLimpo) && pacNomeLimpo.length > 3) {
                     maiorScore = 999;
                     melhorMatch = pac.nome;
@@ -1114,27 +1200,6 @@
                 }
             });
             return melhorMatch;
-        }
-
-        async function preProcessarImagemParaOCR(imgBase64) {
-            return new Promise((resolve) => {
-                const img = new Image(); 
-                img.onload = () => {
-                    const canvas = document.createElement('canvas'); 
-                    canvas.width = img.width * 2.0; 
-                    canvas.height = img.height * 2.0;
-                    const ctx = canvas.getContext('2d'); 
-                    
-                    // Fundo branco obrigatório para o OCR não se perder em fundos transparentes de PDF
-                    ctx.fillStyle = '#ffffff'; 
-                    ctx.fillRect(0, 0, canvas.width, canvas.height); 
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    
-                    // Envia a imagem branca + desenho puro. (Filtros escuros prejudicam a leitura aqui)
-                    resolve(canvas.toDataURL('image/jpeg', 1.0));
-                }; 
-                img.src = imgBase64;
-            });
         }
 
         window.abrirModalUpload = function() { 
@@ -2093,6 +2158,7 @@
             ctxT.fillStyle = '#ffffff'; 
             ctxT.fillRect(0,0,larguraCrop, alturaCrop); 
             ctxT.putImageData(canvasOriginalContextData, 0, 0);
+            
             const cleanBaseUrl = tempC.toDataURL('image/jpeg', 0.85);
 
             const btnSalvar = document.querySelector("#modalFiltrosScanner button[onclick='window.confirmarSalvarPaginaScanner()']");
@@ -2119,8 +2185,7 @@
             let nomeSugerido = "";
             try {
                 const worker = await Tesseract.createWorker('por');
-                const imgBw = await preProcessarImagemParaOCR(cleanBaseUrl);
-                const ret = await worker.recognize(imgBw);
+                const ret = await worker.recognize(cleanBaseUrl);
                 let nomeVisto = encontrarPacienteNoBanco(ret.data.text);
                 if (nomeVisto !== "Desconhecido") nomeSugerido = nomeVisto;
                 await worker.terminate();
@@ -2337,8 +2402,7 @@
                             const imgDataUrl = canvas.toDataURL('image/jpeg', 0.85);
                             let nomeSugerido = "";
                             try { 
-                                const imgBw = await preProcessarImagemParaOCR(imgDataUrl); 
-                                const ret = await worker.recognize(imgBw); 
+                                const ret = await worker.recognize(imgDataUrl); 
                                 let nomeVisto = encontrarPacienteNoBanco(ret.data.text); 
                                 if (nomeVisto !== "Desconhecido") nomeSugerido = nomeVisto; 
                             } catch(e) {}
