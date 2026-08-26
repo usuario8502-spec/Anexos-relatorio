@@ -343,7 +343,7 @@
         <i class="fas fa-plus"></i>
     </button>
 
-    <!-- MODAL DE VISUALIZAÇÃO GERAL (GALERIA E EXPORTAÇÃO) -->
+    <!-- MODAL DE VISUALIZAÇÃO GERAL -->
     <div id="modalVisualizacao" class="fixed inset-0 bg-black/90 popup-blur hidden items-center justify-center p-4 z-[500]">
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 w-full max-w-lg shadow-2xl flex flex-col gap-4 transform transition-all scale-95 opacity-0" id="modalVisualizacaoContent">
             <div class="flex justify-between items-start border-b border-gray-800 pb-3 gap-3">
@@ -455,6 +455,7 @@
                         <span class="text-xs font-bold text-red-400"><i class="fas fa-file-pdf"></i> Revisão de Documentos</span>
                         <span id="txtQtdPaginas" class="text-[10px] text-gray-400 bg-gray-800 px-2 py-1 rounded border border-gray-700">0 páginas</span>
                     </div>
+                    <p class="text-[10px] text-yellow-500 mb-1 leading-tight"><i class="fas fa-info-circle"></i> O carimbo inserido em uma página é aplicado nas próximas automaticamente. A IA seleciona o nome. Clique no Lápis para editar a página.</p>
                     <div id="gridPaginasScanner" class="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto custom-scrollbar p-1"></div>
                     <div class="grid grid-cols-2 gap-2 mt-1">
                         <button onclick="window.limparModosUpload()" class="bg-red-950/50 hover:bg-red-900/60 border border-red-900/50 text-red-400 py-2.5 rounded-lg text-xs font-bold transition">Cancelar</button>
@@ -489,7 +490,7 @@
         <button onclick="window.fecharZoomPagina()" class="absolute top-4 right-4 text-white hover:text-red-400 transition text-3xl"><i class="fas fa-times"></i></button>
     </div>
 
-    <div id="modalOrigemScanner" class="fixed inset-0 bg-black/85 popup-blur hidden items-center justify-center p-4 z-[250]">
+    <div id="modalOrigemScanner" class="fixed inset-0 bg-black/85 popup-blur hidden items-center justify-center p-4 z-[75]">
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-5 w-full max-w-xs shadow-2xl flex flex-col gap-4 text-center">
             <h3 class="text-sm font-bold text-white flex items-center justify-center gap-2"><i class="fas fa-file-pdf text-red-500"></i> Escanear de onde?</h3>
             <div class="flex flex-col gap-2">
@@ -957,24 +958,46 @@
             });
         }
 
-        // --- OCR INTELIGENTE ---
+        // --- OCR INTELIGENTE OTIMIZADO ---
         function encontrarPacienteNoBanco(textoRaw) {
             if (!textoRaw || textoRaw.trim().length < 3) return "Desconhecido";
-            let nomeLimpo = textoRaw.replace(/[:\-\._\n]/g, ' ').replace(/\s+/g, ' ').toLowerCase();
-            if (nomeLimpo.includes("paciente")) nomeLimpo = nomeLimpo.split("paciente")[1].trim();
-            let tokensLidos = nomeLimpo.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z\s]/g, '').split(/\s+/).filter(w => w.length > 2);
-            let melhorMatch = "Desconhecido", maiorScore = 0;
+            
+            // Tira acentos, joga pra minúsculo e limpa caracteres estranhos deixando só palavras
+            let textoLimpo = textoRaw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+            textoLimpo = textoLimpo.replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+
+            let melhorMatch = "Desconhecido";
+            let maiorScore = 0;
 
             listaPacientesCadastrados.forEach(pac => {
                 if(pac.excluidoPorExecutor) return; 
-                let pacNormalizado = pac.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-                let tokensPac = pacNormalizado.split(/\s+/).filter(w => w.length > 2);
+
+                let pacNomeLimpo = pac.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+                pacNomeLimpo = pacNomeLimpo.replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+
+                // 1. Busca Exata (Ideal para letra de forma)
+                if (textoLimpo.includes(pacNomeLimpo) && pacNomeLimpo.length > 3) {
+                    maiorScore = 999;
+                    melhorMatch = pac.nome;
+                    return;
+                }
+
+                // 2. Busca Híbrida/Fuzzy
+                let tokensLidos = textoLimpo.split(' ').filter(w => w.length > 2);
+                let tokensPac = pacNomeLimpo.split(' ').filter(w => w.length > 2);
+
                 let score = 0;
                 tokensPac.forEach(tp => {
                     if (tokensLidos.includes(tp)) score += 1; 
                     else if (tokensLidos.some(tl => (tl.includes(tp) || tp.includes(tl)) && Math.abs(tl.length - tp.length) <= 2)) score += 0.5; 
                 });
-                if (score > maiorScore && score >= 1.5) { maiorScore = score; melhorMatch = pac.nome; }
+
+                let threshold = Math.max(1, tokensPac.length * 0.5);
+
+                if (score > maiorScore && score >= threshold && score !== 999) { 
+                    maiorScore = score; 
+                    melhorMatch = pac.nome; 
+                }
             });
             return melhorMatch;
         }
@@ -999,37 +1022,6 @@
         window.escolherOrigemScanner = function(origem) {
             window.fecharModalOrigemScanner(); indicePaginaSendoEditada = null; 
             if (origem === 'camera') document.getElementById('inputArquivoScannerCamera')?.click(); else document.getElementById('inputArquivoScannerGaleria')?.click();
-        };
-
-        // --- SISTEMA DE PROXY E FETCH SEGURO ---
-        window.fetchComProxyFallback = async function(url) {
-            try {
-                const res = await fetch(url);
-                if (!res.ok) throw new Error('CORS fail');
-                return await res.arrayBuffer();
-            } catch (e) {
-                console.warn("Usando proxy para contornar CORS e permitir leitura do PDF/Imagem...");
-                const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
-                const resProxy = await fetch(proxyUrl);
-                if (!resProxy.ok) throw new Error('Proxy fail');
-                return await resProxy.arrayBuffer();
-            }
-        };
-
-        window.obterImagemComoJpgBlob = async function(url) {
-            const buffer = await window.fetchComProxyFallback(url);
-            const blobOriginal = new Blob([buffer]);
-            const blobUrl = URL.createObjectURL(blobOriginal);
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas'); canvas.width = img.width; canvas.height = img.height;
-                    const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0); 
-                    canvas.toBlob((blob) => { resolve(blob); URL.revokeObjectURL(blobUrl); }, 'image/jpeg', 0.9);
-                }; 
-                img.onerror = (e) => { reject(e); URL.revokeObjectURL(blobUrl); }; 
-                img.src = blobUrl;
-            });
         };
 
         window.abrirModoScanner = function(input) {
@@ -1356,13 +1348,58 @@
             canvas.ontouchstart = iniciarArrasto; canvas.ontouchmove = moverArrasto; canvas.ontouchend = finalizarArrasto;
         }
 
+        window.abrirModalAssinatura = function() {
+            const modal = document.getElementById("modalAssinatura"); if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
+            const canvasAss = document.getElementById("canvasAssinatura"); if (!canvasAss) return;
+            canvasAss.width = canvasAss.offsetWidth; canvasAss.height = canvasAss.offsetHeight;
+            ctxAssinaturaPad = canvasAss.getContext("2d"); ctxAssinaturaPad.strokeStyle = "#000000"; ctxAssinaturaPad.lineWidth = 3; ctxAssinaturaPad.lineCap = "round"; ctxAssinaturaPad.lineJoin = "round";
+            pontosTraçoAssinatura = [];
+
+            const getPosPad = (e) => { const rect = canvasAss.getBoundingClientRect(); const clientX = e.touches ? e.touches[0].clientX : e.clientX; const clientY = e.touches ? e.touches[0].clientY : e.clientY; return { x: (clientX - rect.left) * (canvasAss.width / rect.width), y: (clientY - rect.top) * (canvasAss.height / rect.height) }; };
+            const iniciar = (e) => { assinandoPad = true; const p = getPosPad(e); pontosTraçoAssinatura = [p]; ctxAssinaturaPad.beginPath(); ctxAssinaturaPad.moveTo(p.x, p.y); };
+            const desenhar = (e) => { 
+                if (!assinandoPad) return; e.preventDefault(); const p = getPosPad(e); pontosTraçoAssinatura.push(p);
+                if (pontosTraçoAssinatura.length > 2) {
+                    const len = pontosTraçoAssinatura.length, xc = (pontosTraçoAssinatura[len - 1].x + pontosTraçoAssinatura[len - 2].x) / 2, yc = (pontosTraçoAssinatura[len - 1].y + pontosTraçoAssinatura[len - 2].y) / 2;
+                    ctxAssinaturaPad.quadraticCurveTo(pontosTraçoAssinatura[len - 2].x, pontosTraçoAssinatura[len - 2].y, xc, yc); ctxAssinaturaPad.stroke();
+                }
+            };
+            const parar = () => { assinandoPad = false; };
+            canvasAss.onmousedown = iniciar; canvasAss.onmousemove = desenhar; canvasAss.onmouseup = parar;
+            canvasAss.ontouchstart = iniciar; canvasAss.ontouchmove = desenhar; canvasAss.ontouchend = parar;
+        };
+
+        window.limparAssinaturaPad = function() { const canvasAss = document.getElementById("canvasAssinatura"); if (ctxAssinaturaPad && canvasAss) { ctxAssinaturaPad.clearRect(0, 0, canvasAss.width, canvasAss.height); pontosTraçoAssinatura = []; } };
+        window.fecharModalAssinatura = function() { const modal = document.getElementById("modalAssinatura"); if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); } };
+
+        window.salvarAssinaturaParaCanvas = function() {
+            const canvasAss = document.getElementById("canvasAssinatura"); if (!canvasAss) return;
+            const dataUrl = canvasAss.toDataURL("image/png");
+            const img = new Image();
+            img.onload = function() {
+                imgAssinaturaElemento = img; posicaoAssinatura = { x: (larguraCrop - img.width) / 2, y: (alturaCrop - img.height) / 2 };
+                const pAss = document.getElementById("painelControleAssinatura"); if (pAss) { pAss.classList.remove("hidden"); pAss.classList.add("flex"); }
+                const txtBtnAss = document.getElementById("txtBtnAssinatura"); if (txtBtnAss) txtBtnAss.innerText = "Refazer Assinatura";
+                if(!ordemCamadas.includes('assinatura')) ordemCamadas.push('assinatura');
+                window.fecharModalAssinatura(); window.renderizarFiltroAtual(true);
+            }; img.src = dataUrl;
+        };
+
+        window.removerAssinaturaCanvas = function() {
+            imgAssinaturaElemento = null;
+            const pAss = document.getElementById("painelControleAssinatura"); if (pAss) { pAss.classList.add("hidden"); pAss.classList.remove("flex"); }
+            const txtBtnAss = document.getElementById("txtBtnAssinatura"); if (txtBtnAss) txtBtnAss.innerText = "Assinar";
+            window.renderizarFiltroAtual(true);
+        };
+
         window.confirmarSalvarPaginaScanner = async function() {
             window.renderizarFiltroAtual(false);
             const canvasLive = document.getElementById("canvasLivePreview"); if (!canvasLive) return;
             const imgSalvaDataUrl = canvasLive.toDataURL('image/jpeg', 0.85); 
 
             let tempC = document.createElement('canvas'); tempC.width = larguraCrop; tempC.height = alturaCrop;
-            tempC.getContext('2d').putImageData(canvasOriginalContextData, 0, 0);
+            const ctxT = tempC.getContext('2d'); ctxT.fillStyle = '#ffffff'; ctxT.fillRect(0,0,larguraCrop, alturaCrop);
+            ctxT.putImageData(canvasOriginalContextData, 0, 0);
             const cleanBaseUrl = tempC.toDataURL('image/jpeg', 0.85);
 
             const btnSalvar = document.querySelector("#modalFiltrosScanner button[onclick='window.confirmarSalvarPaginaScanner()']");
@@ -1385,7 +1422,7 @@
                 let nomeVisto = encontrarPacienteNoBanco(ret.data.text);
                 if (nomeVisto !== "Desconhecido") nomeSugerido = nomeVisto;
                 await worker.terminate();
-            } catch(e) { console.error("Erro OCR", e); }
+            } catch(e) {}
 
             if (indicePaginaSendoEditada !== null) {
                 arrayPaginasEscaneadas[indicePaginaSendoEditada].finalDataUrl = imgSalvaDataUrl; arrayPaginasEscaneadas[indicePaginaSendoEditada].baseDataUrl = cleanBaseUrl; arrayPaginasEscaneadas[indicePaginaSendoEditada].estadoEdicao = estadoEdicao;
@@ -1492,6 +1529,7 @@
                         for (let pageNum = 1; pageNum <= pdfDocJs.numPages; pageNum++) {
                             const page = await pdfDocJs.getPage(pageNum), viewport = page.getViewport({ scale: 1.5 });
                             const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d'); canvas.height = viewport.height; canvas.width = viewport.width;
+                            ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height); // GARANTE FUNDO BRANCO PARA O PDF!
                             await page.render({ canvasContext: ctx, viewport: viewport }).promise;
                             const imgDataUrl = canvas.toDataURL('image/jpeg', 0.85);
                             let nomeSugerido = "";
@@ -1614,659 +1652,6 @@
             if (dataObj.getMonth() === hoje.getMonth() && dataObj.getFullYear() === hoje.getFullYear()) return dataObj.toLocaleDateString('pt-BR');
             else return `${String(dataObj.getMonth() + 1).padStart(2, '0')}/${dataObj.getFullYear()}`;
         }
-
-        window.fetchComProxyFallback = async function(url) {
-            try {
-                const res = await fetch(url);
-                if (!res.ok) throw new Error('CORS fail');
-                return await res.arrayBuffer();
-            } catch (e) {
-                console.warn("Usando proxy 1 (corsproxy.io) para contornar CORS e permitir leitura...");
-                try {
-                    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(url);
-                    const resProxy = await fetch(proxyUrl);
-                    if (!resProxy.ok) throw new Error('Proxy 1 fail');
-                    return await resProxy.arrayBuffer();
-                } catch (e2) {
-                    console.warn("Usando proxy 2 (allorigins)...");
-                    try {
-                        const proxyUrl2 = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
-                        const resProxy2 = await fetch(proxyUrl2);
-                        if (!resProxy2.ok) throw new Error('Proxy 2 fail');
-                        return await resProxy2.arrayBuffer();
-                    } catch (e3) {
-                        throw new Error('Falha em todos os proxies. Se o problema persistir, configure o CORS no Firebase.');
-                    }
-                }
-            }
-        };
-
-        window.obterImagemComoJpgBlob = async function(url) {
-            const buffer = await window.fetchComProxyFallback(url);
-            const blobOriginal = new Blob([buffer]);
-            const blobUrl = URL.createObjectURL(blobOriginal);
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas'); canvas.width = img.width; canvas.height = img.height;
-                    const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0); 
-                    canvas.toBlob((blob) => { resolve(blob); URL.revokeObjectURL(blobUrl); }, 'image/jpeg', 0.9);
-                }; 
-                img.onerror = (e) => { reject(e); URL.revokeObjectURL(blobUrl); }; 
-                img.src = blobUrl;
-            });
-        };
-
-        window.abrirExportacao = function() {
-            window.pastaAbertaAtual = 'historico_exportacao_raiz';
-            window.toggleSidebar(false);
-            window.iniciarModoSelecao('exportacao');
-        };
-
-        window.fecharModalRevisaoExportacao = function() {
-            document.getElementById('modalRevisaoExportacao').classList.add('hidden');
-            document.getElementById('modalRevisaoExportacao').classList.remove('flex');
-        };
-
-        window.removerItemExportacao = function(id) {
-            if (!confirm("Deseja remover este arquivo do Dossiê?")) return;
-            window.itensSelecionados.delete(id);
-            const el = document.getElementById('rev_item_' + id);
-            if (el) el.remove();
-            window.atualizarContagemSelecao();
-            window.aplicarFiltrosNaGaleria();
-            
-            if (window.itensSelecionados.size === 0) {
-                window.fecharModalRevisaoExportacao();
-            }
-        };
-
-        window.gerarPdfExportacao = async function() {
-            const inputNome = document.getElementById("inputNomeExportacao"); let nomeFinal = inputNome ? inputNome.value.trim() : "";
-            if(!nomeFinal) return alert("Por favor, digite o nome para o arquivo final (ex: Relatorio_Fechamento).");
-
-            const btnConfirma = document.getElementById("btnConfirmarExportacao"); const btnOriginalHtml = btnConfirma.innerHTML;
-            btnConfirma.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Gerando, aguarde...`; btnConfirma.disabled = true;
-
-            try {
-                let selectedItems = Array.from(window.itensSelecionados).map(id => todosAnexosNaMemoria.find(a => a.id === id)).filter(Boolean);
-                selectedItems.sort((a, b) => {
-                    let pacA = a.pastaPaciente || "Z_Outros", pacB = b.pastaPaciente || "Z_Outros";
-                    let cmp = pacA.localeCompare(pacB, 'pt-BR', {sensitivity: 'base'});
-                    if (cmp !== 0) return cmp; return a.dataEnvio - b.dataEnvio;
-                });
-
-                const pdfDocFinal = await PDFLib.PDFDocument.create();
-
-                for (let i = 0; i < selectedItems.length; i++) {
-                    const item = selectedItems[i];
-                    if (item.tipo === 'pdf') {
-                        const pdfBytes = await window.fetchComProxyFallback(item.url);
-                        const pdfImportado = await PDFLib.PDFDocument.load(pdfBytes);
-                        const copiedPages = await pdfDocFinal.copyPages(pdfImportado, pdfImportado.getPageIndices());
-                        copiedPages.forEach((page) => pdfDocFinal.addPage(page));
-                    } else {
-                        const imgBlob = await window.obterImagemComoJpgBlob(item.url), imgBytes = await imgBlob.arrayBuffer(), pdfImage = await pdfDocFinal.embedJpg(imgBytes);
-                        const page = pdfDocFinal.addPage([595.28, 841.89]), { width, height } = page.getSize(), imgDims = pdfImage.scale(1);
-                        let imgWidth = width, imgHeight = (imgDims.height * width) / imgDims.width;
-                        if (imgHeight > height) { imgHeight = height; imgWidth = (imgDims.width * height) / imgDims.height; }
-                        const x = (width - imgWidth) / 2, y = height - imgHeight - ((height - imgHeight) / 2); 
-                        page.drawImage(pdfImage, { x, y, width: imgWidth, height: imgHeight });
-                    }
-                }
-
-                const pdfBytesFinal = await pdfDocFinal.save(), blobFinal = new Blob([pdfBytesFinal], { type: 'application/pdf' });
-                const urlDownload = window.URL.createObjectURL(blobFinal), a = document.createElement('a'); a.style.display = 'none'; a.href = urlDownload;
-                a.download = nomeFinal + ".pdf"; document.body.appendChild(a); a.click(); setTimeout(() => { document.body.removeChild(a); window.URL.revokeObjectURL(urlDownload); }, 1000);
-
-                const dataAtual = new Date(), pastaData = `${dataAtual.getFullYear()}/${String(dataAtual.getMonth() + 1).padStart(2, '0')}/${String(dataAtual.getDate()).padStart(2, '0')}`;
-                const refHist = storageRef(storage, `Historico_Exportacoes/${pastaData}/${Date.now()}_${nomeFinal}.pdf`);
-                btnConfirma.innerHTML = `<i class="fas fa-cloud-upload-alt fa-fade"></i> Salvando no Histórico...`;
-                
-                await uploadBytesResumable(refHist, blobFinal, { contentType: 'application/pdf' }); const urlHist = await getDownloadURL(refHist);
-                await push(dbRef(db, 'arquivos_anexos'), { nome: nomeFinal, url: urlHist, tipo: 'pdf', enviadoPor: usuarioLogado, dataEnvio: Date.now(), pasta: 'Historico_Exportacoes', statusExclusao: "ativo" });
-
-                alert("Dossiê gerado, baixado e salvo no histórico com sucesso!"); window.fecharModalRevisaoExportacao(); window.cancelarModoSelecao();
-            } catch (error) { alert("Erro ao gerar o PDF. Se o arquivo for muito grande, tente selecionar menos arquivos.\nDetalhe: " + error.message);
-            } finally { btnConfirma.innerHTML = btnOriginalHtml; btnConfirma.disabled = false; }
-        };
-
-        window.abrirLixeira = function() { window.pastaAbertaAtual = 'lixeira'; window.toggleSidebar(false); window.aplicarFiltrosNaGaleria(); };
-
-        window.iniciarModoSelecao = function(tipo, preSelecionado = null) {
-            window.modoSelecaoAtivo = true; window.tipoSelecaoAtual = tipo; window.itensSelecionados = new Set();
-            if (preSelecionado) window.itensSelecionados.add(preSelecionado);
-            
-            document.getElementById('barraSelecao').classList.remove('hidden'); document.getElementById('barraSelecao').classList.add('flex');
-            document.getElementById('secaoFiltros').classList.add('hidden'); document.getElementById('fabUpload').classList.add('hidden'); 
-            
-            const btn = document.getElementById('btnAcaoSelecao');
-            if (tipo === 'lixeira') btn.innerHTML = `<i class="fas fa-check"></i> Ações`;
-            else if (tipo === 'exportacao') btn.innerHTML = `<i class="fas fa-file-pdf"></i> Revisar Dossiê`;
-            else btn.innerHTML = `<i class="fas fa-trash"></i> Apagar`;
-            
-            window.atualizarContagemSelecao(); window.aplicarFiltrosNaGaleria();
-        };
-
-        window.toggleSelecaoItem = function(id) {
-            if(window.itensSelecionados.has(id)) window.itensSelecionados.delete(id); else window.itensSelecionados.add(id);
-            window.atualizarContagemSelecao(); window.aplicarFiltrosNaGaleria();
-        };
-
-        window.atualizarContagemSelecao = function() { document.getElementById('txtContagemSelecao').innerText = `${window.itensSelecionados.size} selecionado(s)`; };
-
-        window.cancelarModoSelecao = function() {
-            window.modoSelecaoAtivo = false; 
-            window.tipoSelecaoAtual = ''; 
-            window.itensSelecionados.clear();
-            document.getElementById('barraSelecao').classList.add('hidden'); document.getElementById('barraSelecao').classList.remove('flex');
-            document.getElementById('secaoFiltros').classList.remove('hidden'); document.getElementById('fabUpload').classList.remove('hidden'); 
-            if(window.pastaAbertaAtual === 'historico_exportacao_raiz') window.pastaAbertaAtual = null;
-            window.aplicarFiltrosNaGaleria();
-        };
-
-        window.iniciarExclusaoArquivo = function() {
-            window.fecharModalVisualizacao(); alvoAtualExclusao = window.idImagemAtiva; tipoAtualExclusao = 'arquivo';
-            document.getElementById("txtTituloPerguntaSelecao").innerHTML = `<i class="fas fa-trash text-red-500"></i> Deseja apagar mais arquivos?`;
-            document.getElementById("txtDescPerguntaSelecao").innerText = `Você pode selecionar vários arquivos de uma vez.`;
-            document.getElementById("modalPerguntaSelecao").classList.remove('hidden'); document.getElementById("modalPerguntaSelecao").classList.add('flex');
-        };
-
-        window.perguntarApagarPasta = function(nomePasta) {
-            window.pastaAbertaAtual = 'diversos_root'; window.aplicarFiltrosNaGaleria();
-            alvoAtualExclusao = nomePasta; tipoAtualExclusao = 'pasta';
-            document.getElementById("txtTituloPerguntaSelecao").innerHTML = `<i class="fas fa-trash text-red-500"></i> Deseja apagar mais pastas?`;
-            document.getElementById("txtDescPerguntaSelecao").innerText = `Você pode excluir várias pastas de uma vez.`;
-            document.getElementById("modalPerguntaSelecao").classList.remove('hidden'); document.getElementById("modalPerguntaSelecao").classList.add('flex');
-        };
-
-        window.responderPerguntaSelecao = function(querSelecionar) {
-            document.getElementById("modalPerguntaSelecao").classList.add('hidden'); document.getElementById("modalPerguntaSelecao").classList.remove('flex');
-            if (querSelecionar) { window.iniciarModoSelecao(tipoAtualExclusao === 'arquivo' ? 'arquivos' : 'pastas', alvoAtualExclusao); } 
-            else {
-                if (tipoAtualExclusao === 'arquivo') { if(confirm("Confirmar exclusão deste arquivo?")) window.moverParaLixeira([alvoAtualExclusao]); } 
-                else { if(confirm("Confirmar exclusão desta pasta inteira?")) window.moverPastaParaLixeira([alvoAtualExclusao]); }
-            }
-        };
-
-        window.executarAcaoSelecao = function() {
-            if(window.itensSelecionados.size === 0) return alert("Selecione pelo menos um item.");
-            let idsArr = Array.from(window.itensSelecionados);
-            
-            if (window.tipoSelecaoAtual === 'arquivos') {
-                if(confirm(`Deseja apagar os ${idsArr.length} arquivos selecionados?`)) window.moverParaLixeira(idsArr);
-            } else if (window.tipoSelecaoAtual === 'pastas') {
-                if(confirm(`Deseja apagar as ${idsArr.length} pastas selecionadas?`)) window.moverPastaParaLixeira(idsArr);
-            } else if (window.tipoSelecaoAtual === 'lixeira') {
-                document.getElementById('modalAcoesSelecaoLixeira').classList.remove('hidden'); document.getElementById('modalAcoesSelecaoLixeira').classList.add('flex');
-            } else if (window.tipoSelecaoAtual === 'exportacao') {
-                const containerRev = document.getElementById("listaRevisaoExportacao"); containerRev.innerHTML = "";
-                let selectedItems = idsArr.map(id => todosAnexosNaMemoria.find(a => a.id === id)).filter(Boolean);
-                selectedItems.sort((a, b) => { let pacA = a.pastaPaciente || "Z_Outros"; let pacB = b.pastaPaciente || "Z_Outros"; let cmp = pacA.localeCompare(pacB, 'pt-BR', {sensitivity: 'base'}); if (cmp !== 0) return cmp; return a.dataEnvio - b.dataEnvio; });
-
-                selectedItems.forEach(arq => {
-                    const dObj = new Date(arq.dataEnvio), dStr = dObj.toLocaleDateString('pt-BR');
-                    let icone = arq.tipo === 'imagem' ? `<img src="${arq.url}" class="w-8 h-8 rounded object-cover">` : `<i class="fas fa-file-pdf text-red-500 text-lg"></i>`;
-                    let loc = arq.pastaPaciente ? `Paciente: ${arq.pastaPaciente}` : `Data: ${dStr}`;
-                    containerRev.innerHTML += `
-                        <div class="flex items-center gap-3 bg-gray-800 p-2 rounded-lg border border-gray-700 hover:bg-gray-700 transition" id="rev_item_${arq.id}">
-                            <div class="w-10 h-10 bg-gray-900 rounded flex items-center justify-center cursor-pointer" onclick="window.abrirModalVisualizacao('${arq.id}', '${arq.url}', '${arq.nome.replace(/'/g, "\\'")}', '${arq.tipo}')">${icone}</div>
-                            <div class="flex-1 min-w-0 cursor-pointer" onclick="window.abrirModalVisualizacao('${arq.id}', '${arq.url}', '${arq.nome.replace(/'/g, "\\'")}', '${arq.tipo}')">
-                                <h4 class="text-white text-xs font-bold truncate">${arq.nome}</h4>
-                                <p class="text-[10px] text-gray-400 truncate">${loc}</p>
-                            </div>
-                            <button onclick="window.removerItemExportacao('${arq.id}')" class="p-2.5 text-gray-500 hover:text-red-400 transition" title="Remover da Seleção">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>`;
-                });
-
-                document.getElementById('modalRevisaoExportacao').classList.remove('hidden'); document.getElementById('modalRevisaoExportacao').classList.add('flex');
-            }
-        };
-
-        window.moverParaLixeira = function(ids) {
-            let updates = {}; ids.forEach(id => { updates[id + '/statusExclusao'] = 'lixeira_usuario'; updates[id + '/dataExclusao'] = Date.now(); });
-            update(dbRef(db, 'arquivos_anexos'), updates).then(() => { window.cancelarModoSelecao(); });
-        };
-
-        window.moverPastaParaLixeira = function(nomesDatas) {
-            let ids = [];
-            todosAnexosNaMemoria.forEach(arq => {
-                if (!arq.pastaPaciente && !(arq.pasta && arq.pasta.startsWith("Relatorio_Geral"))) {
-                    let dataPasta = obterNomePastaInteligente(arq.dataEnvio);
-                    if (nomesDatas.includes(dataPasta)) ids.push({ id: arq.id, lote: dataPasta });
-                }
-            });
-            let updates = {};
-            ids.forEach(obj => { updates[obj.id + '/statusExclusao'] = 'lixeira_usuario'; updates[obj.id + '/dataExclusao'] = Date.now(); updates[obj.id + '/loteExclusao'] = 'Data: ' + obj.lote; });
-            update(dbRef(db, 'arquivos_anexos'), updates).then(() => { window.cancelarModoSelecao(); });
-        };
-
-        function converterSelecaoParaIDs(arr) {
-            let result = []; arr.forEach(item => { if (typeof item === 'string' && item.startsWith('Data:')) { todosAnexosNaMemoria.forEach(a => { if (a.loteExclusao === item) result.push(a.id); }); } else { result.push(item); } }); return result;
-        }
-
-        window.executarLoteLixeiraFinal = function(acao) { let idsArr = Array.from(window.itensSelecionados); let idsReais = converterSelecaoParaIDs(idsArr); if(acao === 'restaurar') window.restaurarDaLixeira(idsReais); else window.acaoDefinitivaLixeira(idsReais); };
-        window.processarLoteLixeira = function(acao) { let ids = todosAnexosNaMemoria.filter(a => a.loteExclusao === window.loteAtivoLixeira).map(a => a.id); if(acao === 'restaurar') window.restaurarDaLixeira(ids); else window.acaoDefinitivaLixeira(ids); };
-        window.abrirModalAcaoLoteLixeira = function(loteNome) { if(window.modoSelecaoAtivo) { window.toggleSelecaoItem(loteNome); return; } window.loteAtivoLixeira = loteNome; document.getElementById('txtNomeLoteLixeira').innerText = loteNome; document.getElementById('modalAcoesLoteLixeira').classList.remove('hidden'); document.getElementById('modalAcoesLoteLixeira').classList.add('flex'); };
-        window.fecharModalAcaoLoteLixeira = function() { document.getElementById('modalAcoesLoteLixeira').classList.add('hidden'); document.getElementById('modalAcoesLoteLixeira').classList.remove('flex'); };
-
-        window.acaoDefinitivaLixeira = function(ids) {
-            if (perfilUsuario === 'administrador') {
-                if(confirm("Tem certeza? Isso apagará DEFINITIVAMENTE os itens do banco de dados.")) { ids.forEach(id => remove(dbRef(db, 'arquivos_anexos/' + id))); window.cancelarModoSelecao(); window.fecharModalAcaoLoteLixeira(); window.fecharModalVisualizacao(); }
-            } else {
-                if(confirm("Esse arquivo poderá ser restaurado pelo administrador em até 10 dias, caso contrário a ação não poderá ser desfeita.\n\nConfirmar?")) {
-                    let updates = {}; ids.forEach(id => { updates[id + '/statusExclusao'] = 'lixeira_admin'; updates[id + '/dataExclusaoAdmin'] = Date.now(); });
-                    update(dbRef(db, 'arquivos_anexos'), updates).then(() => { window.cancelarModoSelecao(); window.fecharModalAcaoLoteLixeira(); window.fecharModalVisualizacao(); document.getElementById('modalAcoesSelecaoLixeira').classList.add('hidden'); });
-                }
-            }
-        };
-
-        window.restaurarDaLixeira = function(ids) {
-            let updates = {}; ids.forEach(id => { updates[id + '/statusExclusao'] = 'ativo'; updates[id + '/dataExclusao'] = null; updates[id + '/loteExclusao'] = null; updates[id + '/dataExclusaoAdmin'] = null; });
-            update(dbRef(db, 'arquivos_anexos'), updates).then(() => { window.cancelarModoSelecao(); window.fecharModalAcaoLoteLixeira(); window.fecharModalVisualizacao(); document.getElementById('modalAcoesSelecaoLixeira').classList.add('hidden'); });
-        };
-
-        window.esvaziarLixeira = function() {
-            let lixeiraFiles = todosAnexosNaMemoria.filter(a => a.statusExclusao === 'lixeira_usuario');
-            if(perfilUsuario === 'administrador') lixeiraFiles = todosAnexosNaMemoria.filter(a => a.statusExclusao === 'lixeira_usuario' || a.statusExclusao === 'lixeira_admin');
-            if(lixeiraFiles.length === 0) return; let ids = lixeiraFiles.map(a => a.id); window.acaoDefinitivaLixeira(ids);
-        };
-
-        document.getElementById("listaAnexos").ondblclick = function(e) { if (window.pastaAbertaAtual === 'lixeira' && !window.modoSelecaoAtivo) window.iniciarModoSelecao('lixeira'); };
-
-        function carregarGaleriaDeAnexos() {
-            const container = document.getElementById("listaAnexos");
-            if (container && todosAnexosNaMemoria.length === 0) { container.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center py-10"><i class="fas fa-circle-notch fa-spin text-4xl text-blue-500 mb-3"></i><p class="text-gray-400 text-sm animate-pulse">Sincronizando base de dados...</p></div>`; }
-
-            onValue(dbRef(db, 'arquivos_anexos'), (snapshot) => {
-                todosAnexosNaMemoria = [];
-                const dezDiasMs = 10 * 24 * 60 * 60 * 1000, agora = Date.now();
-
-                if (snapshot.exists()) {
-                    snapshot.forEach(child => { 
-                        const anexo = { id: child.key, ...child.val() };
-                        if (!anexo.tipo) anexo.tipo = 'imagem'; if (!anexo.statusExclusao) anexo.statusExclusao = 'ativo';
-                        if (anexo.statusExclusao === 'lixeira_admin' && anexo.dataExclusaoAdmin) { if (agora - anexo.dataExclusaoAdmin > dezDiasMs) { remove(dbRef(db, 'arquivos_anexos/' + anexo.id)); return; } }
-                        todosAnexosNaMemoria.push(anexo);
-                    });
-                    todosAnexosNaMemoria.sort((a, b) => b.dataEnvio - a.dataEnvio);
-                }
-                window.aplicarFiltrosNaGaleria();
-            });
-        }
-
-        window.abrirPasta = function(rota) { window.pastaAbertaAtual = rota; window.aplicarFiltrosNaGaleria(); };
-        window.voltarParaPastas = function() { window.pastaAbertaAtual = null; window.aplicarFiltrosNaGaleria(); };
-
-        window.aplicarFiltrosNaGaleria = function() {
-            const inBusca = document.getElementById("inputBuscaAnexo"), inIni = document.getElementById("dataInicioFiltro"), inFim = document.getElementById("dataFimFiltro");
-            const termoBusca = inBusca ? inBusca.value.toLowerCase().trim() : "", dataInicio = inIni ? inIni.value : "", dataFim = inFim ? inFim.value : "";
-            const container = document.getElementById("listaAnexos"), areaBreadcrumb = document.getElementById("areaBreadcrumb"), btnEsvaziar = document.getElementById("areaEsvaziarLixeira");
-            
-            if (!container) return; container.innerHTML = ""; btnEsvaziar.classList.add("hidden");
-            const txtInfo = document.getElementById("txtInfoVista"), txtCount = document.getElementById("txtContadorArquivos");
-
-            if (window.pastaAbertaAtual === 'lixeira') {
-                if(areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-red-400 font-bold text-xs flex items-center gap-1"><i class="fas fa-trash"></i> Lixeira</span>`;
-                if(txtInfo) txtInfo.innerText = "Arquivos Apagados (Duplo Clique para Selecionar)";
-                let lixeiraFiles = todosAnexosNaMemoria.filter(a => a.statusExclusao === 'lixeira_usuario' || (perfilUsuario === 'administrador' && a.statusExclusao === 'lixeira_admin'));
-                if (termoBusca.length > 0) lixeiraFiles = lixeiraFiles.filter(arq => arq.nome.toLowerCase().includes(termoBusca));
-
-                let lotes = {}, avulsos = [];
-                lixeiraFiles.forEach(a => { if (a.loteExclusao) { if(!lotes[a.loteExclusao]) lotes[a.loteExclusao] = []; lotes[a.loteExclusao].push(a); } else { avulsos.push(a); } });
-
-                Object.keys(lotes).forEach(loteNome => {
-                    let clickAc = window.modoSelecaoAtivo ? `window.toggleSelecaoItem('${loteNome}')` : `window.abrirModalAcaoLoteLixeira('${loteNome}')`;
-                    let checkHTML = window.modoSelecaoAtivo ? `<input type="checkbox" class="checkbox-selecao absolute top-2 right-2 z-10 pointer-events-none" ${window.itensSelecionados.has(loteNome)?'checked':''}>` : '';
-                    let sClass = window.modoSelecaoAtivo && window.itensSelecionados.has(loteNome) ? 'border-blue-500 bg-blue-900/40' : 'border-gray-700 hover:border-red-500/50 hover:bg-gray-700/50';
-                    const card = document.createElement("div"); card.className = `relative bg-gray-800 border ${sClass} p-3 rounded-lg shadow-sm flex items-center gap-3 transition cursor-pointer active:scale-95`;
-                    card.setAttribute("onclick", clickAc); card.innerHTML = `${checkHTML} <div class="w-12 h-12 bg-red-900/20 text-red-400 border border-red-800/40 rounded-lg flex items-center justify-center flex-shrink-0"><i class="fas fa-folder text-2xl"></i></div> <div class="flex-1 min-w-0"><span class="font-bold text-gray-200 text-sm block truncate">${loteNome}</span><p class="text-[10px] text-gray-400 mt-0.5">${lotes[loteNome].length} itens excluídos</p></div>`;
-                    container.appendChild(card);
-                });
-                renderizarArquivosFinais(avulsos, container);
-                if (txtCount) txtCount.innerText = `${lixeiraFiles.length} itens totais`;
-                if (lixeiraFiles.length > 0 && !window.modoSelecaoAtivo) btnEsvaziar.classList.remove("hidden");
-                if (lixeiraFiles.length === 0) container.innerHTML = `<div class="col-span-full py-8 text-center text-gray-500 text-xs">Sua lixeira está vazia.</div>`;
-                return;
-            }
-
-            let anexosFiltrados = todosAnexosNaMemoria.filter(a => a.statusExclusao === 'ativo');
-            anexosFiltrados = anexosFiltrados.filter(arq => {
-                const dataObj = new Date(arq.dataEnvio), dataFormatadaDia = dataObj.toLocaleDateString('pt-BR'), mesAnoFormatado = String(dataObj.getMonth() + 1).padStart(2, '0') + '/' + dataObj.getFullYear();
-                let passaTexto = true;
-                if (termoBusca.length > 0) passaTexto = arq.nome.toLowerCase().includes(termoBusca) || dataFormatadaDia.includes(termoBusca) || mesAnoFormatado.includes(termoBusca) || (arq.pastaPaciente && arq.pastaPaciente.toLowerCase().includes(termoBusca));
-                let passaData = true; dataObj.setHours(0,0,0,0);
-                if (dataInicio) { const dataIni = new Date(dataInicio + "T00:00:00"); if (dataObj < dataIni) passaData = false; }
-                if (dataFim) { const dataF = new Date(dataFim + "T23:59:59"); if (dataObj > dataF) passaData = false; }
-                return passaTexto && passaData;
-            });
-
-            const isBuscaAtiva = termoBusca.length > 0;
-            const arqsGeral = anexosFiltrados.filter(a => a.pasta && a.pasta.startsWith("Relatorio_Geral"));
-            const arqsHist = anexosFiltrados.filter(a => a.pasta && a.pasta.startsWith("Historico_Exportacoes"));
-            const arqsPacientes = anexosFiltrados.filter(a => a.pastaPaciente);
-            const arqsDiversos = anexosFiltrados.filter(a => !(a.pasta && a.pasta.startsWith("Relatorio_Geral")) && !(a.pasta && a.pasta.startsWith("Historico_Exportacoes")) && !a.pastaPaciente);
-
-            if (window.pastaAbertaAtual === 'historico_exportacao_raiz' || window.tipoSelecaoAtual === 'exportacao') {
-                if (window.pastaAbertaAtual === 'historico_exportacao_raiz') {
-                    if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.cancelarModoSelecao()" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-blue-400 font-bold text-xs flex items-center gap-1"><i class="fas fa-file-export"></i> Selecionar Arquivos para Dossiê</span>`;
-                    if (txtInfo) txtInfo.innerText = "1 Clique: Selecionar / 2 Cliques: Visualizar";
-                    
-                    renderizarCardPasta(container, "Pastas de Pacientes", `${arqsPacientes.length} evoluções`, "pacientes_root", 'paciente');
-                    renderizarCardPasta(container, "Arquivos Diversos", `${arqsDiversos.length} arquivos`, "diversos_root", 'diversos');
-                    renderizarCardPasta(container, "Relatório Geral", `${arqsGeral.length} itens salvos`, "relatorio_geral", 'geral');
-                } else {
-                    if (window.pastaAbertaAtual === 'pacientes_root') {
-                        if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.abrirPasta('historico_exportacao_raiz')" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-blue-400 font-bold text-xs">Pacientes</span>`;
-                        const agrupamentoPacientes = {};
-                        anexosFiltrados.forEach(arq => { if (arq.pastaPaciente) { if(!agrupamentoPacientes[arq.pastaPaciente]) agrupamentoPacientes[arq.pastaPaciente] = []; agrupamentoPacientes[arq.pastaPaciente].push(arq); } });
-                        Object.keys(agrupamentoPacientes).sort((a,b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' })).forEach(nome => { renderizarCardPasta(container, nome, `${agrupamentoPacientes[nome].length} evoluções`, `paciente:${nome}`, 'paciente'); });
-                    } else if (window.pastaAbertaAtual && window.pastaAbertaAtual.startsWith('paciente:')) {
-                        const nomePac = window.pastaAbertaAtual.split('paciente:')[1];
-                        if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.abrirPasta('pacientes_root')" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-blue-400 font-bold text-xs truncate max-w-[150px]">${nomePac}</span>`;
-                        renderizarArquivosFinais(anexosFiltrados.filter(a => a.pastaPaciente === nomePac), container);
-                    } else if (window.pastaAbertaAtual === 'diversos_root') {
-                        if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.abrirPasta('historico_exportacao_raiz')" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-blue-400 font-bold text-xs">Arquivos Diversos</span>`;
-                        const agrupamentoDatas = {};
-                        arqsDiversos.forEach(arq => { const nomeData = obterNomePastaInteligente(arq.dataEnvio); if (!agrupamentoDatas[nomeData]) agrupamentoDatas[nomeData] = []; agrupamentoDatas[nomeData].push(arq); });
-                        Object.keys(agrupamentoDatas).sort((a,b) => agrupamentoDatas[b][0].dataEnvio - agrupamentoDatas[a][0].dataEnvio).forEach(nomeData => { renderizarCardPasta(container, nomeData, `${agrupamentoDatas[nomeData].length} arquivos`, `diversos_data:${nomeData}`, 'data'); });
-                    } else if (window.pastaAbertaAtual && window.pastaAbertaAtual.startsWith('diversos_data:')) {
-                        const nomeData = window.pastaAbertaAtual.split('diversos_data:')[1];
-                        if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.abrirPasta('diversos_root')" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-blue-400 font-bold text-xs truncate max-w-[150px]">${nomeData}</span>`;
-                        renderizarArquivosFinais(arqsDiversos.filter(a => obterNomePastaInteligente(a.dataEnvio) === nomeData), container);
-                    } else if (window.pastaAbertaAtual === 'relatorio_geral') {
-                        if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.abrirPasta('historico_exportacao_raiz')" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-blue-400 font-bold text-xs">Relatório Geral</span>`;
-                        renderizarArquivosFinais(arqsGeral, container);
-                    }
-                }
-                
-                if (isBuscaAtiva) { container.innerHTML = ""; renderizarArquivosFinais(anexosFiltrados, container); }
-                return;
-            }
-
-            if (window.pastaAbertaAtual === null && !isBuscaAtiva) {
-                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<span class="text-gray-300 font-bold text-xs">Pastas do Sistema</span>`;
-                if (txtInfo) txtInfo.innerText = "Navegando nas Pastas";
-
-                renderizarCardPasta(container, "Relatório Geral", `${arqsGeral.length} itens salvos`, "relatorio_geral", 'geral');
-                renderizarCardPasta(container, "Pacientes", `${arqsPacientes.length} evoluções`, "pacientes_root", 'paciente');
-                renderizarCardPasta(container, "Arquivos Diversos", `${arqsDiversos.length} arquivos`, "diversos_root", 'diversos');
-                renderizarCardPasta(container, "Histórico de Exportações", `${arqsHist.length} dossiês gerados`, "historico_gerado", 'geral');
-
-                if (txtCount) txtCount.innerText = `4 pastas`;
-            } 
-            else if (window.pastaAbertaAtual === 'historico_gerado' && !isBuscaAtiva) {
-                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs">Histórico de Exportações</span>`;
-                if (txtInfo) txtInfo.innerText = "Dossiês Consolidados";
-                renderizarArquivosFinais(arqsHist, container);
-                if (txtCount) txtCount.innerText = `${arqsHist.length} dossiês`;
-            }
-            else if (window.pastaAbertaAtual === 'pacientes_root' && !isBuscaAtiva) {
-                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs">Pacientes</span>`;
-                if (txtInfo) txtInfo.innerText = "Selecione o Paciente";
-                const agrupamentoPacientes = {}; anexosFiltrados.forEach(arq => { if (arq.pastaPaciente) { if(!agrupamentoPacientes[arq.pastaPaciente]) agrupamentoPacientes[arq.pastaPaciente] = []; agrupamentoPacientes[arq.pastaPaciente].push(arq); } });
-                const pacientesNomes = Object.keys(agrupamentoPacientes).sort((a,b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
-                if(pacientesNomes.length === 0) container.innerHTML = `<div class="col-span-full text-center text-gray-500 py-4 text-xs">Nenhum paciente encontrado.</div>`;
-                pacientesNomes.forEach(nome => { renderizarCardPasta(container, nome, `${agrupamentoPacientes[nome].length} evoluções`, `paciente:${nome}`, 'paciente'); });
-                if (txtCount) txtCount.innerText = `${pacientesNomes.length} pacientes`;
-            }
-            else if (window.pastaAbertaAtual === 'relatorio_geral' && !isBuscaAtiva) {
-                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs">Relatório Geral</span>`;
-                if (txtInfo) txtInfo.innerText = "Arquivos Gerais";
-                renderizarArquivosFinais(arqsGeral, container); if (txtCount) txtCount.innerText = `${arqsGeral.length} relatórios`;
-            }
-            else if (window.pastaAbertaAtual === 'diversos_root' && !isBuscaAtiva) {
-                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs">Arquivos Diversos</span>`;
-                if (txtInfo) txtInfo.innerText = "Selecione a Data (Duplo Clique para Excluir)";
-                const agrupamentoDatas = {}; arqsDiversos.forEach(arq => { const nomeData = obterNomePastaInteligente(arq.dataEnvio); if (!agrupamentoDatas[nomeData]) agrupamentoDatas[nomeData] = []; agrupamentoDatas[nomeData].push(arq); });
-                const datasNomes = Object.keys(agrupamentoDatas).sort((a,b) => { return agrupamentoDatas[b][0].dataEnvio - agrupamentoDatas[a][0].dataEnvio; });
-                if (datasNomes.length === 0) container.innerHTML = `<div class="col-span-full text-center text-gray-500 py-4 text-xs">Nenhum arquivo diverso encontrado.</div>`;
-                datasNomes.forEach(nomeData => { renderizarCardPasta(container, nomeData, `${agrupamentoDatas[nomeData].length} arquivos`, `diversos_data:${nomeData}`, 'data'); });
-                if (txtCount) txtCount.innerText = `${datasNomes.length} pastas`;
-            }
-            else if (window.pastaAbertaAtual && window.pastaAbertaAtual.startsWith('paciente:') && !isBuscaAtiva) {
-                const nomePac = window.pastaAbertaAtual.split('paciente:')[1];
-                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.abrirPasta('pacientes_root')" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs truncate max-w-[150px]">${nomePac}</span>`;
-                if (txtInfo) txtInfo.innerText = "Evoluções do Paciente";
-                const arqs = anexosFiltrados.filter(a => a.pastaPaciente === nomePac); renderizarArquivosFinais(arqs, container); if (txtCount) txtCount.innerText = `${arqs.length} evoluções`;
-            }
-            else if (window.pastaAbertaAtual && window.pastaAbertaAtual.startsWith('diversos_data:') && !isBuscaAtiva) {
-                const nomeData = window.pastaAbertaAtual.split('diversos_data:')[1];
-                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.abrirPasta('diversos_root')" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs truncate max-w-[150px]">${nomeData}</span>`;
-                if (txtInfo) txtInfo.innerText = "Arquivos da Data";
-                const arqs = arqsDiversos.filter(a => obterNomePastaInteligente(a.dataEnvio) === nomeData); renderizarArquivosFinais(arqs, container); if (txtCount) txtCount.innerText = `${arqs.length} arquivos`;
-            }
-            else {
-                if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="document.getElementById('inputBuscaAnexo').value=''; window.aplicarFiltrosNaGaleria();" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Limpar Busca</button><span class="text-gray-600 mx-2">/</span><span class="text-blue-400 font-bold text-xs">Resultados</span>`;
-                if (txtInfo) txtInfo.innerText = "Resultados da Pesquisa";
-                renderizarArquivosFinais(anexosFiltrados, container);
-                if (txtCount) txtCount.innerText = `${anexosFiltrados.length} encontrados`;
-            }
-        };
-
-        function renderizarCardPasta(container, nomePasta, subtitulo, rota, tipoPasta = 'geral') {
-            let iconClass = "fa-folder-open text-blue-500", bgClass = "bg-blue-900/20 border-blue-800/40";
-            if (tipoPasta === 'paciente') { iconClass = "fa-user-injured text-indigo-400"; bgClass = "bg-indigo-900/20 border-indigo-800/40"; } 
-            else if (tipoPasta === 'diversos') { iconClass = "fa-layer-group text-purple-400"; bgClass = "bg-purple-900/20 border-purple-800/40"; } 
-            else if (tipoPasta === 'data') { iconClass = "fa-calendar-day text-orange-400"; bgClass = "bg-orange-900/20 border-orange-800/40"; }
-            
-            let clickAc = `window.abrirPasta('${rota}')`; 
-            if (window.modoSelecaoAtivo && window.tipoSelecaoAtual === 'pastas') clickAc = `window.toggleSelecaoItem('${nomePasta}')`;
-            if (window.modoSelecaoAtivo && window.tipoSelecaoAtual === 'exportacao') clickAc = `window.abrirPasta('${rota}')`;
-
-            let dblClickAc = ''; if (tipoPasta === 'data' && !window.modoSelecaoAtivo) dblClickAc = `window.perguntarApagarPasta('${nomePasta}')`;
-
-            let checkHTML = '', selClass = '';
-            if (window.modoSelecaoAtivo && window.tipoSelecaoAtual === 'pastas') {
-                let isChecked = window.itensSelecionados.has(nomePasta) ? 'checked' : '';
-                checkHTML = `<input type="checkbox" class="checkbox-selecao absolute top-2 right-2 z-10 pointer-events-none" ${isChecked}>`;
-                if(isChecked) selClass = 'border-blue-500 bg-blue-900/40';
-            }
-
-            const card = document.createElement("div");
-            card.className = `relative bg-gray-800 border ${selClass || 'border-gray-700 hover:border-blue-500/50 hover:bg-gray-700/50'} p-3 rounded-lg shadow-sm flex items-center gap-3 transition cursor-pointer active:scale-95`;
-            
-            card.onclick = function(e) { if (dblClickAc) { if (card.clickTimeout) clearTimeout(card.clickTimeout); card.clickTimeout = setTimeout(() => { eval(clickAc); }, 250); } else { eval(clickAc); } };
-            if(dblClickAc) { card.ondblclick = function(e) { if (card.clickTimeout) clearTimeout(card.clickTimeout); eval(dblClickAc); }; }
-
-            card.innerHTML = `${checkHTML}<div class="w-12 h-12 ${bgClass} rounded-lg flex items-center justify-center border flex-shrink-0"><i class="fas ${iconClass} text-2xl"></i></div><div class="flex-1 min-w-0"><span class="font-bold text-gray-200 text-sm truncate uppercase block">${nomePasta}</span><p class="text-[10px] text-gray-400 mt-0.5">${subtitulo}</p></div><i class="fas fa-chevron-right text-gray-600 text-xs mr-1"></i>`;
-            container.appendChild(card);
-        }
-
-        function renderizarArquivosFinais(lista, container) {
-            if (lista.length === 0 && window.pastaAbertaAtual !== 'lixeira') { container.innerHTML = `<div class="col-span-full py-8 text-center text-gray-500 text-xs">Nenhum documento encontrado.</div>`; return; }
-            
-            lista.forEach(arq => {
-                const dataObj = new Date(arq.dataEnvio), dataStr = dataObj.toLocaleDateString('pt-BR'), horaStr = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-                const nomeSeguro = arq.nome.replace(/'/g, "\\'").replace(/"/g, "&quot;");
-
-                let icone = `<div class="w-12 h-12 rounded-lg bg-red-950/30 border border-red-900/50 flex items-center justify-center flex-shrink-0"><i class="fas fa-file-pdf text-2xl text-red-500"></i></div>`;
-                if(arq.tipo === 'imagem') icone = `<div class="relative w-12 h-12 rounded-lg border border-gray-700 overflow-hidden flex-shrink-0"><img src="${arq.url}" loading="lazy" class="w-full h-full object-cover"></div>`;
-
-                let clickAc = `window.abrirModalVisualizacao('${arq.id}', '${arq.url}', '${nomeSeguro}', '${arq.tipo}')`;
-                let dblClickAc = '';
-
-                let checkHTML = '', selClass = '';
-                if (window.modoSelecaoAtivo) {
-                    if (window.tipoSelecaoAtual === 'exportacao') {
-                        clickAc = `window.toggleSelecaoItem('${arq.id}')`;
-                        dblClickAc = `window.abrirModalVisualizacao('${arq.id}', '${arq.url}', '${nomeSeguro}', '${arq.tipo}')`;
-                    } else {
-                        clickAc = `window.toggleSelecaoItem('${arq.id}')`;
-                    }
-                    
-                    let isChecked = window.itensSelecionados.has(arq.id) ? 'checked' : '';
-                    checkHTML = `<input type="checkbox" class="checkbox-selecao absolute top-2 right-2 z-10 pointer-events-none" ${isChecked}>`;
-                    if(isChecked) selClass = 'border-blue-500 bg-blue-900/40';
-                }
-
-                const card = document.createElement("div");
-                card.className = `relative bg-gray-900 border ${selClass || 'border-gray-800 hover:border-blue-500/30'} p-2.5 rounded-lg shadow flex gap-3 items-center transition cursor-pointer active:scale-95`;
-                
-                card.onclick = function(e) {
-                    if (dblClickAc) {
-                        if (card.clickTimeout) clearTimeout(card.clickTimeout);
-                        card.clickTimeout = setTimeout(() => { eval(clickAc); }, 250);
-                    } else {
-                        eval(clickAc);
-                    }
-                };
-                if(dblClickAc) {
-                    card.ondblclick = function(e) {
-                        if (card.clickTimeout) clearTimeout(card.clickTimeout);
-                        eval(dblClickAc);
-                    };
-                }
-
-                card.innerHTML = `${checkHTML}${icone}<div class="flex-1 min-w-0"><h4 class="font-bold text-white text-[11px] truncate uppercase">${arq.nome}</h4><p class="text-[9px] text-gray-500 mt-1"><i class="far fa-clock"></i> ${dataStr} às ${horaStr}</p></div>`;
-                container.appendChild(card);
-            });
-        }
-
-        window.abrirModalVisualizacao = function(id, url, nome, tipo) {
-            window.idImagemAtiva = id; window.urlImagemAtiva = url; window.tipoAnexoAtivo = tipo || 'imagem';
-            const tCard = document.getElementById("tituloImagemCard"); if (tCard) tCard.innerText = nome;
-            const inEd = document.getElementById("inputEdicaoNome"); if (inEd) inEd.value = nome;
-            const tp = window.tipoAnexoAtivo.toLowerCase();
-            
-            const elImagem = document.getElementById("imagemEmDestaque"), elIframe = document.getElementById("iframePreview"), elIconeArea = document.getElementById("iconeDestaque"), elIconeFa = document.getElementById("iconeDestaqueFa"), txtExtensao = document.getElementById("txtDestaqueExt");
-            
-            if (elImagem) elImagem.classList.add("hidden"); if (elIframe) elIframe.classList.add("hidden"); if (elIconeArea) { elIconeArea.classList.remove("flex"); elIconeArea.classList.add("hidden"); }
-            
-            if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'imagem'].includes(tp)) { if (elImagem) { elImagem.src = url; elImagem.classList.remove("hidden"); } } 
-            else if (['pdf', 'xls', 'xlsx', 'doc', 'docx', 'csv'].includes(tp)) { if (elIframe) { elIframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`; elIframe.classList.remove("hidden"); } } 
-            else { 
-                if (elIconeArea) { elIconeArea.classList.remove("hidden"); elIconeArea.classList.add("flex"); }
-                if (txtExtensao) txtExtensao.innerText = `Arquivo ${tp.toUpperCase()}`; 
-                if (elIconeFa) {
-                    if (tp === 'pdf') { elIconeFa.className = "fas fa-file-pdf text-6xl text-red-500"; } else if (['xls', 'xlsx', 'csv'].includes(tp)) { elIconeFa.className = "fas fa-file-excel text-6xl text-green-500"; } else if (['doc', 'docx'].includes(tp)) { elIconeFa.className = "fas fa-file-word text-6xl text-blue-500"; } else { elIconeFa.className = "fas fa-file-alt text-6xl text-purple-500"; } 
-                }
-            }
-            
-            document.getElementById('gridAcoesNormal').classList.add('hidden');
-            document.getElementById('gridAcoesLixeira').classList.add('hidden');
-            document.getElementById('gridAcoesExportacao').classList.add('hidden');
-
-            if (window.pastaAbertaAtual === 'lixeira') {
-                document.getElementById('gridAcoesLixeira').classList.remove('hidden');
-            } else if (window.tipoSelecaoAtual === 'exportacao') {
-                document.getElementById('gridAcoesExportacao').classList.remove('hidden');
-            } else {
-                document.getElementById('gridAcoesNormal').classList.remove('hidden');
-            }
-
-            window.cancelarEdicaoNome();
-            const modal = document.getElementById("modalVisualizacao"); const content = document.getElementById("modalVisualizacaoContent");
-            if (modal && content) {
-                modal.classList.remove("hidden"); modal.classList.add("flex");
-                setTimeout(() => { content.classList.remove("scale-95", "opacity-0"); content.classList.add("scale-100", "opacity-100"); }, 10);
-            }
-        };
-
-        window.fecharModalVisualizacao = function() {
-            const modal = document.getElementById("modalVisualizacao"), content = document.getElementById("modalVisualizacaoContent");
-            if (modal && content) {
-                content.classList.remove("scale-100", "opacity-100"); content.classList.add("scale-95", "opacity-0");
-                setTimeout(() => { modal.classList.remove("flex"); modal.classList.add("hidden"); 
-                    const elImg = document.getElementById("imagemEmDestaque"); if (elImg) elImg.src = ""; 
-                    const elIf = document.getElementById("iframePreview"); if (elIf) elIf.src = ""; 
-                }, 200);
-            }
-        };
-
-        window.compartilharAnexoAtivo = async function() {
-            const tCard = document.getElementById("tituloImagemCard"); let nomeLimpo = tCard ? tCard.innerText : "Documento do Sistema";
-            if (navigator.share) { try { await navigator.share({ title: nomeLimpo, text: `Confira este documento: ${nomeLimpo}`, url: window.urlImagemAtiva }); } catch (err) {}
-            } else { navigator.clipboard.writeText(window.urlImagemAtiva).then(() => alert("🔗 Link copiado para a área de transferência!")); }
-        };
-
-        window.baixarAnexoAtivo = async function() {
-            const btnBaixar = document.getElementById("btnBaixarAnexo"); const htmlOriginal = btnBaixar ? btnBaixar.innerHTML : "";
-            if (btnBaixar) btnBaixar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Preparando...`;
-            try {
-                const resposta = await fetch(window.urlImagemAtiva); const blob = await resposta.blob(); const urlBlob = window.URL.createObjectURL(blob);
-                const a = document.createElement('a'); a.style.display = 'none'; a.href = urlBlob;
-                const tp = window.tipoAnexoAtivo.toLowerCase(); let extensao = `.${tp}`; if (tp === 'imagem') extensao = '.jpg';
-                const tCard = document.getElementById("tituloImagemCard"); let nomeLimpo = tCard ? tCard.innerText.replace(/[^a-zA-Z0-9.\- ()]/g, "") : "arquivo"; a.download = nomeLimpo + extensao;
-                document.body.appendChild(a); a.click(); setTimeout(() => { if (document.body.contains(a)) document.body.removeChild(a); window.URL.revokeObjectURL(urlBlob); }, 2000);
-            } catch (erro) { window.open(window.urlImagemAtiva, "_blank"); }
-            if (btnBaixar) btnBaixar.innerHTML = htmlOriginal;
-        };
-
-        window.abrirEdicaoNome = function() {
-            const tCard = document.getElementById("tituloImagemCard"); if (tCard) tCard.classList.add("hidden");
-            const aEd = document.getElementById("areaEdicaoNome"); if (aEd) { aEd.classList.remove("hidden"); aEd.classList.add("flex"); }
-        };
-
-        window.cancelarEdicaoNome = function() {
-            const aEd = document.getElementById("areaEdicaoNome"); if (aEd) { aEd.classList.add("hidden"); aEd.classList.remove("flex"); }
-            const tCard = document.getElementById("tituloImagemCard"); if (tCard) tCard.classList.remove("hidden");
-        };
-
-        window.salvarNovoNome = function() {
-            const inEd = document.getElementById("inputEdicaoNome"); const novoNome = inEd ? inEd.value.trim() : "";
-            if (!novoNome) return alert("⚠️ Digite um nome válido!");
-            const btnSalvar = document.getElementById("btnSalvarEdicao"); if (btnSalvar) { btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Salvando...`; btnSalvar.disabled = true; }
-            update(dbRef(db, 'arquivos_anexos/' + window.idImagemAtiva), { nome: novoNome }).then(() => { 
-                const tCard = document.getElementById("tituloImagemCard"); if (tCard) tCard.innerText = novoNome; window.cancelarEdicaoNome(); 
-                if (btnSalvar) { btnSalvar.innerHTML = `<i class="fas fa-save"></i> Salvar`; btnSalvar.disabled = false; }
-            }).catch(erro => { alert("Erro ao salvar o nome: " + erro.message); if (btnSalvar) { btnSalvar.innerHTML = `<i class="fas fa-save"></i> Salvar`; btnSalvar.disabled = false; } });
-        };
-
-        onAuthStateChanged(auth, (user) => {
-            const modalLogin = document.getElementById("modalLoginApp");
-
-            if (user) {
-                if (modalLogin) modalLogin.classList.add("hidden");
-                uidUsuarioLogado = user.uid;
-                window.resetarTimerInatividade();
-                const fallbackUsername = user.email.split('@')[0];
-
-                onValue(dbRef(db, 'usuarios_sistema/' + user.uid), (snap) => {
-                    let dadosUser = null;
-                    if (snap.exists()) {
-                        dadosUser = snap.val();
-                        usuarioLogado = dadosUser.username || fallbackUsername;
-                        perfilUsuario = dadosUser.perfil || "operador";
-                    } else {
-                        usuarioLogado = fallbackUsername;
-                        perfilUsuario = "administrador";
-                    }
-
-                    const elSidebarNome = document.getElementById("sidebarNomeUsuario");
-                    const elSidebarPerfil = document.getElementById("sidebarPerfilUsuario");
-                    if (elSidebarNome) elSidebarNome.innerText = `@${usuarioLogado}`;
-                    if (elSidebarPerfil) elSidebarPerfil.innerText = perfilUsuario === "administrador" ? "Administrativo" : "Usuário";
-
-                    const btnBancoPacientes = document.getElementById("btnSidebarPacientes");
-                    const btnCadastroUsuario = document.getElementById("btnSidebarCadastrarUsuario");
-                    const areaImportacao = document.getElementById("areaImportacaoPacientes");
-                    
-                    if (perfilUsuario === "administrador") {
-                        if (btnBancoPacientes) { btnBancoPacientes.classList.remove("hidden"); btnBancoPacientes.classList.add("flex"); }
-                        if (btnCadastroUsuario) { btnCadastroUsuario.classList.remove("hidden"); btnCadastroUsuario.classList.add("flex"); }
-                        if (areaImportacao) { areaImportacao.classList.remove("hidden"); }
-                    } else {
-                        if (btnBancoPacientes) { btnBancoPacientes.classList.remove("hidden"); btnBancoPacientes.classList.add("flex"); }
-                        if (btnCadastroUsuario) { btnCadastroUsuario.classList.add("hidden"); btnCadastroUsuario.classList.remove("flex"); }
-                        if (areaImportacao) { areaImportacao.classList.add("hidden"); }
-                    }
-                    
-                    carregarPacientesBanco();
-                    carregarGaleriaDeAnexos();
-                });
-            } else {
-                if (modalLogin) modalLogin.classList.remove("hidden");
-                const elSidebarNome = document.getElementById("sidebarNomeUsuario"), elSidebarPerfil = document.getElementById("sidebarPerfilUsuario");
-                if (elSidebarNome) elSidebarNome.innerText = "@Visitante"; if (elSidebarPerfil) elSidebarPerfil.innerText = "Usuário";
-            }
-        });
-
-        escutarEventoSeguro("inputBuscaAnexo", "input", window.aplicarFiltrosNaGaleria);
-        escutarEventoSeguro("dataInicioFiltro", "change", window.aplicarFiltrosNaGaleria);
-        escutarEventoSeguro("dataFimFiltro", "change", window.aplicarFiltrosNaGaleria);
     </script>
 </body>
 </html>
