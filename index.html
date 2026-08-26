@@ -66,9 +66,7 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
         .popup-blur { backdrop-filter: blur(5px); }
         
-        /* ========================================================
-           CROPPER CSS (Bordas grossas e área de toque expandida)
-           ======================================================== */
+        /* CROPPER CSS (Bordas grossas e área de toque expandida) */
         .cropper-view-box { outline: 4px solid #3b82f6 !important; border-radius: 4px; }
         .cropper-dashed { border: 1px dashed rgba(255, 255, 255, 0.8) !important; }
         
@@ -101,6 +99,11 @@
         input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; background: transparent; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; height: 18px; width: 18px; border-radius: 50%; background: #3b82f6; cursor: pointer; margin-top: -7px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #475569; border-radius: 2px; }
+
+        /* CHECKBOX SELEÇÃO MÚLTIPLA */
+        .checkbox-selecao { width: 22px; height: 22px; border-radius: 6px; border: 2px solid #3b82f6; appearance: none; background: rgba(17, 24, 39, 0.7); cursor: pointer; position: relative; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
+        .checkbox-selecao:checked { background: #3b82f6; }
+        .checkbox-selecao:checked::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: white; font-size: 13px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
     </style>
 </head>
 <body class="bg-gray-950 text-gray-100 font-sans min-h-screen flex flex-col relative pb-24">
@@ -196,7 +199,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE GERENCIAR PACIENTES (BANCO DE DADOS E IMPORTAÇÃO XLSX) -->
+    <!-- MODAL DE GERENCIAR PACIENTES -->
     <div id="modalGerenciarPacientes" class="fixed inset-0 bg-black/90 popup-blur hidden items-center justify-center p-4 z-[120]">
         <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 w-full max-w-md shadow-2xl flex flex-col gap-4">
             <div class="flex justify-between items-center border-b border-gray-800 pb-3">
@@ -209,10 +212,9 @@
             <div class="flex flex-col gap-2">
                 <form onsubmit="event.preventDefault(); if(window.adicionarPacienteFirebase) window.adicionarPacienteFirebase(event);" class="flex gap-2">
                     <input type="text" id="cadNomePaciente" required placeholder="Adicionar manualmente..." class="flex-1 p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 rounded-xl font-bold text-xs transition shadow"><i class="fas fa-plus"></i></button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-4 rounded-xl font-bold text-xs transition shadow"><i class="fas fa-plus"></i></button>
                 </form>
 
-                <!-- BOTÃO DE IMPORTAÇÃO (SÓ APARECE PARA ADMIN VIA JS) -->
                 <div id="areaImportacaoPacientes" class="hidden w-full">
                     <input type="file" id="inputImportXlsx" accept=".xlsx, .xls" class="hidden" onchange="window.importarPacientesXlsx(this)">
                     <button type="button" onclick="document.getElementById('inputImportXlsx').click()" class="w-full bg-green-600/20 hover:bg-green-600/40 border border-green-500/40 text-green-400 py-2.5 rounded-xl font-bold text-xs transition flex items-center justify-center gap-2">
@@ -221,8 +223,51 @@
                 </div>
             </div>
 
-            <div class="flex flex-col gap-2 max-h-56 overflow-y-auto custom-scrollbar pr-1 mt-1" id="listaPacientesBanco">
-                <!-- Lista injetada via JS -->
+            <div class="flex flex-col gap-2 max-h-56 overflow-y-auto custom-scrollbar pr-1 mt-1" id="listaPacientesBanco"></div>
+        </div>
+    </div>
+
+    <!-- MODAL PERGUNTA SELEÇÃO MÚLTIPLA -->
+    <div id="modalPerguntaSelecao" class="fixed inset-0 bg-black/90 popup-blur hidden items-center justify-center p-4 z-[300]">
+        <div class="bg-gray-900 rounded-xl border border-gray-800 p-5 w-full max-w-xs shadow-2xl flex flex-col gap-4 text-center">
+            <h3 class="text-sm font-bold text-white flex items-center justify-center gap-2" id="txtTituloPerguntaSelecao">
+                <i class="fas fa-question-circle text-blue-500"></i> Deseja apagar mais itens?
+            </h3>
+            <p class="text-xs text-gray-400" id="txtDescPerguntaSelecao">Você pode selecionar vários itens para apagar de uma vez só.</p>
+            <div class="flex gap-2 mt-2">
+                <button onclick="window.responderPerguntaSelecao(false)" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2.5 rounded-xl text-xs font-bold border border-gray-700 transition shadow">Não, só este</button>
+                <button onclick="window.responderPerguntaSelecao(true)" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl text-xs font-bold transition shadow">Sim, selecionar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL AÇÕES LOTE LIXEIRA (QUANDO CLICAR NA PASTA DA LIXEIRA) -->
+    <div id="modalAcoesLoteLixeira" class="fixed inset-0 bg-black/90 popup-blur hidden items-center justify-center p-4 z-[250]">
+        <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 w-full max-w-sm shadow-2xl flex flex-col gap-4 text-center">
+            <h3 class="text-sm font-bold text-white flex items-center justify-center gap-2">
+                <i class="fas fa-folder text-orange-400"></i> Pasta Excluída
+            </h3>
+            <p class="text-xs text-gray-300 font-bold" id="txtNomeLoteLixeira"></p>
+            <p class="text-[10px] text-gray-500">Escolha o que deseja fazer com todo o conteúdo desta pasta.</p>
+            <div class="flex flex-col gap-2 mt-2">
+                <button onclick="window.processarLoteLixeira('restaurar')" class="w-full bg-green-600 hover:bg-green-500 text-white py-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2"><i class="fas fa-undo"></i> Restaurar Pasta Inteira</button>
+                <button onclick="window.processarLoteLixeira('apagar')" class="w-full bg-red-600 hover:bg-red-500 text-white py-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2"><i class="fas fa-trash-alt"></i> Apagar Definitivamente</button>
+                <button onclick="window.fecharModalAcaoLoteLixeira()" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded-xl text-xs font-bold border border-gray-700 transition mt-1">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL AÇÕES SELEÇÃO MÚLTIPLA LIXEIRA -->
+    <div id="modalAcoesSelecaoLixeira" class="fixed inset-0 bg-black/90 popup-blur hidden items-center justify-center p-4 z-[300]">
+        <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 w-full max-w-sm shadow-2xl flex flex-col gap-4 text-center">
+            <h3 class="text-sm font-bold text-white flex items-center justify-center gap-2">
+                <i class="fas fa-check-double text-blue-500"></i> Ações em Lote (Lixeira)
+            </h3>
+            <p class="text-xs text-gray-400">O que deseja fazer com os itens selecionados?</p>
+            <div class="flex flex-col gap-2 mt-1">
+                <button onclick="window.executarLoteLixeiraFinal('restaurar')" class="w-full bg-green-600 hover:bg-green-500 text-white py-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow"><i class="fas fa-undo"></i> Restaurar Itens</button>
+                <button onclick="window.executarLoteLixeiraFinal('apagar')" class="w-full bg-red-600 hover:bg-red-500 text-white py-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow"><i class="fas fa-trash-alt"></i> Apagar Definitivamente</button>
+                <button onclick="document.getElementById('modalAcoesSelecaoLixeira').classList.add('hidden'); document.getElementById('modalAcoesSelecaoLixeira').classList.remove('flex');" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded-xl text-xs font-bold border border-gray-700 transition mt-1">Cancelar</button>
             </div>
         </div>
     </div>
@@ -247,32 +292,39 @@
             <button id="btnSidebarCadastrarUsuario" onclick="window.abrirModalCadastroUsuario()" class="hidden w-full bg-blue-900/40 hover:bg-blue-800/60 border border-blue-700/60 text-blue-300 p-3 rounded-xl font-bold text-xs transition flex items-center gap-2.5">
                 <i class="fas fa-user-plus text-blue-400"></i> Cadastrar Novo Usuário
             </button>
-            <button id="btnSidebarPacientes" onclick="window.abrirModalPacientes()" class="hidden w-full bg-indigo-900/40 hover:bg-indigo-800/60 border border-indigo-700/60 text-indigo-300 p-3 rounded-xl font-bold text-xs transition flex items-center gap-2.5">
+            <button id="btnSidebarPacientes" onclick="window.abrirModalPacientes()" class="w-full bg-indigo-900/40 hover:bg-indigo-800/60 border border-indigo-700/60 text-indigo-300 p-3 rounded-xl font-bold text-xs transition flex items-center gap-2.5">
                 <i class="fas fa-address-book text-indigo-400"></i> Banco de Pacientes
+            </button>
+            
+            <div class="border-t border-gray-800 my-2"></div>
+            
+            <!-- NOVO BOTÃO LIXEIRA -->
+            <button onclick="window.abrirLixeira()" class="w-full bg-red-900/20 hover:bg-red-900/40 border border-red-800/40 text-red-400 p-3 rounded-xl font-bold text-xs transition flex items-center gap-2.5">
+                <i class="fas fa-trash"></i> Lixeira
             </button>
         </div>
 
         <div class="p-4 border-t border-gray-800">
-            <button onclick="window.fazerLogout()" class="w-full bg-red-950/40 hover:bg-red-900/60 border border-red-800/60 text-red-400 py-3 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2">
+            <button onclick="window.fazerLogout()" class="w-full bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 py-3 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2">
                 <i class="fas fa-sign-out-alt"></i> Sair do Sistema
             </button>
         </div>
     </aside>
 
-    <!-- Cabeçalho (Sino Removido) -->
+    <!-- Cabeçalho -->
     <header class="bg-gray-900 border-b border-gray-800 p-4 sticky top-0 z-40 shadow-md">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <button onclick="window.toggleSidebar && window.toggleSidebar(true)" class="text-gray-300 hover:text-white text-xl p-2 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-700 focus:outline-none w-10 h-10 flex items-center justify-center">
                 <i class="fas fa-bars"></i>
             </button> 
-            <h1 class="text-xl sm:text-2xl font-bold text-blue-500 tracking-wide text-center flex-1">Anexos</h1>
+            <h1 class="text-xl sm:text-2xl font-bold text-blue-500 tracking-wide text-center flex-1" onclick="window.voltarParaPastas()">Anexos</h1>
             <div class="w-10"></div>
         </div>
     </header>
 
     <main class="flex-1 max-w-5xl w-full mx-auto p-4 flex flex-col gap-6">
         <!-- Barra de Filtros -->
-        <section class="bg-gray-900 border border-gray-800 p-4 rounded-xl shadow-lg flex flex-col gap-3">
+        <section class="bg-gray-900 border border-gray-800 p-4 rounded-xl shadow-lg flex flex-col gap-3" id="secaoFiltros">
             <div class="relative w-full">
                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500"></i>
                 <input type="text" id="inputBuscaAnexo" placeholder="Buscar por paciente, relatórios ou data..." class="w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-blue-500 focus:outline-none text-sm transition-all">
@@ -291,18 +343,33 @@
         </section>
 
         <!-- Galeria Principal Dinâmica -->
-        <section class="flex flex-col gap-3">
+        <section class="flex flex-col gap-3 relative">
+            
+            <!-- BARRA DO MODO DE SELEÇÃO MÚLTIPLA -->
+            <div id="barraSelecao" class="hidden justify-between items-center bg-blue-600 border border-blue-500 p-3 rounded-xl mb-1 shadow-lg">
+                <button onclick="window.cancelarModoSelecao()" class="text-white font-bold text-xs flex items-center gap-1.5 hover:text-gray-200 transition"><i class="fas fa-arrow-left"></i> Cancelar</button>
+                <span id="txtContagemSelecao" class="text-xs font-bold text-white">0 selecionados</span>
+                <button id="btnAcaoSelecao" onclick="window.executarAcaoSelecao()" class="bg-red-700 hover:bg-red-800 text-white text-xs font-bold py-1.5 px-3 rounded shadow transition flex items-center gap-1.5"><i class="fas fa-trash"></i> Apagar</button>
+            </div>
+
             <div class="flex justify-between items-center text-sm text-gray-400 px-1 border-b border-gray-800 pb-2" id="areaBreadcrumb"></div>
             <div class="flex justify-between items-center text-xs text-gray-500 px-1 pt-1">
                 <span id="txtInfoVista">Visualizando Pastas</span>
                 <span id="txtContadorArquivos">0 itens</span>
             </div>
-            <div id="listaAnexos" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 custom-scrollbar"></div>
+            
+            <!-- CONTAINER DA LISTA -->
+            <div id="listaAnexos" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 custom-scrollbar select-none"></div>
+
+            <!-- BOTÃO ESVAZIAR LIXEIRA INJETADO AQUI -->
+            <div id="areaEsvaziarLixeira" class="hidden w-full mt-4">
+                <button onclick="window.esvaziarLixeira()" class="w-full bg-red-950/60 hover:bg-red-900 border border-red-800/60 text-red-400 py-3 rounded-xl font-bold text-sm transition shadow"><i class="fas fa-dumpster"></i> Esvaziar Lixeira</button>
+            </div>
         </section>
     </main>
 
     <!-- Botão Flutuante (FAB) -->
-    <button onclick="window.abrirModalUpload()" class="fixed bottom-6 right-6 w-16 h-16 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-[0_0_20px_rgba(37,99,235,0.5)] flex items-center justify-center text-2xl transition-transform hover:scale-105 z-40 focus:outline-none">
+    <button id="fabUpload" onclick="window.abrirModalUpload()" class="fixed bottom-6 right-6 w-16 h-16 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-[0_0_20px_rgba(37,99,235,0.5)] flex items-center justify-center text-2xl transition-transform hover:scale-105 z-40 focus:outline-none">
         <i class="fas fa-plus"></i>
     </button>
 
@@ -329,11 +396,19 @@
                     <span id="txtDestaqueExt" class="text-sm font-bold uppercase">Arquivo</span>
                 </div>
             </div>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+
+            <!-- BOTÕES NORMAIS DA GALERIA -->
+            <div id="gridAcoesNormal" class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button onclick="window.abrirEdicaoNome()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-pen text-blue-500"></i> Editar</button>
                 <button onclick="window.compartilharAnexoAtivo()" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-share-nodes"></i> Enviar</button>
                 <button id="btnBaixarAnexo" onclick="window.baixarAnexoAtivo()" class="bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-download"></i> Baixar</button>
-                <button id="btnExcluirDisfarce" onclick="window.executarExclusaoDisfarçada()" class="bg-red-950/60 hover:bg-red-900/80 text-red-400 border border-red-800/60 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-trash-alt"></i> Excluir</button>
+                <button onclick="window.iniciarExclusaoArquivo()" class="bg-red-950/60 hover:bg-red-900/80 text-red-400 border border-red-800/60 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-trash-alt"></i> Excluir</button>
+            </div>
+
+            <!-- BOTÕES DA LIXEIRA -->
+            <div id="gridAcoesLixeira" class="hidden grid grid-cols-2 gap-2">
+                <button onclick="window.restaurarDaLixeira([window.idImagemAtiva])" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[11px] sm:text-xs shadow-md"><i class="fas fa-undo"></i> Restaurar</button>
+                <button onclick="window.acaoDefinitivaLixeira([window.idImagemAtiva])" class="bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[11px] sm:text-xs shadow-md"><i class="fas fa-trash-alt"></i> Apagar Definitivamente</button>
             </div>
         </div>
     </div>
@@ -598,24 +673,6 @@
         </div>
     </div>
 
-    <!-- MODAL 3: POP-UP DE ASSINATURA -->
-    <div id="modalAssinatura" class="fixed inset-0 bg-black/95 popup-blur hidden items-center justify-center p-4 z-[80]">
-        <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 w-full max-w-lg shadow-2xl flex flex-col gap-4">
-            <div class="flex justify-between items-center border-b border-gray-800 pb-3">
-                <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fas fa-pen-nib text-indigo-400"></i> Assinatura Digital (HD)</h3>
-                <button onclick="window.fecharModalAssinatura()" class="text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
-            </div>
-            <p class="text-xs text-gray-400">Desenhe sua assinatura com alta precisão abaixo:</p>
-            <div class="w-full h-56 bg-white rounded-xl overflow-hidden relative touch-none border-2 border-gray-700 shadow-inner">
-                <canvas id="canvasAssinatura" class="w-full h-full cursor-crosshair"></canvas>
-            </div>
-            <div class="flex gap-3 mt-1">
-                <button onclick="window.limparAssinaturaPad()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-xl text-xs font-bold border border-gray-700 transition flex items-center justify-center gap-2"><i class="fas fa-eraser"></i> Limpar</button>
-                <button onclick="window.salvarAssinaturaParaCanvas()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-3 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg"><i class="fas fa-check"></i> Inserir</button>
-            </div>
-        </div>
-    </div>
-
     <!-- SCRIPT PRINCIPAL E FIREBASE -->
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -698,6 +755,13 @@
         let ctxAssinaturaPad = null;
         let pontosTraçoAssinatura = [];
 
+        // --- VARIÁVEIS MODO SELEÇÃO MÚLTIPLA ---
+        window.modoSelecaoAtivo = false;
+        window.tipoSelecaoAtual = ''; // 'arquivos', 'pastas', 'lixeira'
+        window.itensSelecionados = new Set();
+        let alvoAtualExclusao = null;
+        let tipoAtualExclusao = null;
+
         function escutarEventoSeguro(idElemento, evento, callback) {
             const el = document.getElementById(idElemento);
             if (el) el.addEventListener(evento, callback);
@@ -762,7 +826,6 @@
             window.renderizarFiltroAtual(true);
         };
 
-        // NOVO CARIMBO: Marcelly Souza da Silva Rosa
         function criarImagemCarimboVetor() {
             const canvasC = document.createElement('canvas');
             canvasC.width = 400;
@@ -998,7 +1061,6 @@
             }
         };
 
-        // Exclusão com permissão (Admin apaga de vez, Executor oculta)
         window.removerPacienteFirebase = function(id, nome) {
             if (perfilUsuario === 'administrador') {
                 if(confirm(`Tem certeza que deseja excluir DEFINITIVAMENTE "${nome}" do banco do sistema?`)) {
@@ -1060,13 +1122,11 @@
                         const v = child.val();
                         const p = { id: child.key, nome: v.nome, excluidoPorExecutor: v.excluidoPorExecutor || false };
                         
-                        // Se executor deletou e o logado for executor, pula ele (não mostra)
                         if (perfilUsuario !== "administrador" && p.excluidoPorExecutor) return;
 
                         listaPacientesCadastrados.push(p);
                     });
                     
-                    // Ordenação de A a Z ignorando acentos
                     listaPacientesCadastrados.sort((a,b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
 
                     if(container) {
@@ -1271,7 +1331,7 @@
                 tempCanvas.height = alturaCrop;
                 const ctx = tempCanvas.getContext('2d');
 
-                // Sempre puxa a base limpa para permitir reeditar os carimbos
+                // Sempre puxa a base limpa para permitir reeditar
                 ctx.drawImage(img, 0, 0);
                 canvasOriginalContextData = ctx.getImageData(0, 0, larguraCrop, alturaCrop);
                 
@@ -1286,7 +1346,7 @@
                     const slAss = document.getElementById("sliderEscalaAssinatura"); if (slAss) slAss.value = pag.estadoEdicao.escalaAssinatura;
                     const slCar = document.getElementById("sliderEscalaCarimbo"); if (slCar) slCar.value = pag.estadoEdicao.escalaCarimbo;
 
-                    // Carrega as imagens de assinatura/carimbo via promessa para garantir renderização
+                    // Carrega as imagens via promessa para garantir renderização
                     let promises = [];
 
                     if (pag.estadoEdicao.imgAssinaturaSrc) {
@@ -1354,7 +1414,6 @@
                     if (modalFiltros) { modalFiltros.classList.remove("hidden"); modalFiltros.classList.add("flex"); }
 
                     sincronizarPainelComCaixaAtiva();
-                    // Se não tiver estado prévio, força o filtro P&B para o scanner
                     if(!hasState) window.filtroAtivo = 'pb';
                     window.renderizarFiltroAtual(true);
                 }
@@ -1744,6 +1803,14 @@
                     let larguraAss = (larguraCrop * 0.35) * escala;
                     let alturaAss = (imgAssinaturaElemento.height * larguraAss) / imgAssinaturaElemento.width;
                     ctxLive.drawImage(imgAssinaturaElemento, posicaoAssinatura.x, posicaoAssinatura.y, larguraAss, alturaAss);
+                    
+                    if (mostrarGuias) {
+                        ctxLive.strokeStyle = "rgba(79, 70, 229, 0.8)";
+                        ctxLive.lineWidth = 2;
+                        ctxLive.setLineDash([4, 4]);
+                        ctxLive.strokeRect(posicaoAssinatura.x - 4, posicaoAssinatura.y - 4, larguraAss + 8, alturaAss + 8);
+                        ctxLive.setLineDash([]);
+                    }
                 } else if (camada === 'carimbo' && imgCarimboElemento) {
                     const slCar = document.getElementById("sliderEscalaCarimbo");
                     let escalaC = slCar ? parseInt(slCar.value) / 100 : 0.85;
@@ -1854,110 +1921,6 @@
             canvas.ontouchend = finalizarArrasto;
         }
 
-        window.abrirModalAssinatura = function() {
-            const modal = document.getElementById("modalAssinatura");
-            if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
-            
-            const canvasAss = document.getElementById("canvasAssinatura");
-            if (!canvasAss) return;
-
-            // Remove distorção, usa resolução base
-            canvasAss.width = canvasAss.offsetWidth;
-            canvasAss.height = canvasAss.offsetHeight;
-            
-            ctxAssinaturaPad = canvasAss.getContext("2d");
-            ctxAssinaturaPad.strokeStyle = "#000000";
-            ctxAssinaturaPad.lineWidth = 3;
-            ctxAssinaturaPad.lineCap = "round";
-            ctxAssinaturaPad.lineJoin = "round";
-
-            pontosTraçoAssinatura = [];
-
-            const getPosPad = (e) => {
-                const rect = canvasAss.getBoundingClientRect();
-                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                return { x: clientX - rect.left, y: clientY - rect.top };
-            };
-
-            const iniciar = (e) => { 
-                assinandoPad = true; 
-                const p = getPosPad(e); 
-                pontosTraçoAssinatura = [p];
-                ctxAssinaturaPad.beginPath(); 
-                ctxAssinaturaPad.moveTo(p.x, p.y); 
-            };
-
-            const desenhar = (e) => { 
-                if (!assinandoPad) return; 
-                e.preventDefault();
-                const p = getPosPad(e); 
-                pontosTraçoAssinatura.push(p);
-
-                if (pontosTraçoAssinatura.length > 2) {
-                    const len = pontosTraçoAssinatura.length;
-                    const xc = (pontosTraçoAssinatura[len - 1].x + pontosTraçoAssinatura[len - 2].x) / 2;
-                    const yc = (pontosTraçoAssinatura[len - 1].y + pontosTraçoAssinatura[len - 2].y) / 2;
-                    ctxAssinaturaPad.quadraticCurveTo(pontosTraçoAssinatura[len - 2].x, pontosTraçoAssinatura[len - 2].y, xc, yc);
-                    ctxAssinaturaPad.stroke();
-                }
-            };
-
-            const parar = () => { assinandoPad = false; };
-
-            canvasAss.onmousedown = iniciar; canvasAss.onmousemove = desenhar; canvasAss.onmouseup = parar;
-            canvasAss.ontouchstart = iniciar; canvasAss.ontouchmove = desenhar; canvasAss.ontouchend = parar;
-        };
-
-        window.limparAssinaturaPad = function() {
-            const canvasAss = document.getElementById("canvasAssinatura");
-            if (ctxAssinaturaPad && canvasAss) {
-                const ratio = window.devicePixelRatio || 1;
-                ctxAssinaturaPad.clearRect(0, 0, canvasAss.width / ratio, canvasAss.height / ratio);
-                pontosTraçoAssinatura = [];
-            }
-        };
-
-        window.fecharModalAssinatura = function() {
-            const modal = document.getElementById("modalAssinatura");
-            if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
-        };
-
-        window.salvarAssinaturaParaCanvas = function() {
-            const canvasAss = document.getElementById("canvasAssinatura");
-            if (!canvasAss) return;
-            const dataUrl = canvasAss.toDataURL("image/png");
-            
-            const img = new Image();
-            img.onload = function() {
-                imgAssinaturaElemento = img;
-                // Centraliza se for a primeira vez para não sumir da tela (Bug da Assinatura invisível resolvido)
-                posicaoAssinatura = { x: (larguraCrop - img.width) / 2, y: (alturaCrop - img.height) / 2 };
-                
-                const pAss = document.getElementById("painelControleAssinatura");
-                if (pAss) { pAss.classList.remove("hidden"); pAss.classList.add("flex"); }
-                
-                const txtBtnAss = document.getElementById("txtBtnAssinatura");
-                if (txtBtnAss) txtBtnAss.innerText = "Refazer Assinatura";
-                
-                window.fecharModalAssinatura();
-                window.renderizarFiltroAtual(true);
-            };
-            img.src = dataUrl;
-        };
-
-        window.removerAssinaturaCanvas = function() {
-            imgAssinaturaElemento = null;
-            const pAss = document.getElementById("painelControleAssinatura");
-            if (pAss) { pAss.classList.add("hidden"); pAss.classList.remove("flex"); }
-            
-            const txtBtnAss = document.getElementById("txtBtnAssinatura");
-            if (txtBtnAss) txtBtnAss.innerText = "Adicionar Assinatura";
-            
-            window.renderizarFiltroAtual(true);
-        };
-
-        // SALVAR PÁGINA (VAI PARA O CARRINHO) E CÓPIA DE ESTADO
         window.confirmarSalvarPaginaScanner = async function() {
             window.renderizarFiltroAtual(false);
             const canvasLive = document.getElementById("canvasLivePreview");
@@ -1969,7 +1932,7 @@
             tempC.getContext('2d').putImageData(canvasOriginalContextData, 0, 0);
             const cleanBaseUrl = tempC.toDataURL('image/jpeg', 0.85);
 
-            // MEMÓRIA DE ESTADO: Salva as edições atuais para recarregar se o usuário clicar no Lápis depois
+            // MEMÓRIA DE ESTADO
             const estadoEdicao = {
                 caixasTexto: JSON.parse(JSON.stringify(caixasTexto)),
                 posicaoAssinatura: { ...posicaoAssinatura },
@@ -1997,7 +1960,7 @@
                 });
             }
 
-            // DUPLICAR PARA AS PRÓXIMAS PÁGINAS (Carimbo e Memória de Estado)
+            // DUPLICAR PARA AS PRÓXIMAS PÁGINAS 
             if ((imgAssinaturaElemento || imgCarimboElemento) && indexAtual < arrayPaginasEscaneadas.length - 1) {
                 const btnSalvar = document.querySelector("#modalFiltrosScanner button[onclick='window.confirmarSalvarPaginaScanner()']");
                 let originalText = btnSalvar ? btnSalvar.innerHTML : "";
@@ -2010,7 +1973,6 @@
                     let pag = arrayPaginasEscaneadas[i];
                     let baseSrc = pag.baseDataUrl || pag.finalDataUrl;
                     
-                    // Copia o estado para a próxima página também para permitir edição
                     pag.estadoEdicao = JSON.parse(JSON.stringify(estadoEdicao));
 
                     await new Promise((resolve) => {
@@ -2025,45 +1987,66 @@
                             let scaleX = img.width / refWidth;
                             let scaleY = img.height / refHeight;
 
-                            // Desenhar o carimbo (se houver)
-                            if (estadoEdicao.imgCarimboSrc) {
-                                let imgC = new Image();
-                                imgC.onload = () => {
-                                    let escalaC = estadoEdicao.escalaCarimbo / 100;
-                                    let larguraCar = 380 * escalaC * scaleX;
-                                    let alturaCar = (imgC.height * (larguraCar / scaleX)) / imgC.width * scaleY;
-                                    tCtx.drawImage(imgC, estadoEdicao.posicaoCarimbo.x * scaleX, estadoEdicao.posicaoCarimbo.y * scaleY, larguraCar, alturaCar);
-                                    drawAssinatura(tCtx, tempCanvas, scaleX, scaleY, resolve, pag);
-                                };
-                                imgC.src = estadoEdicao.imgCarimboSrc;
-                            } else {
-                                drawAssinatura(tCtx, tempCanvas, scaleX, scaleY, resolve, pag);
+                            const renderizarFila = () => {
+                                ordemCamadas.forEach(camada => {
+                                    if (camada === 'assinatura' && estadoEdicao.imgAssinaturaSrc) {
+                                        let imgA = new Image();
+                                        imgA.onload = () => {
+                                            let escalaA = estadoEdicao.escalaAssinatura / 100;
+                                            let larguraAss = (refWidth * 0.35) * escalaA * scaleX;
+                                            let alturaAss = (imgA.height * (larguraAss / scaleX)) / imgA.width * scaleY;
+                                            tCtx.drawImage(imgA, estadoEdicao.posicaoAssinatura.x * scaleX, estadoEdicao.posicaoAssinatura.y * scaleY, larguraAss, alturaAss);
+                                        };
+                                        imgA.src = estadoEdicao.imgAssinaturaSrc;
+                                    } else if (camada === 'carimbo' && estadoEdicao.imgCarimboSrc) {
+                                        let imgC = new Image();
+                                        imgC.onload = () => {
+                                            let escalaC = estadoEdicao.escalaCarimbo / 100;
+                                            let larguraCar = 380 * escalaC * scaleX;
+                                            let alturaCar = (imgC.height * (larguraCar / scaleX)) / imgC.width * scaleY;
+                                            tCtx.drawImage(imgC, estadoEdicao.posicaoCarimbo.x * scaleX, estadoEdicao.posicaoCarimbo.y * scaleY, larguraCar, alturaCar);
+                                        };
+                                        imgC.src = estadoEdicao.imgCarimboSrc;
+                                    }
+                                });
+                            };
+                            
+                            // Para ser seguro na renderização paralela sem piscar, aguardamos as imagens
+                            let loadPromises = [];
+                            let imC, imA;
+                            if(estadoEdicao.imgCarimboSrc) {
+                                loadPromises.push(new Promise((resImg) => {
+                                    imC = new Image(); imC.onload = resImg; imC.src = estadoEdicao.imgCarimboSrc;
+                                }));
                             }
+                            if(estadoEdicao.imgAssinaturaSrc) {
+                                loadPromises.push(new Promise((resImg) => {
+                                    imA = new Image(); imA.onload = resImg; imA.src = estadoEdicao.imgAssinaturaSrc;
+                                }));
+                            }
+                            
+                            Promise.all(loadPromises).then(() => {
+                                ordemCamadas.forEach(camada => {
+                                    if (camada === 'assinatura' && imA) {
+                                        let escalaA = estadoEdicao.escalaAssinatura / 100;
+                                        let larguraAss = (refWidth * 0.35) * escalaA * scaleX;
+                                        let alturaAss = (imA.height * (larguraAss / scaleX)) / imA.width * scaleY;
+                                        tCtx.drawImage(imA, estadoEdicao.posicaoAssinatura.x * scaleX, estadoEdicao.posicaoAssinatura.y * scaleY, larguraAss, alturaAss);
+                                    } else if (camada === 'carimbo' && imC) {
+                                        let escalaC = estadoEdicao.escalaCarimbo / 100;
+                                        let larguraCar = 380 * escalaC * scaleX;
+                                        let alturaCar = (imC.height * (larguraCar / scaleX)) / imC.width * scaleY;
+                                        tCtx.drawImage(imC, estadoEdicao.posicaoCarimbo.x * scaleX, estadoEdicao.posicaoCarimbo.y * scaleY, larguraCar, alturaCar);
+                                    }
+                                });
+                                pag.finalDataUrl = tempCanvas.toDataURL('image/jpeg', 0.85);
+                                resolve();
+                            });
                         };
                         img.src = baseSrc;
                     });
                 }
                 if(btnSalvar) { btnSalvar.innerHTML = originalText; btnSalvar.disabled = false; }
-            }
-
-            // Função auxiliar pra assinar nas cópias
-            function drawAssinatura(tCtx, tempCanvas, scaleX, scaleY, resolve, pag) {
-                if (estadoEdicao.imgAssinaturaSrc) {
-                    let imgA = new Image();
-                    imgA.onload = () => {
-                        let escalaA = estadoEdicao.escalaAssinatura / 100;
-                        let larguraAss = (refWidth * 0.35) * escalaA * scaleX;
-                        let alturaAss = (imgA.height * (larguraAss / scaleX)) / imgA.width * scaleY;
-                        tCtx.drawImage(imgA, estadoEdicao.posicaoAssinatura.x * scaleX, estadoEdicao.posicaoAssinatura.y * scaleY, larguraAss, alturaAss);
-                        
-                        pag.finalDataUrl = tempCanvas.toDataURL('image/jpeg', 0.85);
-                        resolve();
-                    };
-                    imgA.src = estadoEdicao.imgAssinaturaSrc;
-                } else {
-                    pag.finalDataUrl = tempCanvas.toDataURL('image/jpeg', 0.85);
-                    resolve();
-                }
             }
 
             modoUploadAtual = 'scanner';
@@ -2074,362 +2057,245 @@
             window.renderizarCarrinhoScanner();
         };
 
-        // --- PREVIEW INTELIGENTE PARA DROPDOWN COM ZOOM (LIGHTBOX) ---
-        window.renderizarCarrinhoScanner = function() {
-            const areaEscolha = document.getElementById("areaEscolhaModo");
-            const areaPrev = document.getElementById("areaPreviewScanner");
-            const btnSalvar = document.getElementById("btnSalvarUpload");
+        // --- SISTEMA DE SELEÇÃO MÚLTIPLA E LIXEIRA ---
+
+        window.abrirLixeira = function() {
+            window.pastaAbertaAtual = 'lixeira';
+            window.toggleSidebar(false);
+            window.aplicarFiltrosNaGaleria();
+        };
+
+        window.iniciarModoSelecao = function(tipo, preSelecionado = null) {
+            window.modoSelecaoAtivo = true;
+            window.tipoSelecaoAtual = tipo;
+            window.itensSelecionados = new Set();
+            if (preSelecionado) window.itensSelecionados.add(preSelecionado);
             
-            if (areaEscolha) areaEscolha.classList.add("hidden");
-            if (areaPrev) { areaPrev.classList.remove("hidden"); areaPrev.classList.add("flex"); }
-            if (btnSalvar) { btnSalvar.classList.remove("hidden"); btnSalvar.classList.add("flex"); }
-
-            const grid = document.getElementById("gridPaginasScanner");
-            if (grid) grid.innerHTML = "";
+            document.getElementById('barraSelecao').classList.remove('hidden');
+            document.getElementById('barraSelecao').classList.add('flex');
+            document.getElementById('secaoFiltros').classList.add('hidden'); // Oculta barra de busca pra dar foco
+            document.getElementById('fabUpload').classList.add('hidden'); // Oculta botão de mais
             
-            const txtQtd = document.getElementById("txtQtdPaginas");
-            if (txtQtd) txtQtd.innerText = `${arrayPaginasEscaneadas.length} páginas`;
-
-            arrayPaginasEscaneadas.forEach((pagData, index) => {
-                let imgUrl = typeof pagData === 'string' ? pagData : pagData.finalDataUrl;
-                let nomePacSugerido = pagData.paciente || "";
-
-                // Dropdown aprimorado: texto mais curto para caber na tela do celular
-                let optionsHTML = `<option value="">(Mesmo da Pág. Anterior)</option>`;
-                listaPacientesCadastrados.forEach(pac => {
-                    let selected = (nomePacSugerido === pac.nome) ? "selected" : "";
-                    optionsHTML += `<option value="${pac.nome}" ${selected}>${pac.nome}</option>`;
-                });
-
-                const div = document.createElement("div");
-                div.className = "relative border border-gray-700 rounded-lg overflow-hidden h-40 bg-gray-900 flex flex-col group shadow-lg"; 
-                div.innerHTML = `
-                    <div class="flex-1 relative overflow-hidden group-hover:opacity-90 transition">
-                        <!-- IMAGEM COM FUNÇÃO DE ZOOM AO CLICAR -->
-                        <img src="${imgUrl}" onclick="window.abrirZoomPagina(${index})" class="w-full h-full object-cover opacity-80 cursor-zoom-in hover:opacity-100 transition">
-                        <div class="absolute bottom-0 left-0 right-0 bg-black/80 text-[9px] text-center py-0.5 font-bold shadow-inner z-10 pointer-events-none">Pág ${index + 1}</div>
-                        
-                        <div class="absolute top-1 right-1 flex gap-1 z-20">
-                            <!-- BOTÃO EDITAR DE VOLTA NA TELA -->
-                            <button onclick="window.editarPaginaScanner(${index})" title="Editar (Carimbo/Filtro)" class="bg-blue-600 hover:bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow"><i class="fas fa-pen text-[9px]"></i></button>
-                            <button onclick="window.removerPaginaScanner(${index})" title="Remover Página" class="bg-red-600 hover:bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow"><i class="fas fa-times text-[9px]"></i></button>
-                        </div>
-                    </div>
-                    <div class="h-9 bg-gray-950 flex flex-col p-1 border-t border-gray-800 shrink-0">
-                        <select id="selectNomePac_${index}" class="w-full h-full bg-gray-800 text-[10px] text-center text-white font-bold rounded border border-gray-600 focus:outline-none focus:border-blue-500 transition truncate px-1">
-                            ${optionsHTML}
-                        </select>
-                    </div>
-                `;
-                if (grid) grid.appendChild(div);
-            });
-            if (arrayPaginasEscaneadas.length === 0) window.limparModosUpload();
-        };
-
-        window.removerPaginaScanner = function(index) {
-            arrayPaginasEscaneadas.splice(index, 1);
-            window.renderizarCarrinhoScanner();
-        };
-
-        window.limparModosUpload = function() {
-            modoUploadAtual = null;
-            arquivosFilaEnvio = [];
-            arrayPaginasEscaneadas = [];
-            indicePaginaSendoEditada = null;
-            
-            const inCam = document.getElementById("inputArquivoCamera"); if (inCam) inCam.value = "";
-            const inGal = document.getElementById("inputArquivoGaleria"); if (inGal) inGal.value = "";
-            const inScanCam = document.getElementById("inputArquivoScannerCamera"); if (inScanCam) inScanCam.value = "";
-            const inScanGal = document.getElementById("inputArquivoScannerGaleria"); if (inScanGal) inScanGal.value = "";
-            const inGen = document.getElementById("inputArquivoGenerico"); if (inGen) inGen.value = "";
-            
-            const areaEscolha = document.getElementById("areaEscolhaModo"); if (areaEscolha) areaEscolha.classList.remove("hidden");
-            const areaPrevArq = document.getElementById("areaPreviewArquivos"); if (areaPrevArq) { areaPrevArq.classList.add("hidden"); areaPrevArq.classList.remove("flex"); }
-            const areaPrevScan = document.getElementById("areaPreviewScanner"); if (areaPrevScan) { areaPrevScan.classList.add("hidden"); areaPrevScan.classList.remove("flex"); }
-            const btnSalvar = document.getElementById("btnSalvarUpload"); if (btnSalvar) { btnSalvar.classList.add("hidden"); btnSalvar.classList.remove("flex"); }
-        };
-
-        window.processarArquivosLote = async function(input, tipo) {
-            if (input.files && input.files.length > 0) {
-                const file = input.files[0];
-                
-                // NOVO FLUXO: Se o usuário subir um PDF genérico, fatiamos e jogamos no Carrinho de Revisão!
-                if (file.type === 'application/pdf') {
-                    modoUploadAtual = 'scanner'; 
-                    const areaEscolha = document.getElementById("areaEscolhaModo"); if (areaEscolha) areaEscolha.classList.add("hidden");
-                    const areaPrev = document.getElementById("areaPreviewScanner"); if (areaPrev) { areaPrev.classList.remove("hidden"); areaPrev.classList.add("flex"); }
-                    const btnSalvar = document.getElementById("btnSalvarUpload"); 
-                    if (btnSalvar) { btnSalvar.classList.remove("hidden"); btnSalvar.classList.add("flex"); btnSalvar.disabled = true; btnSalvar.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Lendo Páginas do PDF...`; }
-                    
-                    const grid = document.getElementById("gridPaginasScanner");
-                    if (grid) grid.innerHTML = `<div class="col-span-2 text-center text-xs text-gray-400 py-8">Aguarde, a Inteligência Artificial está escaneando a letra do PDF...</div>`;
-
-                    try {
-                        const arrayBuffer = await file.arrayBuffer();
-                        const pdfDocJs = await window.pdfjsLib.getDocument({data: arrayBuffer}).promise; 
-                        const worker = await Tesseract.createWorker('por');
-
-                        for (let pageNum = 1; pageNum <= pdfDocJs.numPages; pageNum++) {
-                            const page = await pdfDocJs.getPage(pageNum);
-                            const viewport = page.getViewport({ scale: 1.5 });
-                            const canvas = document.createElement('canvas');
-                            const ctx = canvas.getContext('2d');
-                            canvas.height = viewport.height;
-                            canvas.width = viewport.width;
-                            await page.render({ canvasContext: ctx, viewport: viewport }).promise;
-                            
-                            const imgDataUrl = canvas.toDataURL('image/jpeg', 0.85);
-                            
-                            // A IA tenta ler a página atual e cruzar com o banco
-                            let nomeSugerido = "";
-                            try {
-                                const imgBw = await preProcessarImagemParaOCR(imgDataUrl);
-                                const ret = await worker.recognize(imgBw);
-                                let nomeVisto = encontrarPacienteNoBanco(ret.data.text);
-                                if (nomeVisto !== "Desconhecido") nomeSugerido = nomeVisto;
-                            } catch(e) {}
-
-                            arrayPaginasEscaneadas.push({
-                                finalDataUrl: imgDataUrl,
-                                baseDataUrl: imgDataUrl, // Guarda a base limpa para o carimbo
-                                paciente: nomeSugerido,
-                                arquivoOriginalParaRelatorioGeral: file
-                            });
-                        }
-                        await worker.terminate();
-                    } catch (err) {
-                        alert("Houve um erro ao processar o PDF.");
-                    }
-                    
-                    window.renderizarCarrinhoScanner();
-                    if (btnSalvar) { btnSalvar.disabled = false; btnSalvar.innerHTML = `<i class="fas fa-cloud-upload-alt"></i> Salvar e Enviar`; }
-                    input.value = "";
-                    return;
-                }
-
-                // Fila normal de imagens
-                modoUploadAtual = tipo; 
-                for (let i = 0; i < input.files.length; i++) { arquivosFilaEnvio.push(input.files[i]); }
-                
-                const areaEscolha = document.getElementById("areaEscolhaModo"); if (areaEscolha) areaEscolha.classList.add("hidden");
-                const areaPrevArq = document.getElementById("areaPreviewArquivos"); if (areaPrevArq) { areaPrevArq.classList.remove("hidden"); areaPrevArq.classList.add("flex"); }
-                const btnSalvar = document.getElementById("btnSalvarUpload"); if (btnSalvar) { btnSalvar.classList.remove("hidden"); btnSalvar.classList.add("flex"); }
-                
-                window.renderizarListaFilaEnvio();
-            }
-            input.value = "";
-        };
-
-        window.renderizarListaFilaEnvio = function() {
-            const container = document.getElementById("listaArquivosFila");
-            if (!container) return;
-            container.innerHTML = "";
-            const txtQtd = document.getElementById("txtQtdFila");
-            if (txtQtd) txtQtd.innerText = `${arquivosFilaEnvio.length} itens`;
-            
-            arquivosFilaEnvio.forEach((file, index) => {
-                let isImg = file.type.startsWith('image/');
-                let iconeLateral = isImg ? `<i class="fas fa-image text-blue-400 mr-2 text-sm"></i>` : `<i class="fas fa-file-alt text-purple-400 mr-2 text-sm"></i>`;
-                const div = document.createElement("div");
-                div.className = "flex justify-between items-center bg-gray-800 p-2.5 rounded-lg border border-gray-700 text-xs hover:border-gray-600 transition";
-                div.innerHTML = `<div class="truncate flex-1 text-gray-300 pr-2 flex items-center font-medium">${iconeLateral} ${file.name}</div><button onclick="window.removerArquivoFila(${index})" class="text-gray-500 hover:text-red-400 p-1.5 transition rounded-full hover:bg-gray-700/50"><i class="fas fa-times"></i></button>`;
-                container.appendChild(div);
-            });
-            if (arquivosFilaEnvio.length === 0) window.limparModosUpload();
-        };
-
-        window.removerArquivoFila = function(index) {
-            arquivosFilaEnvio.splice(index, 1);
-            window.renderizarListaFilaEnvio();
-        };
-
-        // LÓGICA FINAL DE UPLOAD BASEADO NAS REVISÕES DO USUÁRIO
-        window.iniciarUploadStorage = async function() {
-            const inNome = document.getElementById("nomeArquivoManual");
-            let nomeDigitado = inNome ? inNome.value.trim() : "";
-            if (!nomeDigitado) return alert("⚠️ Digite um nome ou descrição do dia para a remessa!");
-
-            const btnSalvar = document.getElementById("btnSalvarUpload");
-            const containerProgresso = document.getElementById("containerProgresso");
-            const barraProgresso = document.getElementById("barraProgresso");
-            
-            if (btnSalvar) { btnSalvar.disabled = true; btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Processando...`; }
-            if (containerProgresso) containerProgresso.classList.remove("hidden");
-            if (barraProgresso) barraProgresso.style.width = '0%';
-
-            if (modoUploadAtual === 'scanner') {
-                const dataAtual = new Date();
-                const pastaData = `${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, '0')}-${String(dataAtual.getDate()).padStart(2, '0')}`;
-                
-                // 1. GERA E SALVA O RELATÓRIO GERAL (Completo)
-                if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Salvando Relatório Geral...`;
-                
-                let arquivoGeralUpload = null;
-                // Só usa o original se ninguém fez nenhuma edição (carimbo, filtro, etc.) em nenhuma página
-                let houveEdicao = arrayPaginasEscaneadas.some(p => p.estadoEdicao && (p.estadoEdicao.imgCarimboSrc || p.estadoEdicao.imgAssinaturaSrc || p.estadoEdicao.brilho !== 0 || p.estadoEdicao.caixasTexto?.length > 0));
-                
-                if (!houveEdicao && arrayPaginasEscaneadas[0] && arrayPaginasEscaneadas[0].arquivoOriginalParaRelatorioGeral) {
-                    arquivoGeralUpload = arrayPaginasEscaneadas[0].arquivoOriginalParaRelatorioGeral;
-                } else {
-                    const { jsPDF } = window.jspdf;
-                    const doc = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
-                    const pdfWidth = doc.internal.pageSize.getWidth();
-                    const pdfHeight = doc.internal.pageSize.getHeight();
-
-                    arrayPaginasEscaneadas.forEach((pagData, i) => {
-                        let imgBase64 = pagData.finalDataUrl;
-                        if (i > 0) doc.addPage();
-                        const imgProps = doc.getImageProperties(imgBase64);
-                        let imgWidth = pdfWidth;
-                        let imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
-                        if (imgHeight > pdfHeight) { imgHeight = pdfHeight; imgWidth = (imgProps.width * pdfHeight) / imgProps.height; }
-                        const x = (pdfWidth - imgWidth) / 2; const y = (pdfHeight - imgHeight) / 2;
-                        doc.addImage(imgBase64, 'JPEG', x, y, imgWidth, imgHeight);
-                    });
-                    arquivoGeralUpload = doc.output('blob');
-                }
-
-                const refRemessa = storageRef(storage, `Relatorio_Geral/${pastaData}/${Date.now()}_${nomeDigitado}.pdf`);
-                await uploadBytesResumable(refRemessa, arquivoGeralUpload, { contentType: 'application/pdf' });
-                const urlGeral = await getDownloadURL(refRemessa);
-                await push(dbRef(db, 'arquivos_anexos'), {
-                    nome: `${nomeDigitado} (Completo)`,
-                    url: urlGeral,
-                    tipo: 'pdf',
-                    enviadoPor: usuarioLogado,
-                    dataEnvio: Date.now(),
-                    pasta: `Relatorio_Geral/${pastaData}`,
-                    statusExclusao: "ativo"
-                });
-
-                // 2. AGRUPA E SEPARA PELOS NOMES DO DROPDOWN
-                if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Separando por Paciente...`;
-                
-                let mapaPacientes = {};
-                let nomeAnteriorLembrado = "Desconhecido"; 
-
-                for (let i = 0; i < arrayPaginasEscaneadas.length; i++) {
-                    let pagData = arrayPaginasEscaneadas[i];
-                    let imgBase64 = pagData.finalDataUrl;
-                    
-                    let elCaixinha = document.getElementById(`selectNomePac_${i}`);
-                    let nomeSelecionadoNaTela = elCaixinha ? elCaixinha.value : "";
-
-                    if (nomeSelecionadoNaTela !== "") {
-                        nomeAnteriorLembrado = nomeSelecionadoNaTela;
-                    }
-                    
-                    if (!mapaPacientes[nomeAnteriorLembrado]) mapaPacientes[nomeAnteriorLembrado] = [];
-                    mapaPacientes[nomeAnteriorLembrado].push(imgBase64);
-                }
-
-                // 3. FAZ O UPLOAD DAS PASTAS INDIVIDUAIS
-                const { jsPDF } = window.jspdf;
-                const docPDF = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
-                const pdfW = docPDF.internal.pageSize.getWidth();
-                const pdfH = docPDF.internal.pageSize.getHeight();
-
-                const nomesPacientes = Object.keys(mapaPacientes);
-                let contadorPac = 0;
-
-                for (let idx = 0; idx < nomesPacientes.length; idx++) {
-                    const nomePac = nomesPacientes[idx];
-                    const imgsPac = mapaPacientes[nomePac];
-
-                    if (nomePac === "Desconhecido") continue; 
-
-                    if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Salvando: ${nomePac}...`;
-
-                    const docPac = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
-                    imgsPac.forEach((imgB64, pIdx) => {
-                        if (pIdx > 0) docPac.addPage();
-                        const imgProps = docPac.getImageProperties(imgB64);
-                        let imgWidth = pdfW;
-                        let imgHeight = (imgProps.height * pdfW) / imgProps.width;
-                        if (imgHeight > pdfH) { imgHeight = pdfH; imgWidth = (imgProps.width * pdfH) / imgProps.height; }
-                        const x = (pdfW - imgWidth) / 2; const y = (pdfH - imgHeight) / 2;
-                        docPac.addImage(imgB64, 'JPEG', x, y, imgWidth, imgHeight);
-                    });
-
-                    const blobPac = docPac.output('blob');
-                    const refPac = storageRef(storage, `Pacientes/${nomePac}/Evolucao_${pastaData}_${Date.now()}.pdf`);
-                    
-                    await uploadBytesResumable(refPac, blobPac, { contentType: 'application/pdf' });
-                    const urlPac = await getDownloadURL(refPac);
-
-                    await push(dbRef(db, 'arquivos_anexos'), {
-                        nome: `Evolução - ${nomePac}`,
-                        url: urlPac,
-                        tipo: 'pdf',
-                        enviadoPor: usuarioLogado,
-                        dataEnvio: Date.now(),
-                        pastaPaciente: nomePac, 
-                        statusExclusao: "ativo"
-                    });
-
-                    contadorPac++;
-                    if (barraProgresso) barraProgresso.style.width = ((contadorPac / nomesPacientes.length) * 100) + '%';
-                }
-
-                window.fecharModalUpload();
-                resetarBotaoAposErro();
-
-            } else if (modoUploadAtual === 'camera' || modoUploadAtual === 'galeria') {
-                let concluidos = 0; let totalArquivos = arquivosFilaEnvio.length;
-                for (let i = 0; i < totalArquivos; i++) {
-                    const file = arquivosFilaEnvio[i];
-                    if (btnSalvar) btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Enviando Foto ${i+1}/${totalArquivos}...`;
-                    let sufixoNome = totalArquivos > 1 ? ` (${i+1})` : "";
-                    let nomeParaBanco = nomeDigitado + sufixoNome;
-
-                    await fazerUploadUnico(file, 'imagem', nomeParaBanco, file.type || 'application/octet-stream');
-                    concluidos++; if (barraProgresso) barraProgresso.style.width = ((concluidos / totalArquivos) * 100) + '%';
-                }
-                window.fecharModalUpload(); resetarBotaoAposErro();
-            }
-
-            function fazerUploadUnico(fileObj, tipoDoArquivoBanco, nomeNoBanco, contentTypeReal) {
-                return new Promise((resolve) => {
-                    const dataAtual = new Date();
-                    const pastaData = `${dataAtual.getFullYear()}/${String(dataAtual.getMonth() + 1).padStart(2, '0')}/${String(dataAtual.getDate()).padStart(2, '0')}`;
-                    let extensaoParaSalvar = `.${tipoDoArquivoBanco === 'imagem' ? 'jpg' : tipoDoArquivoBanco}`;
-                    const extReal = fileObj.name ? (fileObj.name.match(/\.([^.]+)$/) ? `.${fileObj.name.match(/\.([^.]+)$/)[1]}` : extensaoParaSalvar) : extensaoParaSalvar;
-                    const nomeUnico = Date.now() + "_" + Math.floor(Math.random()*10000) + extReal;
-                    const refCaminho = storageRef(storage, `fotos_anexadas/${pastaData}/${nomeUnico}`);
-                    const metadata = { contentType: contentTypeReal };
-                    const tarefa = uploadBytesResumable(refCaminho, fileObj, metadata);
-
-                    tarefa.on('state_changed', () => {}, 
-                        (erro) => { resolve(); }, 
-                        () => {
-                            getDownloadURL(tarefa.snapshot.ref).then((url) => {
-                                const novoAnexo = { nome: nomeNoBanco, url: url, tipo: tipoDoArquivoBanco, enviadoPor: usuarioLogado, dataEnvio: Date.now(), statusExclusao: "ativo" };
-                                push(dbRef(db, 'arquivos_anexos'), novoAnexo).then(() => { resolve(); });
-                            });
-                        }
-                    );
-                });
-            }
-
-            function resetarBotaoAposErro() {
-                if (btnSalvar) { btnSalvar.disabled = false; btnSalvar.innerHTML = `<i class="fas fa-cloud-upload-alt"></i> Salvar e Enviar`; }
-                if (containerProgresso) containerProgresso.classList.add("hidden"); 
-                if (barraProgresso) barraProgresso.style.width = '0%';
-            }
-        };
-
-        function obterNomePastaInteligente(timestamp) {
-            const dataObj = new Date(timestamp);
-            const hoje = new Date();
-            if (dataObj.getMonth() === hoje.getMonth() && dataObj.getFullYear() === hoje.getFullYear()) {
-                return dataObj.toLocaleDateString('pt-BR');
+            const btn = document.getElementById('btnAcaoSelecao');
+            if (tipo === 'lixeira') {
+                btn.innerHTML = `<i class="fas fa-check"></i> Ações`;
             } else {
-                const mes = String(dataObj.getMonth() + 1).padStart(2, '0');
-                return `${mes}/${dataObj.getFullYear()}`;
+                btn.innerHTML = `<i class="fas fa-trash"></i> Apagar`;
             }
+            
+            window.atualizarContagemSelecao();
+            window.aplicarFiltrosNaGaleria();
+        };
+
+        window.toggleSelecaoItem = function(id) {
+            if(window.itensSelecionados.has(id)) window.itensSelecionados.delete(id);
+            else window.itensSelecionados.add(id);
+            window.atualizarContagemSelecao();
+            window.aplicarFiltrosNaGaleria();
+        };
+
+        window.atualizarContagemSelecao = function() {
+            document.getElementById('txtContagemSelecao').innerText = `${window.itensSelecionados.size} selecionado(s)`;
+        };
+
+        window.cancelarModoSelecao = function() {
+            window.modoSelecaoAtivo = false;
+            window.itensSelecionados.clear();
+            document.getElementById('barraSelecao').classList.add('hidden');
+            document.getElementById('barraSelecao').classList.remove('flex');
+            document.getElementById('secaoFiltros').classList.remove('hidden'); 
+            document.getElementById('fabUpload').classList.remove('hidden'); 
+            window.aplicarFiltrosNaGaleria();
+        };
+
+        // Modais de Pergunta "Deseja apagar mais?"
+        window.iniciarExclusaoArquivo = function() {
+            window.fecharModalVisualizacao();
+            alvoAtualExclusao = window.idImagemAtiva;
+            tipoAtualExclusao = 'arquivo';
+            document.getElementById("txtTituloPerguntaSelecao").innerHTML = `<i class="fas fa-trash text-red-500"></i> Deseja apagar mais arquivos?`;
+            document.getElementById("txtDescPerguntaSelecao").innerText = `Você pode selecionar vários arquivos de uma vez.`;
+            document.getElementById("modalPerguntaSelecao").classList.remove('hidden');
+            document.getElementById("modalPerguntaSelecao").classList.add('flex');
+        };
+
+        window.perguntarApagarPasta = function(nomePasta) {
+            alvoAtualExclusao = nomePasta;
+            tipoAtualExclusao = 'pasta';
+            document.getElementById("txtTituloPerguntaSelecao").innerHTML = `<i class="fas fa-trash text-red-500"></i> Deseja apagar mais pastas?`;
+            document.getElementById("txtDescPerguntaSelecao").innerText = `Você pode excluir várias pastas de uma vez.`;
+            document.getElementById("modalPerguntaSelecao").classList.remove('hidden');
+            document.getElementById("modalPerguntaSelecao").classList.add('flex');
+        };
+
+        window.responderPerguntaSelecao = function(querSelecionar) {
+            document.getElementById("modalPerguntaSelecao").classList.add('hidden');
+            document.getElementById("modalPerguntaSelecao").classList.remove('flex');
+            
+            if (querSelecionar) {
+                window.iniciarModoSelecao(tipoAtualExclusao === 'arquivo' ? 'arquivos' : 'pastas', alvoAtualExclusao);
+            } else {
+                if (tipoAtualExclusao === 'arquivo') {
+                    if(confirm("Confirmar exclusão deste arquivo?")) window.moverParaLixeira([alvoAtualExclusao]);
+                } else {
+                    if(confirm("Confirmar exclusão desta pasta inteira?")) window.moverPastaParaLixeira([alvoAtualExclusao]);
+                }
+            }
+        };
+
+        window.executarAcaoSelecao = function() {
+            if(window.itensSelecionados.size === 0) return alert("Selecione pelo menos um item.");
+            
+            let idsArr = Array.from(window.itensSelecionados);
+            
+            if (window.tipoSelecaoAtual === 'arquivos') {
+                if(confirm(`Deseja apagar os ${idsArr.length} arquivos selecionados?`)) window.moverParaLixeira(idsArr);
+            } else if (window.tipoSelecaoAtual === 'pastas') {
+                if(confirm(`Deseja apagar as ${idsArr.length} pastas selecionadas?`)) window.moverPastaParaLixeira(idsArr);
+            } else if (window.tipoSelecaoAtual === 'lixeira') {
+                document.getElementById('modalAcoesSelecaoLixeira').classList.remove('hidden');
+                document.getElementById('modalAcoesSelecaoLixeira').classList.add('flex');
+            }
+        };
+
+        window.moverParaLixeira = function(ids) {
+            let updates = {};
+            ids.forEach(id => {
+                updates[id + '/statusExclusao'] = 'lixeira_usuario';
+                updates[id + '/dataExclusao'] = Date.now();
+            });
+            update(dbRef(db, 'arquivos_anexos'), updates).then(() => {
+                window.cancelarModoSelecao();
+            });
+        };
+
+        window.moverPastaParaLixeira = function(nomesDatas) {
+            let ids = [];
+            todosAnexosNaMemoria.forEach(arq => {
+                if (!arq.pastaPaciente && !(arq.pasta && arq.pasta.startsWith("Relatorio_Geral"))) {
+                    let dataPasta = obterNomePastaInteligente(arq.dataEnvio);
+                    if (nomesDatas.includes(dataPasta)) {
+                        ids.push({ id: arq.id, lote: dataPasta });
+                    }
+                }
+            });
+            
+            let updates = {};
+            ids.forEach(obj => {
+                updates[obj.id + '/statusExclusao'] = 'lixeira_usuario';
+                updates[obj.id + '/dataExclusao'] = Date.now();
+                updates[obj.id + '/loteExclusao'] = 'Data: ' + obj.lote;
+            });
+            update(dbRef(db, 'arquivos_anexos'), updates).then(() => {
+                window.cancelarModoSelecao();
+            });
+        };
+
+        // LÓGICA DE AÇÃO DA LIXEIRA
+        function converterSelecaoParaIDs(arr) {
+            let result = [];
+            arr.forEach(item => {
+                if (typeof item === 'string' && item.startsWith('Data:')) {
+                    todosAnexosNaMemoria.forEach(a => {
+                        if (a.loteExclusao === item) result.push(a.id);
+                    });
+                } else {
+                    result.push(item);
+                }
+            });
+            return result;
         }
 
-        // RENDERIZAÇÃO DA GALERIA
+        window.executarLoteLixeiraFinal = function(acao) { // restaurar ou apagar
+            let idsArr = Array.from(window.itensSelecionados);
+            let idsReais = converterSelecaoParaIDs(idsArr);
+
+            if(acao === 'restaurar') window.restaurarDaLixeira(idsReais);
+            else window.acaoDefinitivaLixeira(idsReais);
+        };
+
+        window.processarLoteLixeira = function(acao) { 
+            let ids = todosAnexosNaMemoria.filter(a => a.loteExclusao === window.loteAtivoLixeira).map(a => a.id);
+            if(acao === 'restaurar') window.restaurarDaLixeira(ids);
+            else window.acaoDefinitivaLixeira(ids);
+        };
+
+        window.abrirModalAcaoLoteLixeira = function(loteNome) {
+            if(window.modoSelecaoAtivo) {
+                window.toggleSelecaoItem(loteNome);
+                return;
+            }
+            window.loteAtivoLixeira = loteNome;
+            document.getElementById('txtNomeLoteLixeira').innerText = loteNome;
+            document.getElementById('modalAcoesLoteLixeira').classList.remove('hidden');
+            document.getElementById('modalAcoesLoteLixeira').classList.add('flex');
+        };
+
+        window.fecharModalAcaoLoteLixeira = function() {
+            document.getElementById('modalAcoesLoteLixeira').classList.add('hidden');
+            document.getElementById('modalAcoesLoteLixeira').classList.remove('flex');
+        };
+
+        window.acaoDefinitivaLixeira = function(ids) {
+            if (perfilUsuario === 'administrador') {
+                if(confirm("Tem certeza? Isso apagará DEFINITIVAMENTE os itens do banco de dados.")) {
+                    ids.forEach(id => remove(dbRef(db, 'arquivos_anexos/' + id)));
+                    window.cancelarModoSelecao();
+                    window.fecharModalAcaoLoteLixeira();
+                    window.fecharModalVisualizacao();
+                }
+            } else {
+                if(confirm("Esse arquivo poderá ser restaurado pelo administrador em até 10 dias, caso contrário a ação não poderá ser desfeita.\n\nConfirmar?")) {
+                    let updates = {};
+                    ids.forEach(id => {
+                        updates[id + '/statusExclusao'] = 'lixeira_admin';
+                        updates[id + '/dataExclusaoAdmin'] = Date.now();
+                    });
+                    update(dbRef(db, 'arquivos_anexos'), updates).then(() => {
+                        window.cancelarModoSelecao();
+                        window.fecharModalAcaoLoteLixeira();
+                        window.fecharModalVisualizacao();
+                        document.getElementById('modalAcoesSelecaoLixeira').classList.add('hidden');
+                    });
+                }
+            }
+        };
+
+        window.restaurarDaLixeira = function(ids) {
+            let updates = {};
+            ids.forEach(id => {
+                updates[id + '/statusExclusao'] = 'ativo';
+                updates[id + '/dataExclusao'] = null;
+                updates[id + '/loteExclusao'] = null;
+                updates[id + '/dataExclusaoAdmin'] = null;
+            });
+            update(dbRef(db, 'arquivos_anexos'), updates).then(() => {
+                window.cancelarModoSelecao();
+                window.fecharModalAcaoLoteLixeira();
+                window.fecharModalVisualizacao();
+                document.getElementById('modalAcoesSelecaoLixeira').classList.add('hidden');
+            });
+        };
+
+        window.esvaziarLixeira = function() {
+            let lixeiraFiles = todosAnexosNaMemoria.filter(a => a.statusExclusao === 'lixeira_usuario');
+            if(perfilUsuario === 'administrador') {
+                lixeiraFiles = todosAnexosNaMemoria.filter(a => a.statusExclusao === 'lixeira_usuario' || a.statusExclusao === 'lixeira_admin');
+            }
+            if(lixeiraFiles.length === 0) return;
+
+            let ids = lixeiraFiles.map(a => a.id);
+            window.acaoDefinitivaLixeira(ids);
+        };
+
+        // Permite duplo clique geral na Lixeira para entrar no modo de seleção
+        document.getElementById("listaAnexos").ondblclick = function(e) {
+            if (window.pastaAbertaAtual === 'lixeira' && !window.modoSelecaoAtivo) {
+                window.iniciarModoSelecao('lixeira');
+            }
+        };
+
+        // --- RENDERIZAÇÃO DA GALERIA ---
         function carregarGaleriaDeAnexos() {
             const container = document.getElementById("listaAnexos");
             if (container && todosAnexosNaMemoria.length === 0) {
@@ -2438,59 +2304,104 @@
 
             onValue(dbRef(db, 'arquivos_anexos'), (snapshot) => {
                 todosAnexosNaMemoria = [];
-                const selectUsuario = document.getElementById("filtroUsuario");
-                let usuariosUnicos = new Set();
+                const dezDiasMs = 10 * 24 * 60 * 60 * 1000;
+                const agora = Date.now();
 
                 if (snapshot.exists()) {
                     snapshot.forEach(child => { 
                         const anexo = { id: child.key, ...child.val() };
                         if (!anexo.tipo) anexo.tipo = 'imagem'; 
-                        if (perfilUsuario === "administrador" || anexo.statusExclusao !== "pendente_aprovacao") {
-                            todosAnexosNaMemoria.push(anexo);
-                            if (anexo.enviadoPor) usuariosUnicos.add(anexo.enviadoPor);
+                        if (!anexo.statusExclusao) anexo.statusExclusao = 'ativo';
+
+                        // LIMPADOR DE 10 DIAS DA LIXEIRA (Soft Delete Silencioso)
+                        if (anexo.statusExclusao === 'lixeira_admin' && anexo.dataExclusaoAdmin) {
+                            if (agora - anexo.dataExclusaoAdmin > dezDiasMs) {
+                                remove(dbRef(db, 'arquivos_anexos/' + anexo.id));
+                                return; // Pula a adição na memória, pois foi deletado
+                            }
                         }
+
+                        todosAnexosNaMemoria.push(anexo);
                     });
                     todosAnexosNaMemoria.sort((a, b) => b.dataEnvio - a.dataEnvio);
                 }
-
-                if (selectUsuario) {
-                    const valorAtualSelect = selectUsuario.value;
-                    selectUsuario.innerHTML = '<option value="todos">Todos os Usuários</option>';
-                    usuariosUnicos.forEach(user => { selectUsuario.innerHTML += `<option value="${user}">@${user}</option>`; });
-                    selectUsuario.value = usuariosUnicos.has(valorAtualSelect) ? valorAtualSelect : "todos";
-                }
-
                 window.aplicarFiltrosNaGaleria();
             });
         }
-
-        window.abrirPasta = function(rota) {
-            window.pastaAbertaAtual = rota;
-            window.aplicarFiltrosNaGaleria();
-        };
-
-        window.voltarParaPastas = function() {
-            window.pastaAbertaAtual = null;
-            window.aplicarFiltrosNaGaleria();
-        };
 
         window.aplicarFiltrosNaGaleria = function() {
             const inBusca = document.getElementById("inputBuscaAnexo");
             const inIni = document.getElementById("dataInicioFiltro");
             const inFim = document.getElementById("dataFimFiltro");
-            const selUser = document.getElementById("filtroUsuario");
 
             const termoBusca = inBusca ? inBusca.value.toLowerCase().trim() : "";
             const dataInicio = inIni ? inIni.value : "";
             const dataFim = inFim ? inFim.value : "";
-            const usuarioFiltro = selUser ? selUser.value : "todos";
 
             const container = document.getElementById("listaAnexos");
             const areaBreadcrumb = document.getElementById("areaBreadcrumb");
+            const btnEsvaziar = document.getElementById("areaEsvaziarLixeira");
             if (!container) return;
             container.innerHTML = "";
+            btnEsvaziar.classList.add("hidden");
 
-            let anexosFiltrados = todosAnexosNaMemoria;
+            const txtInfo = document.getElementById("txtInfoVista");
+            const txtCount = document.getElementById("txtContadorArquivos");
+
+            // RENDERIZAÇÃO ESPECÍFICA DA LIXEIRA
+            if (window.pastaAbertaAtual === 'lixeira') {
+                if(areaBreadcrumb) areaBreadcrumb.innerHTML = `<span class="text-red-400 font-bold text-xs flex items-center gap-1"><i class="fas fa-trash"></i> Lixeira</span>`;
+                if(txtInfo) txtInfo.innerText = "Arquivos Apagados (Duplo Clique para Selecionar)";
+
+                let lixeiraFiles = todosAnexosNaMemoria.filter(a => 
+                    a.statusExclusao === 'lixeira_usuario' || 
+                    (perfilUsuario === 'administrador' && a.statusExclusao === 'lixeira_admin')
+                );
+
+                if (termoBusca.length > 0) {
+                    lixeiraFiles = lixeiraFiles.filter(arq => arq.nome.toLowerCase().includes(termoBusca));
+                }
+
+                // Agrupa pastas excluídas
+                let lotes = {};
+                let avulsos = [];
+                lixeiraFiles.forEach(a => {
+                    if (a.loteExclusao) {
+                        if(!lotes[a.loteExclusao]) lotes[a.loteExclusao] = [];
+                        lotes[a.loteExclusao].push(a);
+                    } else {
+                        avulsos.push(a);
+                    }
+                });
+
+                Object.keys(lotes).forEach(loteNome => {
+                    let clickAc = window.modoSelecaoAtivo ? `window.toggleSelecaoItem('${loteNome}')` : `window.abrirModalAcaoLoteLixeira('${loteNome}')`;
+                    let checkHTML = window.modoSelecaoAtivo ? `<input type="checkbox" class="checkbox-selecao absolute top-2 right-2 z-10 pointer-events-none" ${window.itensSelecionados.has(loteNome)?'checked':''}>` : '';
+                    let sClass = window.modoSelecaoAtivo && window.itensSelecionados.has(loteNome) ? 'border-blue-500 bg-blue-900/40' : 'border-gray-700 hover:border-red-500/50 hover:bg-gray-700/50';
+
+                    const card = document.createElement("div");
+                    card.className = `relative bg-gray-800 border ${sClass} p-3 rounded-lg shadow-sm flex items-center gap-3 transition cursor-pointer active:scale-95`;
+                    card.setAttribute("onclick", clickAc);
+                    card.innerHTML = `${checkHTML} <div class="w-12 h-12 bg-red-900/20 text-red-400 border border-red-800/40 rounded-lg flex items-center justify-center flex-shrink-0"><i class="fas fa-folder text-2xl"></i></div> <div class="flex-1 min-w-0"><span class="font-bold text-gray-200 text-sm block truncate">${loteNome}</span><p class="text-[10px] text-gray-400 mt-0.5">${lotes[loteNome].length} itens excluídos</p></div>`;
+                    container.appendChild(card);
+                });
+
+                renderizarArquivosFinais(avulsos, container);
+
+                if (txtCount) txtCount.innerText = `${lixeiraFiles.length} itens totais`;
+                
+                if (lixeiraFiles.length > 0 && !window.modoSelecaoAtivo) {
+                    btnEsvaziar.classList.remove("hidden");
+                }
+                
+                if (lixeiraFiles.length === 0) {
+                    container.innerHTML = `<div class="col-span-full py-8 text-center text-gray-500 text-xs">Sua lixeira está vazia.</div>`;
+                }
+                return;
+            }
+
+            // GESTÃO NORMAL DE PASTAS (Ignora lixeira)
+            let anexosFiltrados = todosAnexosNaMemoria.filter(a => a.statusExclusao === 'ativo');
             
             anexosFiltrados = anexosFiltrados.filter(arq => {
                 const dataObj = new Date(arq.dataEnvio);
@@ -2505,19 +2416,15 @@
                                  (arq.pastaPaciente && arq.pastaPaciente.toLowerCase().includes(termoBusca));
                 }
 
-                const passaUsuario = usuarioFiltro === "todos" || arq.enviadoPor === usuarioFiltro;
                 let passaData = true;
                 dataObj.setHours(0,0,0,0);
                 if (dataInicio) { const dataIni = new Date(dataInicio + "T00:00:00"); if (dataObj < dataIni) passaData = false; }
                 if (dataFim) { const dataF = new Date(dataFim + "T23:59:59"); if (dataObj > dataF) passaData = false; }
                 
-                return passaTexto && passaUsuario && passaData;
+                return passaTexto && passaData;
             });
 
             const isBuscaAtiva = termoBusca.length > 0;
-
-            const txtInfo = document.getElementById("txtInfoVista");
-            const txtCount = document.getElementById("txtContadorArquivos");
 
             const arqsGeral = anexosFiltrados.filter(a => a.pasta && a.pasta.startsWith("Relatorio_Geral"));
             const arqsPacientes = anexosFiltrados.filter(a => a.pastaPaciente);
@@ -2528,9 +2435,9 @@
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<span class="text-gray-300 font-bold text-xs">Pastas do Sistema</span>`;
                 if (txtInfo) txtInfo.innerText = "Navegando nas Pastas";
 
-                renderizarCardPasta(container, "Relatório Geral", `${arqsGeral.length} itens salvos`, "window.abrirPasta('relatorio_geral')", 'geral');
-                renderizarCardPasta(container, "Pacientes", `${arqsPacientes.length} evoluções`, "window.abrirPasta('pacientes_root')", 'paciente');
-                renderizarCardPasta(container, "Arquivos Diversos", `${arqsDiversos.length} arquivos`, "window.abrirPasta('diversos_root')", 'diversos');
+                renderizarCardPasta(container, "Relatório Geral", `${arqsGeral.length} itens salvos`, "relatorio_geral", 'geral');
+                renderizarCardPasta(container, "Pacientes", `${arqsPacientes.length} evoluções`, "pacientes_root", 'paciente');
+                renderizarCardPasta(container, "Arquivos Diversos", `${arqsDiversos.length} arquivos`, "diversos_root", 'diversos');
 
                 if (txtCount) txtCount.innerText = `3 pastas`;
 
@@ -2553,7 +2460,7 @@
 
                 pacientesNomes.forEach(nome => {
                     const qtd = agrupamentoPacientes[nome].length;
-                    renderizarCardPasta(container, nome, `${qtd} evoluções`, `window.abrirPasta('paciente:${nome}')`, 'paciente');
+                    renderizarCardPasta(container, nome, `${qtd} evoluções`, `paciente:${nome}`, 'paciente');
                 });
                 if (txtCount) txtCount.innerText = `${pacientesNomes.length} pacientes`;
             }
@@ -2568,7 +2475,7 @@
             // NIVEL 1: DENTRO DE ARQUIVOS DIVERSOS (Pastas por Data)
             else if (window.pastaAbertaAtual === 'diversos_root' && !isBuscaAtiva) {
                 if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.voltarParaPastas()" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-gray-300 font-bold text-xs">Arquivos Diversos</span>`;
-                if (txtInfo) txtInfo.innerText = "Selecione a Data";
+                if (txtInfo) txtInfo.innerText = "Selecione a Data (Duplo Clique para Excluir)";
 
                 const agrupamentoDatas = {};
                 arqsDiversos.forEach(arq => {
@@ -2585,7 +2492,7 @@
 
                 datasNomes.forEach(nomeData => {
                     const qtd = agrupamentoDatas[nomeData].length;
-                    renderizarCardPasta(container, nomeData, `${qtd} arquivos`, `window.abrirPasta('diversos_data:${nomeData}')`, 'data');
+                    renderizarCardPasta(container, nomeData, `${qtd} arquivos`, `diversos_data:${nomeData}`, 'data');
                 });
                 if (txtCount) txtCount.innerText = `${datasNomes.length} pastas`;
             }
@@ -2618,8 +2525,8 @@
             }
         };
 
-        // RENDERIZAÇÃO DOS CARDS DE PASTAS ADAPTADO PARA TIPOS
-        function renderizarCardPasta(container, nomePasta, subtitulo, onclickAction, tipoPasta = 'geral') {
+        // RENDERIZAÇÃO DOS CARDS DE PASTAS
+        function renderizarCardPasta(container, nomePasta, subtitulo, rota, tipoPasta = 'geral') {
             let iconClass = "fa-folder-open text-blue-500";
             let bgClass = "bg-blue-900/20 border-blue-800/40";
             
@@ -2634,10 +2541,29 @@
                 bgClass = "bg-orange-900/20 border-orange-800/40";
             }
             
+            let clickAc = `window.abrirPasta('${rota}')`;
+            if (window.modoSelecaoAtivo) clickAc = `window.toggleSelecaoItem('${nomePasta}')`;
+
+            let dblClickAc = '';
+            if (tipoPasta === 'data' && !window.modoSelecaoAtivo) {
+                dblClickAc = `ondblclick="window.perguntarApagarPasta('${nomePasta}')"`;
+            }
+
+            let checkHTML = '';
+            let selClass = '';
+            if (window.modoSelecaoAtivo) {
+                let isChecked = window.itensSelecionados.has(nomePasta) ? 'checked' : '';
+                checkHTML = `<input type="checkbox" class="checkbox-selecao absolute top-2 right-2 z-10 pointer-events-none" ${isChecked}>`;
+                if(isChecked) selClass = 'border-blue-500 bg-blue-900/40';
+            }
+
             const card = document.createElement("div");
-            card.className = "bg-gray-800 border border-gray-700 p-3 rounded-lg shadow-sm flex items-center gap-3 hover:border-blue-500/50 hover:bg-gray-700/50 transition cursor-pointer active:scale-95";
-            card.setAttribute("onclick", onclickAction);
+            card.className = `relative bg-gray-800 border ${selClass || 'border-gray-700 hover:border-blue-500/50 hover:bg-gray-700/50'} p-3 rounded-lg shadow-sm flex items-center gap-3 transition cursor-pointer active:scale-95`;
+            card.setAttribute("onclick", clickAc);
+            if(dblClickAc) card.setAttribute("ondblclick", `window.perguntarApagarPasta('${nomePasta}')`);
+            
             card.innerHTML = `
+                ${checkHTML}
                 <div class="w-12 h-12 ${bgClass} rounded-lg flex items-center justify-center border flex-shrink-0">
                     <i class="fas ${iconClass} text-2xl"></i>
                 </div>
@@ -2650,9 +2576,10 @@
             container.appendChild(card);
         }
 
-        // RENDERIZAÇÃO DOS CARDS DE ARQUIVOS (PDF E FOTOS)
+        // RENDERIZAÇÃO DOS CARDS DE ARQUIVOS
         function renderizarArquivosFinais(lista, container) {
-            if (lista.length === 0) { container.innerHTML = `<div class="col-span-full py-8 text-center text-gray-500 text-xs">Nenhum documento encontrado.</div>`; return; }
+            if (lista.length === 0 && window.pastaAbertaAtual !== 'lixeira') { container.innerHTML = `<div class="col-span-full py-8 text-center text-gray-500 text-xs">Nenhum documento encontrado.</div>`; return; }
+            
             lista.forEach(arq => {
                 const dataObj = new Date(arq.dataEnvio);
                 const dataStr = dataObj.toLocaleDateString('pt-BR');
@@ -2662,10 +2589,21 @@
                 let icone = `<div class="w-12 h-12 rounded-lg bg-red-950/30 border border-red-900/50 flex items-center justify-center flex-shrink-0"><i class="fas fa-file-pdf text-2xl text-red-500"></i></div>`;
                 if(arq.tipo === 'imagem') icone = `<div class="relative w-12 h-12 rounded-lg border border-gray-700 overflow-hidden flex-shrink-0"><img src="${arq.url}" loading="lazy" class="w-full h-full object-cover"></div>`;
 
+                let clickAc = `window.abrirModalVisualizacao('${arq.id}', '${arq.url}', '${nomeSeguro}', '${arq.tipo}')`;
+                if (window.modoSelecaoAtivo) clickAc = `window.toggleSelecaoItem('${arq.id}')`;
+
+                let checkHTML = '';
+                let selClass = '';
+                if (window.modoSelecaoAtivo) {
+                    let isChecked = window.itensSelecionados.has(arq.id) ? 'checked' : '';
+                    checkHTML = `<input type="checkbox" class="checkbox-selecao absolute top-2 right-2 z-10 pointer-events-none" ${isChecked}>`;
+                    if(isChecked) selClass = 'border-blue-500 bg-blue-900/40';
+                }
+
                 const card = document.createElement("div");
-                card.className = "bg-gray-900 border border-gray-800 p-2.5 rounded-lg shadow flex gap-3 items-center hover:border-blue-500/30 transition cursor-pointer active:scale-95";
-                card.setAttribute("onclick", `window.abrirModalVisualizacao('${arq.id}', '${arq.url}', '${nomeSeguro}', '${arq.tipo}')`);
-                card.innerHTML = `${icone}<div class="flex-1 min-w-0"><h4 class="font-bold text-white text-[11px] truncate uppercase">${arq.nome}</h4><p class="text-[9px] text-gray-500 mt-1"><i class="far fa-clock"></i> ${dataStr} às ${horaStr}</p></div>`;
+                card.className = `relative bg-gray-900 border ${selClass || 'border-gray-800 hover:border-blue-500/30'} p-2.5 rounded-lg shadow flex gap-3 items-center transition cursor-pointer active:scale-95`;
+                card.setAttribute("onclick", clickAc);
+                card.innerHTML = `${checkHTML}${icone}<div class="flex-1 min-w-0"><h4 class="font-bold text-white text-[11px] truncate uppercase">${arq.nome}</h4><p class="text-[9px] text-gray-500 mt-1"><i class="far fa-clock"></i> ${dataStr} às ${horaStr}</p></div>`;
                 container.appendChild(card);
             });
         }
@@ -2701,6 +2639,14 @@
                 }
             }
             
+            if (window.pastaAbertaAtual === 'lixeira') {
+                document.getElementById('gridAcoesNormal').classList.add('hidden');
+                document.getElementById('gridAcoesLixeira').classList.remove('hidden');
+            } else {
+                document.getElementById('gridAcoesNormal').classList.remove('hidden');
+                document.getElementById('gridAcoesLixeira').classList.add('hidden');
+            }
+
             window.cancelarEdicaoNome();
             const modal = document.getElementById("modalVisualizacao"); const content = document.getElementById("modalVisualizacaoContent");
             if (modal && content) {
@@ -2732,14 +2678,10 @@
                         text: `Confira este documento: ${nomeLimpo}`,
                         url: window.urlImagemAtiva
                     });
-                } catch (err) {
-                    console.log("Compartilhamento nativo não concluído:", err);
-                }
+                } catch (err) {}
             } else {
                 navigator.clipboard.writeText(window.urlImagemAtiva).then(() => {
                     alert("🔗 Link copiado para a área de transferência!");
-                }).catch(() => {
-                    alert("Seu navegador não suporta compartilhamento automático.");
                 });
             }
         };
@@ -2758,21 +2700,6 @@
                 setTimeout(() => { if (document.body.contains(a)) document.body.removeChild(a); window.URL.revokeObjectURL(urlBlob); }, 2000);
             } catch (erro) { window.open(window.urlImagemAtiva, "_blank"); }
             if (btnBaixar) btnBaixar.innerHTML = htmlOriginal;
-        };
-
-        window.executarExclusaoDisfarçada = function() {
-            const tCard = document.getElementById("tituloImagemCard");
-            const nomeArquivo = tCard ? tCard.innerText : "";
-            if (!confirm(`⚠️ Tem certeza de que deseja excluir o anexo "${nomeArquivo}"?`)) return;
-            
-            if (perfilUsuario === "administrador") {
-                remove(dbRef(db, 'arquivos_anexos/' + window.idImagemAtiva)).then(() => { window.fecharModalVisualizacao(); }).catch(err => alert("Erro ao excluir: " + err.message));
-            } else {
-                update(dbRef(db, 'arquivos_anexos/' + window.idImagemAtiva), { statusExclusao: "pendente_aprovacao", solicitadoPor: usuarioLogado }).then(() => {
-                    push(dbRef(db, 'notificacoes_sistema'), { titulo: "Exclusão Solicitada", mensagem: `@${usuarioLogado} pediu para excluir "${nomeArquivo}".`, tipo: "alerta", timestamp: Date.now() });
-                    window.fecharModalVisualizacao();
-                }).catch(err => alert("Erro ao processar: " + err.message));
-            }
         };
 
         window.abrirEdicaoNome = function() {
@@ -2803,16 +2730,6 @@
             });
         };
 
-        window.abrirModalNotificacoes = function() { 
-            const modal = document.getElementById("modalNotificacoes"); const content = document.getElementById("modalNotificacoesContent"); 
-            if (modal && content) { modal.classList.remove("hidden"); modal.classList.add("flex"); setTimeout(() => { content.classList.remove("scale-95", "opacity-0"); content.classList.add("scale-100", "opacity-100"); }, 10); }
-        };
-
-        window.fecharModalNotificacoes = function() { 
-            const modal = document.getElementById("modalNotificacoes"); const content = document.getElementById("modalNotificacoesContent"); 
-            if (modal && content) { content.classList.remove("scale-100", "opacity-100"); content.classList.add("scale-95", "opacity-0"); setTimeout(() => { modal.classList.remove("flex"); modal.classList.add("hidden"); }, 200); }
-        };
-
         onAuthStateChanged(auth, (user) => {
             const modalLogin = document.getElementById("modalLoginApp");
 
@@ -2838,25 +2755,15 @@
                     if (elSidebarNome) elSidebarNome.innerText = `@${usuarioLogado}`;
                     if (elSidebarPerfil) elSidebarPerfil.innerText = perfilUsuario === "administrador" ? "Administrativo" : "Usuário";
 
-                    const areaSino = document.getElementById("areaSinoAdmin");
-                    const espacador = document.getElementById("espacadorHeader");
                     const btnBancoPacientes = document.getElementById("btnSidebarPacientes");
                     const btnCadastroUsuario = document.getElementById("btnSidebarCadastrarUsuario");
                     const areaImportacao = document.getElementById("areaImportacaoPacientes");
                     
                     if (perfilUsuario === "administrador") {
-                        if (areaSino) areaSino.classList.remove("hidden");
-                        if (espacador) espacador.classList.add("hidden");
                         if (btnBancoPacientes) { btnBancoPacientes.classList.remove("hidden"); btnBancoPacientes.classList.add("flex"); }
                         if (btnCadastroUsuario) { btnCadastroUsuario.classList.remove("hidden"); btnCadastroUsuario.classList.add("flex"); }
                         if (areaImportacao) { areaImportacao.classList.remove("hidden"); }
-                        
-                        if (typeof window.inicializarNotificacoes === 'function') {
-                            window.inicializarNotificacoes(dadosUser, "containerNotificacoes", "badgeNotificacoes");
-                        }
                     } else {
-                        if (areaSino) areaSino.classList.add("hidden");
-                        if (espacador) espacador.classList.remove("hidden");
                         if (btnBancoPacientes) { btnBancoPacientes.classList.remove("hidden"); btnBancoPacientes.classList.add("flex"); }
                         if (btnCadastroUsuario) { btnCadastroUsuario.classList.add("hidden"); btnCadastroUsuario.classList.remove("flex"); }
                         if (areaImportacao) { areaImportacao.classList.add("hidden"); }
