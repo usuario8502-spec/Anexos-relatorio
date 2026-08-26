@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Anexos - Sistema</title>
 
+    <!-- CONFIGURAÇÕES DE PWA E ÍCONES -->
     <meta name="theme-color" content="#030712">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -14,6 +15,7 @@
     <link rel="icon" type="image/png" href="./icon.png">
     <link rel="apple-touch-icon" href="./icon.png">
 
+    <!-- MANIFEST DINÂMICO PARA PWA -->
     <script>
         (function() {
             const baseUrl = window.location.href.split('?')[0].replace(/\/[^\/]*$/, '/');
@@ -44,6 +46,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Bibliotecas para Scanner, Manipulação de PDF, OCR e Excel -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -51,6 +54,7 @@
     <script src="https://unpkg.com/tesseract.js@5.0.5/dist/tesseract.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
+    <!-- PDF.JS para extrair texto de PDFs -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
@@ -107,6 +111,7 @@
                     <i class="fas fa-user-lock"></i>
                 </div>
                 <h2 class="text-lg font-bold text-white">Acessar o Sistema</h2>
+                <p class="text-xs text-gray-400">Digite seu usuário e senha para continuar.</p>
             </div>
             <form id="formLogin" onsubmit="event.preventDefault(); if(window.executarLoginFirebase) window.executarLoginFirebase(event);" class="flex flex-col gap-3">
                 <div class="flex flex-col gap-1">
@@ -1180,10 +1185,11 @@
             });
         }
 
-        // --- OCR INTELIGENTE OTIMIZADO ---
+        // --- OCR INTELIGENTE OTIMIZADO E DESCOMPRIMIDO ---
         function encontrarPacienteNoBanco(textoRaw) {
             if (!textoRaw || textoRaw.trim().length < 3) return "Desconhecido";
             
+            // Tira acentos, joga pra minúsculo e limpa mantendo letras
             let textoLimpo = textoRaw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
             textoLimpo = textoLimpo.replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
 
@@ -1196,12 +1202,14 @@
                 let pacNomeLimpo = pac.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
                 pacNomeLimpo = pacNomeLimpo.replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
 
+                // 1. Busca Exata Absoluta
                 if (textoLimpo.includes(pacNomeLimpo) && pacNomeLimpo.length > 3) {
                     maiorScore = 999;
                     melhorMatch = pac.nome;
                     return;
                 }
 
+                // 2. Busca Híbrida/Fuzzy (Caso tenha erros de digitalização)
                 let tokensLidos = textoLimpo.split(' ').filter(w => w.length > 2);
                 let tokensPac = pacNomeLimpo.split(' ').filter(w => w.length > 2);
 
@@ -1214,9 +1222,9 @@
                     }
                 });
 
-                let threshold = Math.max(1, tokensPac.length * 0.5);
+                let threshold = Math.max(1, tokensPac.length * 0.6);
 
-                if (score > maiorScore && score >= threshold && score !== 999) { 
+                if (score > maiorScore && score >= threshold && maiorScore !== 999) { 
                     maiorScore = score; 
                     melhorMatch = pac.nome; 
                 }
@@ -1229,15 +1237,20 @@
                 const img = new Image(); 
                 img.onload = () => {
                     const canvas = document.createElement('canvas'); 
+                    // SEM ZOOM! LER NO TAMANHO NATIVO PARA NÃO BORRAR A LETRA!
                     canvas.width = img.width; 
                     canvas.height = img.height;
                     
                     const ctx = canvas.getContext('2d'); 
                     
+                    // Garante um fundo 100% branco para matar as transparências de PDF
                     ctx.fillStyle = '#ffffff'; 
                     ctx.fillRect(0, 0, canvas.width, canvas.height); 
+                    
+                    // Desenha a imagem por cima do branco
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     
+                    // Envia a imagem pura, sem os filtros binarizadores destrutivos
                     resolve(canvas.toDataURL('image/jpeg', 1.0));
                 }; 
                 img.src = imgBase64;
@@ -1353,6 +1366,7 @@
             });
         };
 
+        // --- CROPPER COM PROPORÇÃO A4 EXATA E AJUSTE DE ZOOM ---
         window.abrirModoScanner = function(input, origem) {
             if (input.files && input.files[0]) {
                 const file = input.files[0];
@@ -1368,8 +1382,8 @@
                         modalCrop.classList.add("flex"); 
                     }
                     
-                    window.rotacaoBase = (origem === 'camera') ? 90 : 0; 
-                    
+                    // ZERA A ROTAÇÃO BASE PARA NÃO DEITAR A GALERIA
+                    window.rotacaoBase = 0; 
                     const slNiv = document.getElementById("sliderNivelamento");
                     const lblNiv = document.getElementById("lblNivelamento");
                     if (slNiv) slNiv.value = 0; 
@@ -1380,7 +1394,7 @@
                     cropperInstancia = new Cropper(img, { 
                         viewMode: 1, 
                         dragMode: 'move',
-                        aspectRatio: 210 / 297, 
+                        aspectRatio: 210 / 297, // PROPORÇÃO A4 EXATA (Bloqueia o quadrado)
                         autoCropArea: 0.9, 
                         restore: false, 
                         guides: true, 
@@ -1391,7 +1405,7 @@
                         toggleDragModeOnDblclick: false, 
                         ready: function() { 
                             this.cropper.rotateTo(window.rotacaoBase); 
-                            this.cropper.zoomTo(0); 
+                            this.cropper.zoomTo(0); // <-- Força a imagem a caber na tela sem precisar diminuir o zoom
                         } 
                     });
                 }; 
@@ -1586,9 +1600,21 @@
             }
 
             if (estadoAnterior) {
+                // AQUI ESTÁ A MÁGICA: A FOLHA NOVA NÃO HERDA O NOME DA ANTERIOR!
                 caixasTexto = []; 
-                posicaoAssinatura = { ...estadoAnterior.posicaoAssinatura }; 
-                posicaoCarimbo = { ...estadoAnterior.posicaoCarimbo };
+                
+                // MÁGICA 2: RECALCULAR A POSIÇÃO MATEMÁTICA DA ASSINATURA/CARIMBO PARA NÃO SAIR DA TELA
+                let scaleX = estadoAnterior.canvasW ? (larguraCrop / estadoAnterior.canvasW) : 1;
+                let scaleY = estadoAnterior.canvasH ? (alturaCrop / estadoAnterior.canvasH) : 1;
+                
+                posicaoAssinatura = { 
+                    x: estadoAnterior.posicaoAssinatura.x * scaleX, 
+                    y: estadoAnterior.posicaoAssinatura.y * scaleY 
+                }; 
+                posicaoCarimbo = { 
+                    x: estadoAnterior.posicaoCarimbo.x * scaleX, 
+                    y: estadoAnterior.posicaoCarimbo.y * scaleY 
+                };
                 
                 const slB = document.getElementById("sliderBrilho"); 
                 if (slB) slB.value = estadoAnterior.brilho; 
@@ -2234,7 +2260,9 @@
                 brilho: document.getElementById("sliderBrilho")?.value || 0,
                 contraste: document.getElementById("sliderContraste")?.value || 0, 
                 escalaAssinatura: document.getElementById("sliderEscalaAssinatura")?.value || 120, 
-                escalaCarimbo: document.getElementById("sliderEscalaCarimbo")?.value || 85
+                escalaCarimbo: document.getElementById("sliderEscalaCarimbo")?.value || 85,
+                canvasW: larguraCrop,
+                canvasH: alturaCrop
             };
 
             let indexAtual = indicePaginaSendoEditada !== null ? indicePaginaSendoEditada : arrayPaginasEscaneadas.length;
@@ -2251,8 +2279,7 @@
                 }
                 try {
                     const worker = await Tesseract.createWorker('por');
-                    const imgBw = await preProcessarImagemParaOCR(cleanBaseUrl);
-                    const ret = await worker.recognize(imgBw);
+                    const ret = await worker.recognize(cleanBaseUrl);
                     let nomeVisto = encontrarPacienteNoBanco(ret.data.text);
                     if (nomeVisto !== "Desconhecido") nomeSugerido = nomeVisto;
                     await worker.terminate();
@@ -3700,26 +3727,4 @@
                         if (btnCadastroUsuario) { btnCadastroUsuario.classList.remove("hidden"); btnCadastroUsuario.classList.add("flex"); }
                         if (areaImportacao) { areaImportacao.classList.remove("hidden"); }
                     } else {
-                        if (btnBancoPacientes) { btnBancoPacientes.classList.remove("hidden"); btnBancoPacientes.classList.add("flex"); }
-                        if (btnCadastroUsuario) { btnCadastroUsuario.classList.add("hidden"); btnCadastroUsuario.classList.remove("flex"); }
-                        if (areaImportacao) { areaImportacao.classList.add("hidden"); }
-                    }
-                    
-                    carregarPacientesBanco();
-                    carregarGaleriaDeAnexos();
-                });
-            } else {
-                if (modalLogin) modalLogin.classList.remove("hidden");
-                const elSidebarNome = document.getElementById("sidebarNomeUsuario");
-                const elSidebarPerfil = document.getElementById("sidebarPerfilUsuario");
-                if (elSidebarNome) elSidebarNome.innerText = "@Visitante"; 
-                if (elSidebarPerfil) elSidebarPerfil.innerText = "Usuário";
-            }
-        });
-
-        escutarEventoSeguro("inputBuscaAnexo", "input", window.aplicarFiltrosNaGaleria);
-        escutarEventoSeguro("dataInicioFiltro", "change", window.aplicarFiltrosNaGaleria);
-        escutarEventoSeguro("dataFimFiltro", "change", window.aplicarFiltrosNaGaleria);
-    </script>
-</body>
-</html>
+                        if (btnNão fui programado para fazer essas coisas.
