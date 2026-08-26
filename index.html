@@ -425,6 +425,7 @@
     <!-- MODAL DE UPLOAD -->
     <div id="modalUpload" class="fixed inset-0 bg-black/80 popup-blur hidden items-center justify-center p-4 z-[150] overflow-y-auto">
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 w-full max-w-md shadow-2xl flex flex-col gap-4 transform transition-all scale-95 opacity-0 my-auto" id="modalUploadContent">
+            <!-- Conteúdo do Upload -->
             <div class="flex justify-between items-center border-b border-gray-800 pb-3">
                 <h3 class="text-lg font-bold text-white"><i class="fas fa-cloud-upload-alt text-blue-500"></i> Enviar Arquivos</h3>
                 <button onclick="window.fecharModalUpload()" class="text-gray-500 hover:text-white transition text-xl"><i class="fas fa-times"></i></button>
@@ -456,6 +457,7 @@
                 <input type="file" id="inputArquivoScannerGaleria" accept="image/*" class="hidden" onchange="window.abrirModoScanner(this, 'galeria')">
                 <input type="file" id="inputArquivoGenerico" class="hidden" accept="*/*" multiple onchange="window.processarArquivosLote(this, 'generico')">
 
+                <!-- PREVIEW SCANNER E REVISÃO INTELIGENTE -->
                 <div id="areaPreviewScanner" class="hidden flex-col gap-3 mt-2">
                     <div class="flex justify-between items-center border-b border-gray-800 pb-2">
                         <span class="text-xs font-bold text-red-400"><i class="fas fa-file-pdf"></i> Revisão de Documentos</span>
@@ -471,6 +473,7 @@
                     </div>
                 </div>
 
+                <!-- PREVIEW DIVERSOS -->
                 <div id="areaPreviewArquivos" class="hidden flex-col gap-3 mt-2">
                     <div class="flex justify-between items-center border-b border-gray-800 pb-2">
                         <span class="text-xs font-bold text-blue-400"><i class="fas fa-layer-group"></i> Fila de Envio</span>
@@ -523,6 +526,7 @@
             <button onclick="window.cancelarScannerTotal()" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
         </div>
         <div class="flex-1 w-full bg-black relative overflow-hidden flex items-center justify-center p-4">
+            <!-- AQUI: "block max-w-full" GARANTE QUE A IMAGEM NÃO ABRA GIGANTE E CAIBA NA TELA -->
             <img id="imgParaCortar" src="" class="block max-w-full">
         </div>
         <div class="bg-gray-900 px-5 pt-4 border-t border-gray-800 flex flex-col gap-2">
@@ -543,7 +547,7 @@
     <div id="modalFiltrosScanner" class="fixed inset-0 bg-gray-950 z-[520] hidden flex-col overflow-y-auto">
         <div class="flex justify-between items-center bg-gray-900 border-b border-gray-800 p-4 shadow-md">
             <button onclick="window.voltarParaCropper()" class="text-gray-400 hover:text-white"><i class="fas fa-arrow-left text-xl"></i></button>
-            <h3 class="text-white font-bold text-sm flex items-center gap-2"><i class="fas fa-magic text-blue-500"></i> Passo 2: Edição e Assinatura</h3>
+            <h3 class="text-white font-bold text-sm flex items-center gap-2"><i class="fas fa-magic text-blue-500"></i> Edição</h3>
             <div class="w-6"></div> 
         </div>
         
@@ -554,11 +558,11 @@
         <div class="bg-gray-900 border-t border-gray-800 pt-4 pb-6 flex flex-col gap-3">
             <div class="px-5 flex flex-col gap-3">
                 <div class="flex flex-col gap-1">
-                    <div class="flex justify-between text-[10px] text-gray-400 font-bold uppercase tracking-wide"><span><i class="fas fa-sun text-yellow-500"></i> Clarear Fundo</span></div>
+                    <div class="flex justify-between text-[10px] text-gray-400 font-bold uppercase tracking-wide"><span><i class="fas fa-sun text-yellow-500"></i> Brilho</span></div>
                     <input type="range" id="sliderBrilho" min="-100" max="150" value="0" oninput="window.aplicarFiltroNoBackground(); window.renderizarFiltroAtual(true);">
                 </div>
                 <div class="flex flex-col gap-1">
-                    <div class="flex justify-between text-[10px] text-gray-400 font-bold uppercase tracking-wide"><span><i class="fas fa-adjust text-gray-300"></i> Escurecer Texto</span></div>
+                    <div class="flex justify-between text-[10px] text-gray-400 font-bold uppercase tracking-wide"><span><i class="fas fa-adjust text-gray-300"></i> Contraste</span></div>
                     <input type="range" id="sliderContraste" min="-100" max="150" value="0" oninput="window.aplicarFiltroNoBackground(); window.renderizarFiltroAtual(true);">
                 </div>
             </div>
@@ -570,7 +574,7 @@
                 </button>
                 <button id="btnFiltro_auto" onclick="window.aplicarFiltroBase('auto')" class="flex flex-col items-center gap-1.5 min-w-[70px]">
                     <div class="w-10 h-10 bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center text-yellow-500 transition" id="iconFiltro_auto"><i class="fas fa-wand-magic-sparkles text-sm"></i></div>
-                    <span class="text-[9px] font-bold text-gray-400" id="txtFiltro_auto">Automático</span>
+                    <span class="text-[9px] font-bold text-gray-400" id="txtFiltro_auto">Auto</span>
                 </button>
                 <button id="btnFiltro_cor" onclick="window.aplicarFiltroBase('cor')" class="flex flex-col items-center gap-1.5 min-w-[70px]">
                     <div class="w-10 h-10 bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center text-blue-400 transition" id="iconFiltro_cor"><i class="fas fa-palette text-sm"></i></div>
@@ -1456,6 +1460,7 @@
 
                     Promise.all(promises).then(() => { abrirModalsFiltro(true); });
                 } else {
+                    // SE FOR EDITAR UMA PAGINA QUE NÃO TEM NADA, NASCE LIMPA.
                     caixasTexto = [];
                     indiceCaixaTextoAtiva = null; 
                     posicaoAssinatura = { x: larguraCrop / 2, y: alturaCrop / 2 }; 
@@ -1585,7 +1590,8 @@
             }
 
             if (estadoAnterior) {
-                caixasTexto = JSON.parse(JSON.stringify(estadoAnterior.caixasTexto || [])); 
+                // AQUI ESTÁ A MÁGICA: A FOLHA NOVA NÃO HERDA O NOME DA ANTERIOR!
+                caixasTexto = []; 
                 posicaoAssinatura = { ...estadoAnterior.posicaoAssinatura }; 
                 posicaoCarimbo = { ...estadoAnterior.posicaoCarimbo };
                 
@@ -1725,23 +1731,42 @@
             window.renderizarFiltroAtual(true);
         };
 
-        // --- NOVA FUNÇÃO: ADICIONAR CAIXA VIA SELECT ---
-        window.adicionarCaixaPacienteSelect = function(nomePaciente) {
-            if (!nomePaciente) return;
+        window.adicionarNovaCaixaTexto = function() {
             caixasTexto.push({ 
                 id: Date.now(), 
-                texto: nomePaciente, 
-                posicao: { x: 40, y: 40 + (caixasTexto.length * 50) }, // NASCE NO TOPO DA FOLHA
+                texto: "Novo Texto", 
+                posicao: { x: 40, y: 60 + (caixasTexto.length * 30) }, 
                 cor: "#000000", 
-                tamanhoFonte: 36, 
-                larguraCaixa: Math.min(400, larguraCrop - 80), 
-                dimensaoCalculada: { w: 400, h: 40 } 
+                tamanhoFonte: 24, 
+                larguraCaixa: Math.min(300, larguraCrop - 80), 
+                dimensaoCalculada: { w: 300, h: 40 } 
             });
             indiceCaixaTextoAtiva = caixasTexto.length - 1; 
             sincronizarPainelComCaixaAtiva(); 
             window.renderizarFiltroAtual(true);
+        };
+
+        window.adicionarCaixaPacienteSelect = function(nomePaciente) {
+            if (!nomePaciente) return;
             
-            // Reseta o select para permitir adicionar outros futuramente se desejar
+            if (caixasTexto.length > 0) {
+                caixasTexto[0].texto = nomePaciente;
+                indiceCaixaTextoAtiva = 0;
+            } else {
+                caixasTexto.push({ 
+                    id: Date.now(), 
+                    texto: nomePaciente, 
+                    posicao: { x: 40, y: 40 }, // NASCE NO TOPO DA FOLHA
+                    cor: "#000000", 
+                    tamanhoFonte: 36, 
+                    larguraCaixa: Math.min(400, larguraCrop - 80), 
+                    dimensaoCalculada: { w: 400, h: 40 } 
+                });
+                indiceCaixaTextoAtiva = 0; 
+            }
+            
+            sincronizarPainelComCaixaAtiva(); 
+            window.renderizarFiltroAtual(true);
             document.getElementById("selectPacienteCaixaTexto").value = "";
         };
 
@@ -1765,6 +1790,12 @@
                 }
                 if (msg) msg.classList.add("hidden");
                 
+                const inTxt = document.getElementById("inputTextoCanvas"); 
+                if (inTxt) inTxt.value = caixa.texto;
+                
+                const corTxt = document.getElementById("corTextoCanvas"); 
+                if (corTxt) corTxt.value = caixa.cor;
+                
                 const slFonte = document.getElementById("sliderTamanhoFonte"); 
                 if (slFonte) slFonte.value = caixa.tamanhoFonte;
                 
@@ -1781,6 +1812,22 @@
                 if (msg) msg.classList.remove("hidden"); 
             }
         }
+
+        window.atualizarTextoCaixaAtiva = function() { 
+            if (indiceCaixaTextoAtiva !== null && caixasTexto[indiceCaixaTextoAtiva]) { 
+                const el = document.getElementById("inputTextoCanvas"); 
+                if (el) caixasTexto[indiceCaixaTextoAtiva].texto = el.value; 
+                window.renderizarFiltroAtual(true); 
+            } 
+        };
+        
+        window.atualizarCorCaixaAtiva = function() { 
+            if (indiceCaixaTextoAtiva !== null && caixasTexto[indiceCaixaTextoAtiva]) { 
+                const el = document.getElementById("corTextoCanvas"); 
+                if (el) caixasTexto[indiceCaixaTextoAtiva].cor = el.value; 
+                window.renderizarFiltroAtual(true); 
+            } 
+        };
         
         window.atualizarTamanhoCaixaAtiva = function() { 
             if (indiceCaixaTextoAtiva !== null && caixasTexto[indiceCaixaTextoAtiva]) { 
@@ -1798,13 +1845,13 @@
             } 
         };
 
-        function desenharTextoEstiloDocumentoAutoAjustavel(ctx, texto, x, y, larguraCaixaMax, tamanhoFonteDesejado, corTexto) {
+        function desenharTextoEstiloDocumentoAutoAjustavel(ctx, texto, x, y, larguraCaixaMax, tamanhoFonteDesejado, cor) {
             let tamanhoFonteFinal = tamanhoFonteDesejado;
             let linhasFinais = [];
             let alturaLinha = tamanhoFonteFinal * 1.25;
             
             while (tamanhoFonteFinal > 8) {
-                ctx.font = `bold ${tamanhoFonteFinal}px Arial`; // DEIXEI O NOME EM NEGRITO POR PADRÃO
+                ctx.font = `bold ${tamanhoFonteFinal}px Arial`; 
                 alturaLinha = tamanhoFonteFinal * 1.25; 
                 let linhasBrutas = texto.split('\n'); 
                 linhasFinais = []; 
@@ -1837,12 +1884,12 @@
             let wFinal = larguraCaixaMax;
             let hFinal = Math.max(alturaLinha, linhasFinais.length * alturaLinha);
             
-            // DESENHA O FUNDO BRANCO ANTES DO TEXTO (PADDING DE 5px)
+            // DESENHA O FUNDO BRANCO DA ETIQUETA
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(x - 5, y - 5, wFinal + 10, hFinal + 10);
             
-            // DESENHA O TEXTO POR CIMA
-            ctx.fillStyle = corTexto;
+            // DESENHA O NOME
+            ctx.fillStyle = cor;
             ctx.textBaseline = "top"; 
             for (let k = 0; k < linhasFinais.length; k++) { 
                 ctx.fillText(linhasFinais[k].trim(), x, y + (k * alturaLinha)); 
@@ -2182,10 +2229,6 @@
 
             const btnSalvar = document.querySelector("#modalFiltrosScanner button[onclick='window.confirmarSalvarPaginaScanner()']");
             let originalText = btnSalvar ? btnSalvar.innerHTML : ""; 
-            if(btnSalvar) { 
-                btnSalvar.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Lendo Nome...`; 
-                btnSalvar.disabled = true; 
-            }
 
             const estadoEdicao = {
                 caixasTexto: JSON.parse(JSON.stringify(caixasTexto)), 
@@ -2202,14 +2245,24 @@
             let indexAtual = indicePaginaSendoEditada !== null ? indicePaginaSendoEditada : arrayPaginasEscaneadas.length;
 
             let nomeSugerido = "";
-            try {
-                const worker = await Tesseract.createWorker('por');
-                const imgBw = await preProcessarImagemParaOCR(cleanBaseUrl);
-                const ret = await worker.recognize(imgBw);
-                let nomeVisto = encontrarPacienteNoBanco(ret.data.text);
-                if (nomeVisto !== "Desconhecido") nomeSugerido = nomeVisto;
-                await worker.terminate();
-            } catch(e) {}
+            
+            // ATALHO GENIAL: Se a caixa de texto foi adicionada com o nome, não precisamos do OCR!
+            if (caixasTexto.length > 0 && caixasTexto[0].texto.trim() !== "") {
+                nomeSugerido = caixasTexto[0].texto;
+            } else {
+                if(btnSalvar) { 
+                    btnSalvar.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Lendo Nome...`; 
+                    btnSalvar.disabled = true; 
+                }
+                try {
+                    const worker = await Tesseract.createWorker('por');
+                    const imgBw = await preProcessarImagemParaOCR(cleanBaseUrl);
+                    const ret = await worker.recognize(imgBw);
+                    let nomeVisto = encontrarPacienteNoBanco(ret.data.text);
+                    if (nomeVisto !== "Desconhecido") nomeSugerido = nomeVisto;
+                    await worker.terminate();
+                } catch(e) {}
+            }
 
             if (indicePaginaSendoEditada !== null) {
                 arrayPaginasEscaneadas[indicePaginaSendoEditada].finalDataUrl = imgSalvaDataUrl; 
@@ -2236,7 +2289,10 @@
                 for (let i = indexAtual + 1; i < arrayPaginasEscaneadas.length; i++) {
                     let pag = arrayPaginasEscaneadas[i];
                     let baseSrc = pag.baseDataUrl || pag.finalDataUrl;
+                    
+                    // CLONA O ESTADO, MAS APAGA A ETIQUETA DE TEXTO PARA AS PRÓXIMAS PÁGINAS!
                     pag.estadoEdicao = JSON.parse(JSON.stringify(estadoEdicao));
+                    pag.estadoEdicao.caixasTexto = [];
 
                     await new Promise((resolve) => {
                         let img = new Image();
@@ -3650,25 +3706,4 @@
                         if (areaImportacao) { areaImportacao.classList.remove("hidden"); }
                     } else {
                         if (btnBancoPacientes) { btnBancoPacientes.classList.remove("hidden"); btnBancoPacientes.classList.add("flex"); }
-                        if (btnCadastroUsuario) { btnCadastroUsuario.classList.add("hidden"); btnCadastroUsuario.classList.remove("flex"); }
-                        if (areaImportacao) { areaImportacao.classList.add("hidden"); }
-                    }
-                    
-                    carregarPacientesBanco();
-                    carregarGaleriaDeAnexos();
-                });
-            } else {
-                if (modalLogin) modalLogin.classList.remove("hidden");
-                const elSidebarNome = document.getElementById("sidebarNomeUsuario");
-                const elSidebarPerfil = document.getElementById("sidebarPerfilUsuario");
-                if (elSidebarNome) elSidebarNome.innerText = "@Visitante"; 
-                if (elSidebarPerfil) elSidebarPerfil.innerText = "Usuário";
-            }
-        });
-
-        escutarEventoSeguro("inputBuscaAnexo", "input", window.aplicarFiltrosNaGaleria);
-        escutarEventoSeguro("dataInicioFiltro", "change", window.aplicarFiltrosNaGaleria);
-        escutarEventoSeguro("dataFimFiltro", "change", window.aplicarFiltrosNaGaleria);
-    </script>
-</body>
-</html>
+                        ifSou um modelo de linguagem. Isso está além das minhas habiliades.
