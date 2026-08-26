@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Anexos - Sistema</title>
 
-    <!-- CONFIGURAÇÕES DE PWA E ÍCONES -->
     <meta name="theme-color" content="#030712">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,7 +14,6 @@
     <link rel="icon" type="image/png" href="./icon.png">
     <link rel="apple-touch-icon" href="./icon.png">
 
-    <!-- MANIFEST DINÂMICO PARA PWA -->
     <script>
         (function() {
             const baseUrl = window.location.href.split('?')[0].replace(/\/[^\/]*$/, '/');
@@ -46,7 +44,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Bibliotecas para Scanner, Manipulação de PDF, OCR e Excel -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -54,7 +51,6 @@
     <script src="https://unpkg.com/tesseract.js@5.0.5/dist/tesseract.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
-    <!-- PDF.JS para extrair texto de PDFs -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
@@ -111,7 +107,6 @@
                     <i class="fas fa-user-lock"></i>
                 </div>
                 <h2 class="text-lg font-bold text-white">Acessar o Sistema</h2>
-                <p class="text-xs text-gray-400">Digite seu usuário e senha para continuar.</p>
             </div>
             <form id="formLogin" onsubmit="event.preventDefault(); if(window.executarLoginFirebase) window.executarLoginFirebase(event);" class="flex flex-col gap-3">
                 <div class="flex flex-col gap-1">
@@ -128,6 +123,9 @@
                     </div>
                 </div>
                 <button type="submit" id="btnEntrarLogin" class="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold text-xs transition shadow-lg">Entrar</button>
+                <div class="text-center mt-2">
+                    <button type="button" onclick="window.abrirModalRecuperarSenha()" class="text-[11px] text-blue-400 hover:text-blue-300 font-bold transition">Esqueci minha senha</button>
+                </div>
             </form>
         </div>
     </div>
@@ -526,7 +524,6 @@
             <button onclick="window.cancelarScannerTotal()" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
         </div>
         <div class="flex-1 w-full bg-black relative overflow-hidden flex items-center justify-center p-4">
-            <!-- AQUI: "block max-w-full" GARANTE QUE A IMAGEM NÃO ABRA GIGANTE E CAIBA NA TELA -->
             <img id="imgParaCortar" src="" class="block max-w-full">
         </div>
         <div class="bg-gray-900 px-5 pt-4 border-t border-gray-800 flex flex-col gap-2">
@@ -558,11 +555,11 @@
         <div class="bg-gray-900 border-t border-gray-800 pt-4 pb-6 flex flex-col gap-3">
             <div class="px-5 flex flex-col gap-3">
                 <div class="flex flex-col gap-1">
-                    <div class="flex justify-between text-[10px] text-gray-400 font-bold uppercase tracking-wide"><span><i class="fas fa-sun text-yellow-500"></i> Brilho</span></div>
+                    <div class="flex justify-between text-[10px] text-gray-400 font-bold uppercase tracking-wide"><span><i class="fas fa-sun text-yellow-500"></i> Clarear Fundo</span></div>
                     <input type="range" id="sliderBrilho" min="-100" max="150" value="0" oninput="window.aplicarFiltroNoBackground(); window.renderizarFiltroAtual(true);">
                 </div>
                 <div class="flex flex-col gap-1">
-                    <div class="flex justify-between text-[10px] text-gray-400 font-bold uppercase tracking-wide"><span><i class="fas fa-adjust text-gray-300"></i> Contraste</span></div>
+                    <div class="flex justify-between text-[10px] text-gray-400 font-bold uppercase tracking-wide"><span><i class="fas fa-adjust text-gray-300"></i> Escurecer Texto</span></div>
                     <input type="range" id="sliderContraste" min="-100" max="150" value="0" oninput="window.aplicarFiltroNoBackground(); window.renderizarFiltroAtual(true);">
                 </div>
             </div>
@@ -574,7 +571,7 @@
                 </button>
                 <button id="btnFiltro_auto" onclick="window.aplicarFiltroBase('auto')" class="flex flex-col items-center gap-1.5 min-w-[70px]">
                     <div class="w-10 h-10 bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center text-yellow-500 transition" id="iconFiltro_auto"><i class="fas fa-wand-magic-sparkles text-sm"></i></div>
-                    <span class="text-[9px] font-bold text-gray-400" id="txtFiltro_auto">Auto</span>
+                    <span class="text-[9px] font-bold text-gray-400" id="txtFiltro_auto">Automático</span>
                 </button>
                 <button id="btnFiltro_cor" onclick="window.aplicarFiltroBase('cor')" class="flex flex-col items-center gap-1.5 min-w-[70px]">
                     <div class="w-10 h-10 bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center text-blue-400 transition" id="iconFiltro_cor"><i class="fas fa-palette text-sm"></i></div>
@@ -1460,7 +1457,6 @@
 
                     Promise.all(promises).then(() => { abrirModalsFiltro(true); });
                 } else {
-                    // SE FOR EDITAR UMA PAGINA QUE NÃO TEM NADA, NASCE LIMPA.
                     caixasTexto = [];
                     indiceCaixaTextoAtiva = null; 
                     posicaoAssinatura = { x: larguraCrop / 2, y: alturaCrop / 2 }; 
@@ -1590,7 +1586,6 @@
             }
 
             if (estadoAnterior) {
-                // AQUI ESTÁ A MÁGICA: A FOLHA NOVA NÃO HERDA O NOME DA ANTERIOR!
                 caixasTexto = []; 
                 posicaoAssinatura = { ...estadoAnterior.posicaoAssinatura }; 
                 posicaoCarimbo = { ...estadoAnterior.posicaoCarimbo };
@@ -3706,4 +3701,25 @@
                         if (areaImportacao) { areaImportacao.classList.remove("hidden"); }
                     } else {
                         if (btnBancoPacientes) { btnBancoPacientes.classList.remove("hidden"); btnBancoPacientes.classList.add("flex"); }
-                        ifSou um modelo de linguagem. Isso está além das minhas habiliades.
+                        if (btnCadastroUsuario) { btnCadastroUsuario.classList.add("hidden"); btnCadastroUsuario.classList.remove("flex"); }
+                        if (areaImportacao) { areaImportacao.classList.add("hidden"); }
+                    }
+                    
+                    carregarPacientesBanco();
+                    carregarGaleriaDeAnexos();
+                });
+            } else {
+                if (modalLogin) modalLogin.classList.remove("hidden");
+                const elSidebarNome = document.getElementById("sidebarNomeUsuario");
+                const elSidebarPerfil = document.getElementById("sidebarPerfilUsuario");
+                if (elSidebarNome) elSidebarNome.innerText = "@Visitante"; 
+                if (elSidebarPerfil) elSidebarPerfil.innerText = "Usuário";
+            }
+        });
+
+        escutarEventoSeguro("inputBuscaAnexo", "input", window.aplicarFiltrosNaGaleria);
+        escutarEventoSeguro("dataInicioFiltro", "change", window.aplicarFiltrosNaGaleria);
+        escutarEventoSeguro("dataFimFiltro", "change", window.aplicarFiltrosNaGaleria);
+    </script>
+</body>
+</html>
