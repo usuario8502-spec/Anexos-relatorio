@@ -523,7 +523,6 @@
             <button onclick="window.cancelarScannerTotal()" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
         </div>
         <div class="flex-1 w-full bg-black relative overflow-hidden flex items-center justify-center p-4">
-            <!-- AQUI: "block max-w-full" GARANTE QUE A IMAGEM NÃO ABRA GIGANTE E CAIBA NA TELA -->
             <img id="imgParaCortar" src="" class="block max-w-full">
         </div>
         <div class="bg-gray-900 px-5 pt-4 border-t border-gray-800 flex flex-col gap-2">
@@ -588,39 +587,35 @@
             </div>
 
             <div class="px-4 mt-2">
-                <div class="bg-gray-800/60 p-3 rounded-xl border border-gray-700/60 flex flex-col gap-3">
+                <div class="bg-gray-800/60 p-3 rounded-xl border border-gray-700/60 flex flex-col gap-2">
                     <div class="flex justify-between items-center">
-                        <span class="text-xs font-bold text-blue-400 flex items-center gap-1.5"><i class="fas fa-align-left"></i> Caixas de Texto</span>
-                        <button onclick="window.adicionarNovaCaixaTexto()" class="bg-blue-600/80 hover:bg-blue-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-lg transition flex items-center gap-1">
-                            <i class="fas fa-plus"></i> Nova Caixa
-                        </button>
+                        <span class="text-xs font-bold text-blue-400 flex items-center gap-1.5"><i class="fas fa-id-badge"></i> Etiqueta de Paciente</span>
+                        <button onclick="window.removerCaixaTextoAtiva()" title="Excluir Etiqueta Selecionada" class="bg-red-950/60 hover:bg-red-900 border border-red-800/60 text-red-400 px-2.5 py-1 rounded-lg transition"><i class="fas fa-trash-alt text-xs"></i> Remover</button>
+                    </div>
+                    
+                    <div class="flex gap-2 items-center">
+                        <select id="selectPacienteCaixaTexto" onchange="window.adicionarCaixaPacienteSelect(this.value)" class="w-full p-2.5 rounded-lg bg-gray-900 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500 custom-scrollbar">
+                            <option value="">Selecione um paciente para adicionar...</option>
+                            <!-- Preenchido via JS -->
+                        </select>
                     </div>
 
-                    <div id="painelEdicaoCaixaAtiva" class="flex flex-col gap-3">
-                        <div class="flex gap-2 items-center">
-                            <textarea id="inputTextoCanvas" rows="2" placeholder="Digite seu texto..." oninput="window.atualizarTextoCaixaAtiva()" class="w-full p-2.5 rounded-lg bg-gray-900 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500 resize-none custom-scrollbar"></textarea>
-                            <button id="btnNegritoTexto" onclick="window.alternarNegritoCaixaAtiva()" title="Negrito" class="bg-gray-900 hover:bg-gray-700 border border-gray-700 text-gray-300 font-black px-3 py-2.5 rounded-lg transition"><i class="fas fa-bold"></i></button>
-                            <button onclick="window.removerCaixaTextoAtiva()" title="Excluir Caixa Selecionada" class="bg-red-950/60 hover:bg-red-900 border border-red-800/60 text-red-400 p-2.5 rounded-lg transition"><i class="fas fa-trash-alt text-xs"></i></button>
-                        </div>
+                    <div id="painelEdicaoCaixaAtiva" class="hidden flex-col gap-3 mt-1">
                         <div class="grid grid-cols-2 gap-3 items-center">
-                            <div class="flex items-center gap-2">
-                                <label class="text-[10px] text-gray-400 font-bold uppercase whitespace-nowrap">Cor:</label>
-                                <input type="color" id="corTextoCanvas" value="#000000" oninput="window.atualizarCorCaixaAtiva()" class="w-8 h-8 p-0.5 rounded bg-gray-900 border border-gray-700 cursor-pointer">
-                            </div>
                             <div class="flex items-center gap-2">
                                 <label class="text-[10px] text-gray-400 font-bold uppercase whitespace-nowrap">Tamanho:</label>
                                 <input type="range" id="sliderTamanhoFonte" min="12" max="100" value="36" oninput="window.atualizarTamanhoCaixaAtiva()">
                                 <span id="lblTamanhoFonte" class="text-xs font-bold text-white w-8">36px</span>
                             </div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <label class="text-[10px] text-gray-400 font-bold uppercase whitespace-nowrap">Largura Caixa:</label>
-                            <input type="range" id="sliderLarguraCaixaTexto" min="100" max="1000" value="400" oninput="window.atualizarLarguraCaixaAtiva()">
-                            <span id="lblLarguraCaixaTexto" class="text-xs font-bold text-white w-10">400px</span>
+                            <div class="flex items-center gap-2">
+                                <label class="text-[10px] text-gray-400 font-bold uppercase whitespace-nowrap">Largura:</label>
+                                <input type="range" id="sliderLarguraCaixaTexto" min="100" max="1000" value="400" oninput="window.atualizarLarguraCaixaAtiva()">
+                                <span id="lblLarguraCaixaTexto" class="text-xs font-bold text-white w-10">400px</span>
+                            </div>
                         </div>
                     </div>
-                    <div id="msgSemCaixaTexto" class="hidden text-center py-3 text-xs text-gray-500 italic">
-                        Nenhuma caixa de texto selecionada. Clique em "Nova Caixa" ou selecione uma no Canvas.
+                    <div id="msgSemCaixaTexto" class="text-center py-2 text-xs text-gray-500 italic">
+                        Nenhuma etiqueta selecionada.
                     </div>
                 </div>
             </div>
@@ -1127,6 +1122,16 @@
             reader.readAsArrayBuffer(file);
         };
 
+        function atualizarSelectPacientesCaixa() {
+            const select = document.getElementById("selectPacienteCaixaTexto");
+            if (!select) return;
+            let optionsHTML = `<option value="">Selecione um paciente para adicionar...</option>`;
+            listaPacientesCadastrados.forEach(p => {
+                optionsHTML += `<option value="${p.nome}">${p.nome}</option>`;
+            });
+            select.innerHTML = optionsHTML;
+        }
+
         function carregarPacientesBanco() {
             onValue(dbRef(db, 'pacientes_cadastrados'), (snapshot) => {
                 listaPacientesCadastrados = []; 
@@ -1142,19 +1147,20 @@
                     });
                     
                     listaPacientesCadastrados.sort((a,b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
+                    atualizarSelectPacientesCaixa();
                     
                     if(container) {
                         listaPacientesCadastrados.forEach(p => {
                             let acoesHtml = "";
                             if (perfilUsuario === "administrador" && p.excluidoPorExecutor) {
                                 acoesHtml = `
-                                    <button onclick="window.restaurarPacienteFirebase('${p.id}', '${p.nome.replace(/'/g, "\\'")}')" class="text-green-400 p-1.5"><i class="fas fa-recycle"></i></button>
-                                    <button onclick="window.removerPacienteFirebase('${p.id}', '${p.nome.replace(/'/g, "\\'")}')" class="text-red-600 p-1.5"><i class="fas fa-trash"></i></button>
+                                    <button onclick="window.restaurarPacienteFirebase('${p.id}', '${p.nome.replace(/'/g, "\\'")}')" class="text-green-400 hover:text-green-300 p-1.5 transition"><i class="fas fa-recycle"></i></button>
+                                    <button onclick="window.removerPacienteFirebase('${p.id}', '${p.nome.replace(/'/g, "\\'")}')" class="text-red-600 hover:text-red-500 p-1.5 transition"><i class="fas fa-trash"></i></button>
                                 `;
                             } else {
                                 acoesHtml = `
-                                    <button onclick="window.editarPacienteFirebase('${p.id}', '${p.nome.replace(/'/g, "\\'")}')" class="text-blue-400 p-1.5"><i class="fas fa-pen"></i></button>
-                                    <button onclick="window.removerPacienteFirebase('${p.id}', '${p.nome.replace(/'/g, "\\'")}')" class="text-red-400 p-1.5"><i class="fas fa-trash"></i></button>
+                                    <button onclick="window.editarPacienteFirebase('${p.id}', '${p.nome.replace(/'/g, "\\'")}')" class="text-blue-400 hover:text-blue-300 p-1.5 transition"><i class="fas fa-pen"></i></button>
+                                    <button onclick="window.removerPacienteFirebase('${p.id}', '${p.nome.replace(/'/g, "\\'")}')" class="text-red-400 hover:text-red-300 p-1.5 transition"><i class="fas fa-trash"></i></button>
                                 `;
                             }
                             const textColor = p.excluidoPorExecutor ? "text-gray-500 line-through" : "text-white";
@@ -1168,15 +1174,15 @@
                     }
                 } else { 
                     if(container) container.innerHTML = `<div class="text-center text-gray-500 text-xs py-4">Nenhum paciente cadastrado.</div>`; 
+                    atualizarSelectPacientesCaixa();
                 }
             });
         }
 
-        // --- OCR INTELIGENTE OTIMIZADO E DESCOMPRIMIDO ---
+        // --- OCR INTELIGENTE OTIMIZADO ---
         function encontrarPacienteNoBanco(textoRaw) {
             if (!textoRaw || textoRaw.trim().length < 3) return "Desconhecido";
             
-            // Tira acentos, joga pra minúsculo e limpa mantendo letras
             let textoLimpo = textoRaw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
             textoLimpo = textoLimpo.replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
 
@@ -1189,14 +1195,12 @@
                 let pacNomeLimpo = pac.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
                 pacNomeLimpo = pacNomeLimpo.replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
 
-                // 1. Busca Exata Absoluta
                 if (textoLimpo.includes(pacNomeLimpo) && pacNomeLimpo.length > 3) {
                     maiorScore = 999;
                     melhorMatch = pac.nome;
                     return;
                 }
 
-                // 2. Busca Híbrida/Fuzzy (Caso tenha erros de digitalização)
                 let tokensLidos = textoLimpo.split(' ').filter(w => w.length > 2);
                 let tokensPac = pacNomeLimpo.split(' ').filter(w => w.length > 2);
 
@@ -1209,9 +1213,9 @@
                     }
                 });
 
-                let threshold = Math.max(1, tokensPac.length * 0.6);
+                let threshold = Math.max(1, tokensPac.length * 0.5);
 
-                if (score > maiorScore && score >= threshold && maiorScore !== 999) { 
+                if (score > maiorScore && score >= threshold && score !== 999) { 
                     maiorScore = score; 
                     melhorMatch = pac.nome; 
                 }
@@ -1224,20 +1228,15 @@
                 const img = new Image(); 
                 img.onload = () => {
                     const canvas = document.createElement('canvas'); 
-                    // SEM ZOOM! LER NO TAMANHO NATIVO PARA NÃO BORRAR A LETRA!
                     canvas.width = img.width; 
                     canvas.height = img.height;
                     
                     const ctx = canvas.getContext('2d'); 
                     
-                    // Garante um fundo 100% branco para matar as transparências de PDF
                     ctx.fillStyle = '#ffffff'; 
                     ctx.fillRect(0, 0, canvas.width, canvas.height); 
-                    
-                    // Desenha a imagem por cima do branco
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     
-                    // Envia a imagem pura, sem os filtros binarizadores destrutivos
                     resolve(canvas.toDataURL('image/jpeg', 1.0));
                 }; 
                 img.src = imgBase64;
@@ -1353,7 +1352,6 @@
             });
         };
 
-        // --- CROPPER COM PROPORÇÃO A4 EXATA ---
         window.abrirModoScanner = function(input, origem) {
             if (input.files && input.files[0]) {
                 const file = input.files[0];
@@ -1369,8 +1367,6 @@
                         modalCrop.classList.add("flex"); 
                     }
                     
-                    // LÓGICA INTELIGENTE DE ROTAÇÃO
-                    // Câmera -> deita em 90 | Galeria -> Mantém original em 0
                     window.rotacaoBase = (origem === 'camera') ? 90 : 0; 
                     
                     const slNiv = document.getElementById("sliderNivelamento");
@@ -1383,7 +1379,7 @@
                     cropperInstancia = new Cropper(img, { 
                         viewMode: 1, 
                         dragMode: 'move',
-                        aspectRatio: 210 / 297, // PROPORÇÃO A4 EXATA (Bloqueia o quadrado)
+                        aspectRatio: 210 / 297, 
                         autoCropArea: 0.9, 
                         restore: false, 
                         guides: true, 
@@ -1394,7 +1390,7 @@
                         toggleDragModeOnDblclick: false, 
                         ready: function() { 
                             this.cropper.rotateTo(window.rotacaoBase); 
-                            this.cropper.zoomTo(0); // <-- Força a imagem a caber na tela sem precisar diminuir o zoom
+                            this.cropper.zoomTo(0); 
                         } 
                     });
                 }; 
@@ -1460,16 +1456,8 @@
 
                     Promise.all(promises).then(() => { abrirModalsFiltro(true); });
                 } else {
-                    caixasTexto = [{ 
-                        id: Date.now(), 
-                        texto: "", 
-                        posicao: { x: 40, y: alturaCrop - 150 }, 
-                        cor: "#000000", 
-                        tamanhoFonte: 24, 
-                        larguraCaixa: Math.min(400, larguraCrop - 80), 
-                        dimensaoCalculada: { w: 400, h: 40 } 
-                    }];
-                    indiceCaixaTextoAtiva = 0; 
+                    caixasTexto = [];
+                    indiceCaixaTextoAtiva = null; 
                     posicaoAssinatura = { x: larguraCrop / 2, y: alturaCrop / 2 }; 
                     posicaoCarimbo = { x: (larguraCrop - 400) / 2, y: (alturaCrop / 2) - 65 };
                     
@@ -1546,7 +1534,7 @@
                 let slNiv = document.getElementById("sliderNivelamento"); 
                 let ajusteFino = slNiv ? parseFloat(slNiv.value) : 0; 
                 cropperInstancia.rotateTo(window.rotacaoBase + ajusteFino); 
-                cropperInstancia.zoomTo(0); // Reajusta o tamanho na tela ao girar
+                cropperInstancia.zoomTo(0); 
             } 
         };
         
@@ -1629,16 +1617,8 @@
                 
                 Promise.all(promises).then(() => { abrirModalsFiltro(true); });
             } else {
-                caixasTexto = [{ 
-                    id: Date.now(), 
-                    texto: "", 
-                    posicao: { x: 40, y: alturaCrop - 150 }, 
-                    cor: "#000000", 
-                    tamanhoFonte: 24, 
-                    larguraCaixa: Math.min(400, larguraCrop - 80), 
-                    dimensaoCalculada: { w: 400, h: 40 } 
-                }];
-                indiceCaixaTextoAtiva = 0; 
+                caixasTexto = [];
+                indiceCaixaTextoAtiva = null; 
                 posicaoAssinatura = { x: larguraCrop / 2, y: alturaCrop / 2 }; 
                 posicaoCarimbo = { x: (larguraCrop - 400) / 2, y: (alturaCrop / 2) - 65 };
                 imgAssinaturaElemento = null; 
@@ -1745,19 +1725,24 @@
             window.renderizarFiltroAtual(true);
         };
 
-        window.adicionarNovaCaixaTexto = function() {
+        // --- NOVA FUNÇÃO: ADICIONAR CAIXA VIA SELECT ---
+        window.adicionarCaixaPacienteSelect = function(nomePaciente) {
+            if (!nomePaciente) return;
             caixasTexto.push({ 
                 id: Date.now(), 
-                texto: "Novo Texto", 
-                posicao: { x: 40, y: 60 + (caixasTexto.length * 30) }, 
+                texto: nomePaciente, 
+                posicao: { x: 40, y: 40 + (caixasTexto.length * 50) }, // NASCE NO TOPO DA FOLHA
                 cor: "#000000", 
-                tamanhoFonte: 24, 
-                larguraCaixa: Math.min(300, larguraCrop - 80), 
-                dimensaoCalculada: { w: 300, h: 40 } 
+                tamanhoFonte: 36, 
+                larguraCaixa: Math.min(400, larguraCrop - 80), 
+                dimensaoCalculada: { w: 400, h: 40 } 
             });
             indiceCaixaTextoAtiva = caixasTexto.length - 1; 
             sincronizarPainelComCaixaAtiva(); 
             window.renderizarFiltroAtual(true);
+            
+            // Reseta o select para permitir adicionar outros futuramente se desejar
+            document.getElementById("selectPacienteCaixaTexto").value = "";
         };
 
         window.removerCaixaTextoAtiva = function() {
@@ -1780,12 +1765,6 @@
                 }
                 if (msg) msg.classList.add("hidden");
                 
-                const inTxt = document.getElementById("inputTextoCanvas"); 
-                if (inTxt) inTxt.value = caixa.texto;
-                
-                const corTxt = document.getElementById("corTextoCanvas"); 
-                if (corTxt) corTxt.value = caixa.cor;
-                
                 const slFonte = document.getElementById("sliderTamanhoFonte"); 
                 if (slFonte) slFonte.value = caixa.tamanhoFonte;
                 
@@ -1802,22 +1781,6 @@
                 if (msg) msg.classList.remove("hidden"); 
             }
         }
-
-        window.atualizarTextoCaixaAtiva = function() { 
-            if (indiceCaixaTextoAtiva !== null && caixasTexto[indiceCaixaTextoAtiva]) { 
-                const el = document.getElementById("inputTextoCanvas"); 
-                if (el) caixasTexto[indiceCaixaTextoAtiva].texto = el.value; 
-                window.renderizarFiltroAtual(true); 
-            } 
-        };
-        
-        window.atualizarCorCaixaAtiva = function() { 
-            if (indiceCaixaTextoAtiva !== null && caixasTexto[indiceCaixaTextoAtiva]) { 
-                const el = document.getElementById("corTextoCanvas"); 
-                if (el) caixasTexto[indiceCaixaTextoAtiva].cor = el.value; 
-                window.renderizarFiltroAtual(true); 
-            } 
-        };
         
         window.atualizarTamanhoCaixaAtiva = function() { 
             if (indiceCaixaTextoAtiva !== null && caixasTexto[indiceCaixaTextoAtiva]) { 
@@ -1835,15 +1798,13 @@
             } 
         };
 
-        function desenharTextoEstiloDocumentoAutoAjustavel(ctx, texto, x, y, larguraCaixaMax, tamanhoFonteDesejado, cor) {
-            ctx.fillStyle = cor; 
-            ctx.textBaseline = "top"; 
+        function desenharTextoEstiloDocumentoAutoAjustavel(ctx, texto, x, y, larguraCaixaMax, tamanhoFonteDesejado, corTexto) {
             let tamanhoFonteFinal = tamanhoFonteDesejado;
             let linhasFinais = [];
             let alturaLinha = tamanhoFonteFinal * 1.25;
             
             while (tamanhoFonteFinal > 8) {
-                ctx.font = `${tamanhoFonteFinal}px Arial`; 
+                ctx.font = `bold ${tamanhoFonteFinal}px Arial`; // DEIXEI O NOME EM NEGRITO POR PADRÃO
                 alturaLinha = tamanhoFonteFinal * 1.25; 
                 let linhasBrutas = texto.split('\n'); 
                 linhasFinais = []; 
@@ -1873,10 +1834,20 @@
                 tamanhoFonteFinal--; 
             }
             
+            let wFinal = larguraCaixaMax;
+            let hFinal = Math.max(alturaLinha, linhasFinais.length * alturaLinha);
+            
+            // DESENHA O FUNDO BRANCO ANTES DO TEXTO (PADDING DE 5px)
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(x - 5, y - 5, wFinal + 10, hFinal + 10);
+            
+            // DESENHA O TEXTO POR CIMA
+            ctx.fillStyle = corTexto;
+            ctx.textBaseline = "top"; 
             for (let k = 0; k < linhasFinais.length; k++) { 
                 ctx.fillText(linhasFinais[k].trim(), x, y + (k * alturaLinha)); 
             }
-            return { w: larguraCaixaMax, h: Math.max(alturaLinha, linhasFinais.length * alturaLinha) };
+            return { w: wFinal, h: hFinal };
         }
 
         window.aplicarFiltroNoBackground = function() {
