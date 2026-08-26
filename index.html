@@ -190,7 +190,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE GERENCIAR PACIENTES -->
+    <!-- MODAL DE GERENCIAR PACIENTES (BANCO DE DADOS E IMPORTAÇÃO XLSX) -->
     <div id="modalGerenciarPacientes" class="fixed inset-0 bg-black/90 popup-blur hidden items-center justify-center p-4 z-[120]">
         <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 w-full max-w-md shadow-2xl flex flex-col gap-4">
             <div class="flex justify-between items-center border-b border-gray-800 pb-3">
@@ -343,7 +343,7 @@
         <i class="fas fa-plus"></i>
     </button>
 
-    <!-- MODAL DE VISUALIZAÇÃO GERAL -->
+    <!-- MODAL DE VISUALIZAÇÃO GERAL (GALERIA E EXPORTAÇÃO) -->
     <div id="modalVisualizacao" class="fixed inset-0 bg-black/90 popup-blur hidden items-center justify-center p-4 z-[500]">
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 w-full max-w-lg shadow-2xl flex flex-col gap-4 transform transition-all scale-95 opacity-0" id="modalVisualizacaoContent">
             <div class="flex justify-between items-start border-b border-gray-800 pb-3 gap-3">
@@ -423,7 +423,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE UPLOAD -->
+    <!-- MODAL DE UPLOAD (Original) -->
     <div id="modalUpload" class="fixed inset-0 bg-black/80 popup-blur hidden items-center justify-center p-4 z-[150] overflow-y-auto">
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 w-full max-w-md shadow-2xl flex flex-col gap-4 transform transition-all scale-95 opacity-0 my-auto" id="modalUploadContent">
             <!-- Conteúdo do Upload -->
@@ -455,7 +455,6 @@
                         <span class="text-xs font-bold text-red-400"><i class="fas fa-file-pdf"></i> Revisão de Documentos</span>
                         <span id="txtQtdPaginas" class="text-[10px] text-gray-400 bg-gray-800 px-2 py-1 rounded border border-gray-700">0 páginas</span>
                     </div>
-                    <p class="text-[10px] text-yellow-500 mb-1 leading-tight"><i class="fas fa-info-circle"></i> O carimbo inserido em uma página é aplicado nas próximas automaticamente. A IA seleciona o nome. Clique no Lápis para editar a página.</p>
                     <div id="gridPaginasScanner" class="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto custom-scrollbar p-1"></div>
                     <div class="grid grid-cols-2 gap-2 mt-1">
                         <button onclick="window.limparModosUpload()" class="bg-red-950/50 hover:bg-red-900/60 border border-red-900/50 text-red-400 py-2.5 rounded-lg text-xs font-bold transition">Cancelar</button>
@@ -490,7 +489,7 @@
         <button onclick="window.fecharZoomPagina()" class="absolute top-4 right-4 text-white hover:text-red-400 transition text-3xl"><i class="fas fa-times"></i></button>
     </div>
 
-    <div id="modalOrigemScanner" class="fixed inset-0 bg-black/85 popup-blur hidden items-center justify-center p-4 z-[75]">
+    <div id="modalOrigemScanner" class="fixed inset-0 bg-black/85 popup-blur hidden items-center justify-center p-4 z-[250]">
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-5 w-full max-w-xs shadow-2xl flex flex-col gap-4 text-center">
             <h3 class="text-sm font-bold text-white flex items-center justify-center gap-2"><i class="fas fa-file-pdf text-red-500"></i> Escanear de onde?</h3>
             <div class="flex flex-col gap-2">
@@ -1158,7 +1157,10 @@
                 const modalCrop = document.getElementById("modalCropperScanner"); if (modalCrop) { modalCrop.classList.add("hidden"); modalCrop.classList.remove("flex"); }
                 const modalFiltros = document.getElementById("modalFiltrosScanner"); if (modalFiltros) { modalFiltros.classList.remove("hidden"); modalFiltros.classList.add("flex"); }
 
-                sincronizarPainelComCaixaAtiva(); if(!hasState) window.filtroAtivo = 'pb'; window.aplicarFiltroNoBackground(); window.renderizarFiltroAtual(true); 
+                sincronizarPainelComCaixaAtiva();
+                if(!hasState) window.filtroAtivo = 'pb';
+                window.aplicarFiltroNoBackground();
+                window.renderizarFiltroAtual(true);
             }
         };
 
@@ -1354,50 +1356,6 @@
             canvas.ontouchstart = iniciarArrasto; canvas.ontouchmove = moverArrasto; canvas.ontouchend = finalizarArrasto;
         }
 
-        window.abrirModalAssinatura = function() {
-            const modal = document.getElementById("modalAssinatura"); if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
-            const canvasAss = document.getElementById("canvasAssinatura"); if (!canvasAss) return;
-            canvasAss.width = canvasAss.offsetWidth; canvasAss.height = canvasAss.offsetHeight;
-            ctxAssinaturaPad = canvasAss.getContext("2d"); ctxAssinaturaPad.strokeStyle = "#000000"; ctxAssinaturaPad.lineWidth = 3; ctxAssinaturaPad.lineCap = "round"; ctxAssinaturaPad.lineJoin = "round";
-            pontosTraçoAssinatura = [];
-
-            const getPosPad = (e) => { const rect = canvasAss.getBoundingClientRect(); const clientX = e.touches ? e.touches[0].clientX : e.clientX; const clientY = e.touches ? e.touches[0].clientY : e.clientY; return { x: (clientX - rect.left) * (canvasAss.width / rect.width), y: (clientY - rect.top) * (canvasAss.height / rect.height) }; };
-            const iniciar = (e) => { assinandoPad = true; const p = getPosPad(e); pontosTraçoAssinatura = [p]; ctxAssinaturaPad.beginPath(); ctxAssinaturaPad.moveTo(p.x, p.y); };
-            const desenhar = (e) => { 
-                if (!assinandoPad) return; e.preventDefault(); const p = getPosPad(e); pontosTraçoAssinatura.push(p);
-                if (pontosTraçoAssinatura.length > 2) {
-                    const len = pontosTraçoAssinatura.length, xc = (pontosTraçoAssinatura[len - 1].x + pontosTraçoAssinatura[len - 2].x) / 2, yc = (pontosTraçoAssinatura[len - 1].y + pontosTraçoAssinatura[len - 2].y) / 2;
-                    ctxAssinaturaPad.quadraticCurveTo(pontosTraçoAssinatura[len - 2].x, pontosTraçoAssinatura[len - 2].y, xc, yc); ctxAssinaturaPad.stroke();
-                }
-            };
-            const parar = () => { assinandoPad = false; };
-            canvasAss.onmousedown = iniciar; canvasAss.onmousemove = desenhar; canvasAss.onmouseup = parar;
-            canvasAss.ontouchstart = iniciar; canvasAss.ontouchmove = desenhar; canvasAss.ontouchend = parar;
-        };
-
-        window.limparAssinaturaPad = function() { const canvasAss = document.getElementById("canvasAssinatura"); if (ctxAssinaturaPad && canvasAss) { ctxAssinaturaPad.clearRect(0, 0, canvasAss.width, canvasAss.height); pontosTraçoAssinatura = []; } };
-        window.fecharModalAssinatura = function() { const modal = document.getElementById("modalAssinatura"); if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); } };
-
-        window.salvarAssinaturaParaCanvas = function() {
-            const canvasAss = document.getElementById("canvasAssinatura"); if (!canvasAss) return;
-            const dataUrl = canvasAss.toDataURL("image/png");
-            const img = new Image();
-            img.onload = function() {
-                imgAssinaturaElemento = img; posicaoAssinatura = { x: (larguraCrop - img.width) / 2, y: (alturaCrop - img.height) / 2 };
-                const pAss = document.getElementById("painelControleAssinatura"); if (pAss) { pAss.classList.remove("hidden"); pAss.classList.add("flex"); }
-                const txtBtnAss = document.getElementById("txtBtnAssinatura"); if (txtBtnAss) txtBtnAss.innerText = "Refazer Assinatura";
-                if(!ordemCamadas.includes('assinatura')) ordemCamadas.push('assinatura');
-                window.fecharModalAssinatura(); window.renderizarFiltroAtual(true);
-            }; img.src = dataUrl;
-        };
-
-        window.removerAssinaturaCanvas = function() {
-            imgAssinaturaElemento = null;
-            const pAss = document.getElementById("painelControleAssinatura"); if (pAss) { pAss.classList.add("hidden"); pAss.classList.remove("flex"); }
-            const txtBtnAss = document.getElementById("txtBtnAssinatura"); if (txtBtnAss) txtBtnAss.innerText = "Assinar";
-            window.renderizarFiltroAtual(true);
-        };
-
         window.confirmarSalvarPaginaScanner = async function() {
             window.renderizarFiltroAtual(false);
             const canvasLive = document.getElementById("canvasLivePreview"); if (!canvasLive) return;
@@ -1407,6 +1365,10 @@
             tempC.getContext('2d').putImageData(canvasOriginalContextData, 0, 0);
             const cleanBaseUrl = tempC.toDataURL('image/jpeg', 0.85);
 
+            const btnSalvar = document.querySelector("#modalFiltrosScanner button[onclick='window.confirmarSalvarPaginaScanner()']");
+            let originalText = btnSalvar ? btnSalvar.innerHTML : ""; 
+            if(btnSalvar) { btnSalvar.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Lendo Nome...`; btnSalvar.disabled = true; }
+
             const estadoEdicao = {
                 caixasTexto: JSON.parse(JSON.stringify(caixasTexto)), posicaoAssinatura: { ...posicaoAssinatura }, imgAssinaturaSrc: imgAssinaturaElemento ? imgAssinaturaElemento.src : null,
                 posicaoCarimbo: { ...posicaoCarimbo }, imgCarimboSrc: imgCarimboElemento ? imgCarimboElemento.src : null, brilho: document.getElementById("sliderBrilho")?.value || 0,
@@ -1415,13 +1377,23 @@
 
             let indexAtual = indicePaginaSendoEditada !== null ? indicePaginaSendoEditada : arrayPaginasEscaneadas.length;
 
+            let nomeSugerido = "";
+            try {
+                const worker = await Tesseract.createWorker('por');
+                const imgBw = await preProcessarImagemParaOCR(cleanBaseUrl);
+                const ret = await worker.recognize(imgBw);
+                let nomeVisto = encontrarPacienteNoBanco(ret.data.text);
+                if (nomeVisto !== "Desconhecido") nomeSugerido = nomeVisto;
+                await worker.terminate();
+            } catch(e) { console.error("Erro OCR", e); }
+
             if (indicePaginaSendoEditada !== null) {
                 arrayPaginasEscaneadas[indicePaginaSendoEditada].finalDataUrl = imgSalvaDataUrl; arrayPaginasEscaneadas[indicePaginaSendoEditada].baseDataUrl = cleanBaseUrl; arrayPaginasEscaneadas[indicePaginaSendoEditada].estadoEdicao = estadoEdicao;
-            } else { arrayPaginasEscaneadas.push({ finalDataUrl: imgSalvaDataUrl, baseDataUrl: cleanBaseUrl, estadoEdicao: estadoEdicao, paciente: "" }); }
+                if(nomeSugerido && !arrayPaginasEscaneadas[indicePaginaSendoEditada].paciente) arrayPaginasEscaneadas[indicePaginaSendoEditada].paciente = nomeSugerido;
+            } else { arrayPaginasEscaneadas.push({ finalDataUrl: imgSalvaDataUrl, baseDataUrl: cleanBaseUrl, estadoEdicao: estadoEdicao, paciente: nomeSugerido }); }
 
             if ((imgAssinaturaElemento || imgCarimboElemento) && indexAtual < arrayPaginasEscaneadas.length - 1) {
-                const btnSalvar = document.querySelector("#modalFiltrosScanner button[onclick='window.confirmarSalvarPaginaScanner()']");
-                let originalText = btnSalvar ? btnSalvar.innerHTML : ""; if(btnSalvar) { btnSalvar.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Aplicando nas seguintes...`; btnSalvar.disabled = true; }
+                if(btnSalvar) { btnSalvar.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Aplicando...`; }
 
                 const refWidth = larguraCrop, refHeight = alturaCrop;
 
@@ -1455,9 +1427,9 @@
                         }; img.src = baseSrc;
                     });
                 }
-                if(btnSalvar) { btnSalvar.innerHTML = originalText; btnSalvar.disabled = false; }
             }
 
+            if(btnSalvar) { btnSalvar.innerHTML = originalText; btnSalvar.disabled = false; }
             modoUploadAtual = 'scanner'; const modalFiltros = document.getElementById("modalFiltrosScanner"); if (modalFiltros) { modalFiltros.classList.add("hidden"); modalFiltros.classList.remove("flex"); }
             if (cropperInstancia) cropperInstancia.destroy(); window.renderizarCarrinhoScanner();
         };
@@ -1785,7 +1757,7 @@
 
         window.cancelarModoSelecao = function() {
             window.modoSelecaoAtivo = false; 
-            window.tipoSelecaoAtual = ''; // A TRAVA DE SEGURANÇA!
+            window.tipoSelecaoAtual = ''; 
             window.itensSelecionados.clear();
             document.getElementById('barraSelecao').classList.add('hidden'); document.getElementById('barraSelecao').classList.remove('flex');
             document.getElementById('secaoFiltros').classList.remove('hidden'); document.getElementById('fabUpload').classList.remove('hidden'); 
@@ -1977,7 +1949,6 @@
             const arqsPacientes = anexosFiltrados.filter(a => a.pastaPaciente);
             const arqsDiversos = anexosFiltrados.filter(a => !(a.pasta && a.pasta.startsWith("Relatorio_Geral")) && !(a.pasta && a.pasta.startsWith("Historico_Exportacoes")) && !a.pastaPaciente);
 
-            // MODO DE EXPORTAÇÃO
             if (window.pastaAbertaAtual === 'historico_exportacao_raiz' || window.tipoSelecaoAtual === 'exportacao') {
                 if (window.pastaAbertaAtual === 'historico_exportacao_raiz') {
                     if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.cancelarModoSelecao()" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-blue-400 font-bold text-xs flex items-center gap-1"><i class="fas fa-file-export"></i> Selecionar Arquivos para Dossiê</span>`;
@@ -1987,7 +1958,6 @@
                     renderizarCardPasta(container, "Arquivos Diversos", `${arqsDiversos.length} arquivos`, "diversos_root", 'diversos');
                     renderizarCardPasta(container, "Relatório Geral", `${arqsGeral.length} itens salvos`, "relatorio_geral", 'geral');
                 } else {
-                    // Navegação Interna do Modo Exportação
                     if (window.pastaAbertaAtual === 'pacientes_root') {
                         if (areaBreadcrumb) areaBreadcrumb.innerHTML = `<button onclick="window.abrirPasta('historico_exportacao_raiz')" class="text-gray-400 hover:text-white transition flex items-center gap-2 text-xs"><i class="fas fa-arrow-left"></i> Voltar</button><span class="text-gray-600 mx-2">/</span><span class="text-blue-400 font-bold text-xs">Pacientes</span>`;
                         const agrupamentoPacientes = {};
