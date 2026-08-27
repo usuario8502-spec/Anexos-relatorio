@@ -3482,17 +3482,25 @@
             let bgClass = "bg-blue-900/20 border-blue-800/40";
             let iconeHtml = '<i class="fas fa-folder-open text-blue-500 text-2xl"></i>';
             
-            // VERIFICA SE É PASTA DE PACIENTE PARA USAR A SUA IMAGEM
             if (tipoPasta === 'paciente') { 
                 bgClass = "bg-indigo-900/20 border-indigo-800/40"; 
-                // A mágica acontece aqui: A imagem vira branca com o filtro de inversão!
                 iconeHtml = '<img src="./psicologo.png" class="w-8 h-8 object-contain" style="filter: brightness(0) invert(1) opacity(0.9);">'; 
             } else if (tipoPasta === 'diversos') { 
+                // Ícone para Arquivos Diversos
                 bgClass = "bg-purple-900/20 border-purple-800/40"; 
-                iconeHtml = '<i class="fas fa-layer-group text-purple-400 text-2xl"></i>';
+                iconeHtml = '<img src="./arquivos.png" class="w-8 h-8 object-contain" style="filter: brightness(0) invert(1) opacity(0.9);">';
             } else if (tipoPasta === 'data') { 
                 bgClass = "bg-orange-900/20 border-orange-800/40"; 
                 iconeHtml = '<i class="fas fa-calendar-day text-orange-400 text-2xl"></i>';
+            }
+
+            // --- REGRAS EXCLUSIVAS PARA AS PASTAS GERAIS ---
+            if (rota === 'relatorio_geral') {
+                bgClass = "bg-blue-900/20 border-blue-800/40";
+                iconeHtml = '<img src="./bloco-de-anotacoes.png" class="w-8 h-8 object-contain" style="filter: brightness(0) invert(1) opacity(0.9);">';
+            } else if (rota === 'historico_gerado') {
+                bgClass = "bg-teal-900/20 border-teal-800/40"; // Fundo verde-água suave para combinar com o design
+                iconeHtml = '<img src="./exportar.png" class="w-8 h-8 object-contain" style="filter: brightness(0) invert(1) opacity(0.9);">';
             }
 
             let isChecked = false;
