@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Anexos - Sistema</title>
 
+    <!-- CONFIGURAÇÕES DE PWA E ÍCONES -->
     <meta name="theme-color" content="#030712">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -14,16 +15,30 @@
     <link rel="icon" type="image/png" href="./icon.png">
     <link rel="apple-touch-icon" href="./icon.png">
 
+    <!-- MANIFEST DINÂMICO PARA PWA -->
     <script>
         (function() {
             const baseUrl = window.location.href.split('?')[0].replace(/\/[^\/]*$/, '/');
             const manifest = {
-                name: "Sistema de Anexos", short_name: "Anexos", description: "Gestão e Escaneamento de Anexos e Documentos",
-                start_url: baseUrl, display: "standalone", background_color: "#030712", theme_color: "#030712", orientation: "portrait",
-                icons: [{ src: baseUrl + "icon.png", sizes: "192x192", type: "image/png", purpose: "any" }, { src: baseUrl + "icon.png", sizes: "512x512", type: "image/png", purpose: "any" }]
+                name: "Sistema de Anexos",
+                short_name: "Anexos",
+                description: "Gestão e Escaneamento de Anexos e Documentos",
+                start_url: baseUrl,
+                display: "standalone",
+                background_color: "#030712",
+                theme_color: "#030712",
+                orientation: "portrait",
+                icons: [
+                    { src: baseUrl + "icon.png", sizes: "192x192", type: "image/png", purpose: "any" },
+                    { src: baseUrl + "icon.png", sizes: "512x512", type: "image/png", purpose: "any" }
+                ]
             };
-            const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-            const link = document.createElement('link'); link.rel = 'manifest'; link.href = URL.createObjectURL(blob);
+            const stringManifest = JSON.stringify(manifest);
+            const blob = new Blob([stringManifest], {type: 'application/json'});
+            const manifestUrl = URL.createObjectURL(blob);
+            const link = document.createElement('link');
+            link.rel = 'manifest';
+            link.href = manifestUrl;
             document.head.appendChild(link);
         })();
     </script>
@@ -31,6 +46,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Bibliotecas para Scanner, Exportação de PDF, OCR e Excel -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -43,14 +59,32 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
         .popup-blur { backdrop-filter: blur(5px); }
+
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
         .cropper-view-box { outline: 4px solid #3b82f6 !important; border-radius: 4px; }
         .cropper-dashed { border: 1px dashed rgba(255, 255, 255, 0.8) !important; }
         .cropper-line { background-color: transparent !important; }
+        .cropper-line.line-e { width: 50px !important; right: -25px !important; cursor: e-resize !important; }
+        .cropper-line.line-w { width: 50px !important; left: -25px !important; cursor: w-resize !important; }
+        .cropper-line.line-n { height: 50px !important; top: -25px !important; cursor: n-resize !important; }
+        .cropper-line.line-s { height: 50px !important; bottom: -25px !important; cursor: s-resize !important; }
+
         .cropper-point { width: 50px !important; height: 50px !important; background-color: transparent !important; opacity: 1 !important; }
-        .cropper-point::before { content: ''; position: absolute; width: 18px; height: 18px; background-color: #3b82f6; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 5px rgba(0,0,0,0.8); border: 2px solid white; }
+        .cropper-point::before {
+            content: ''; position: absolute; width: 18px; height: 18px; background-color: #3b82f6; border-radius: 50%;
+            top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 5px rgba(0,0,0,0.8); border: 2px solid white;
+        }
+        
+        .cropper-point.point-nw { top: -25px !important; left: -25px !important; }
+        .cropper-point.point-ne { top: -25px !important; right: -25px !important; }
+        .cropper-point.point-sw { bottom: -25px !important; left: -25px !important; }
+        .cropper-point.point-se { bottom: -25px !important; right: -25px !important; }
+        .cropper-point.point-n { top: -25px !important; margin-left: -25px !important; }
+        .cropper-point.point-s { bottom: -25px !important; margin-left: -25px !important; }
+        .cropper-point.point-e { right: -25px !important; margin-top: -25px !important; }
+        .cropper-point.point-w { left: -25px !important; margin-top: -25px !important; }
         .cropper-center { display: none !important; }
 
         .filtro-ativo { border-color: #3b82f6 !important; background-color: #1e3a8a !important; color: #60a5fa !important; }
@@ -66,44 +100,143 @@
 </head>
 <body class="bg-gray-950 text-gray-100 font-sans min-h-screen flex flex-col relative pb-24">
 
-    <!-- MODAIS DE ACESSO E USUÁRIO OMITIDOS PARA SIMPLICIDADE VISUAL, MAS ESTÃO AQUI -->
+    <!-- MODAIS DE ACESSO -->
     <div id="modalLoginApp" class="fixed inset-0 bg-black/95 popup-blur z-[100] flex items-center justify-center p-4">
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl flex flex-col gap-4">
-            <div class="text-center flex flex-col items-center gap-2"><div class="w-12 h-12 rounded-full bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-500 text-xl"><i class="fas fa-user-lock"></i></div><h2 class="text-lg font-bold text-white">Acessar o Sistema</h2></div>
+            <div class="text-center flex flex-col items-center gap-2">
+                <div class="w-12 h-12 rounded-full bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-500 text-xl">
+                    <i class="fas fa-user-lock"></i>
+                </div>
+                <h2 class="text-lg font-bold text-white">Acessar o Sistema</h2>
+            </div>
             <form id="formLogin" onsubmit="event.preventDefault(); window.executarLoginFirebase(event);" class="flex flex-col gap-3">
-                <input type="text" id="loginUsuario" required placeholder="Digite seu usuário..." class="p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
-                <div class="relative w-full"><input type="password" id="loginSenha" required placeholder="******" class="w-full p-3 pr-10 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500"><button type="button" onclick="window.toggleVisibilidadeSenha('loginSenha', 'iconLoginSenha')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition focus:outline-none"><i class="fas fa-eye" id="iconLoginSenha"></i></button></div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] text-gray-400 font-bold uppercase">Usuário</label>
+                    <input type="text" id="loginUsuario" required placeholder="Digite seu usuário..." class="p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] text-gray-400 font-bold uppercase">Senha</label>
+                    <div class="relative w-full">
+                        <input type="password" id="loginSenha" required placeholder="******" class="w-full p-3 pr-10 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
+                        <button type="button" onclick="window.toggleVisibilidadeSenha('loginSenha', 'iconLoginSenha')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition focus:outline-none">
+                            <i class="fas fa-eye" id="iconLoginSenha"></i>
+                        </button>
+                    </div>
+                </div>
                 <button type="submit" id="btnEntrarLogin" class="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold text-xs transition shadow-lg">Entrar</button>
-                <div class="text-center mt-2"><button type="button" onclick="window.abrirModalRecuperarSenha()" class="text-[11px] text-blue-400 hover:text-blue-300 font-bold transition">Esqueci minha senha</button></div>
+                <div class="text-center mt-2">
+                    <button type="button" onclick="window.abrirModalRecuperarSenha()" class="text-[11px] text-blue-400 hover:text-blue-300 font-bold transition">Esqueci minha senha</button>
+                </div>
             </form>
         </div>
     </div>
+
+    <!-- POP-UP DE RECUPERAÇÃO DE SENHA -->
     <div id="modalRecuperarSenha" class="fixed inset-0 bg-black/90 popup-blur hidden items-center justify-center p-4 z-[110]">
         <div class="bg-gray-900 rounded-2xl border border-gray-800 p-5 w-full max-w-xs shadow-2xl flex flex-col gap-4 text-center">
-            <div class="w-10 h-10 rounded-full bg-yellow-500/20 text-yellow-400 flex items-center justify-center mx-auto text-lg border border-yellow-500/30"><i class="fas fa-key"></i></div>
+            <div class="w-10 h-10 rounded-full bg-yellow-500/20 text-yellow-400 flex items-center justify-center mx-auto text-lg border border-yellow-500/30">
+                <i class="fas fa-key"></i>
+            </div>
             <h3 class="text-sm font-bold text-white">Recuperar Senha</h3>
-            <form onsubmit="event.preventDefault(); window.confirmarRecuperacaoSenha(event);" class="flex flex-col gap-3"><input type="text" id="recUsuario" required placeholder="Digite o nome de usuário..." class="p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500"><div class="flex gap-2"><button type="button" onclick="window.fecharModalRecuperarSenha()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2.5 rounded-xl text-xs font-bold border border-gray-700 transition">Cancelar</button><button type="submit" id="btnEnviarRecuperacao" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl text-xs font-bold transition">Enviar Link</button></div></form>
+            <p class="text-xs text-gray-400">Digite seu nome de usuário. O sistema localizará seu e-mail e enviará o link de redefinição.</p>
+            <form onsubmit="event.preventDefault(); window.confirmarRecuperacaoSenha(event);" class="flex flex-col gap-3">
+                <input type="text" id="recUsuario" required placeholder="Digite o nome de usuário..." class="p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
+                <div class="flex gap-2">
+                    <button type="button" onclick="window.fecharModalRecuperarSenha()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2.5 rounded-xl text-xs font-bold border border-gray-700 transition">Cancelar</button>
+                    <button type="submit" id="btnEnviarRecuperacao" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl text-xs font-bold transition">Enviar Link</button>
+                </div>
+            </form>
         </div>
     </div>
+
+    <!-- MODAL DE CADASTRO DE NOVO USUÁRIO -->
     <div id="modalCadastroUsuario" class="fixed inset-0 bg-black/90 popup-blur hidden items-center justify-center p-4 z-[120]">
         <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 w-full max-w-sm shadow-2xl flex flex-col gap-4">
-            <div class="flex justify-between items-center border-b border-gray-800 pb-3"><h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fas fa-user-plus text-blue-500"></i> Cadastrar Novo Usuário</h3><button onclick="window.fecharModalCadastroUsuario()" class="text-gray-500 hover:text-white"><i class="fas fa-times text-lg"></i></button></div>
-            <form onsubmit="event.preventDefault(); window.executarCadastroFirebase(event);" class="flex flex-col gap-3"><select id="cadPerfil" required class="p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500"><option value="executor">Executor</option><option value="administrador">Administrador</option></select><input type="text" id="cadUsuario" required placeholder="Ex: joao_silva" class="p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500"><input type="email" id="cadEmail" required placeholder="joao@email.com" class="p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500"><div class="relative w-full"><input type="password" id="cadSenha" required placeholder="Mínimo 6 caracteres..." class="w-full p-3 pr-10 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500"><button type="button" onclick="window.toggleVisibilidadeSenha('cadSenha', 'iconCadSenha')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition focus:outline-none"><i class="fas fa-eye" id="iconCadSenha"></i></button></div><div class="flex gap-2 mt-2"><button type="button" onclick="window.fecharModalCadastroUsuario()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 py-3 rounded-xl font-bold text-xs transition">Cancelar</button><button type="submit" id="btnSalvarCadastro" class="flex-1 bg-green-600 hover:bg-green-500 text-white py-3 rounded-xl font-bold text-xs transition">Salvar</button></div></form>
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fas fa-user-plus text-blue-500"></i> Cadastrar Novo Usuário</h3>
+                <button onclick="window.fecharModalCadastroUsuario()" class="text-gray-500 hover:text-white"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            <form onsubmit="event.preventDefault(); window.executarCadastroFirebase(event);" class="flex flex-col gap-3">
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] text-gray-400 font-bold uppercase">Tipo de Conta / Perfil</label>
+                    <select id="cadPerfil" required class="p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
+                        <option value="executor">Executor</option>
+                        <option value="administrador">Administrador</option>
+                    </select>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] text-gray-400 font-bold uppercase">Nome de Usuário (Para Login)</label>
+                    <input type="text" id="cadUsuario" required placeholder="Ex: joao_silva" class="p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] text-gray-400 font-bold uppercase">E-mail Real (Apenas Recuperação)</label>
+                    <input type="email" id="cadEmail" required placeholder="joao@email.com" class="p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] text-gray-400 font-bold uppercase">Senha</label>
+                    <div class="relative w-full">
+                        <input type="password" id="cadSenha" required placeholder="Mínimo 6 caracteres..." class="w-full p-3 pr-10 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
+                        <button type="button" onclick="window.toggleVisibilidadeSenha('cadSenha', 'iconCadSenha')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition focus:outline-none">
+                            <i class="fas fa-eye" id="iconCadSenha"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex gap-2 mt-2">
+                    <button type="button" onclick="window.fecharModalCadastroUsuario()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 py-3 rounded-xl font-bold text-xs transition">Cancelar</button>
+                    <button type="submit" id="btnSalvarCadastro" class="flex-1 bg-green-600 hover:bg-green-500 text-white py-3 rounded-xl font-bold text-xs transition">Salvar Cadastro</button>
+                </div>
+            </form>
         </div>
     </div>
+
+    <!-- MODAL DE GERENCIAR PACIENTES -->
     <div id="modalGerenciarPacientes" class="fixed inset-0 bg-black/90 popup-blur hidden items-center justify-center p-4 z-[120]">
         <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 w-full max-w-md shadow-2xl flex flex-col gap-4">
-            <div class="flex justify-between items-center border-b border-gray-800 pb-3"><h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fas fa-users text-blue-500"></i> Banco de Pacientes</h3><button onclick="window.fecharModalPacientes()" class="text-gray-500 hover:text-white"><i class="fas fa-times text-lg"></i></button></div>
-            <div class="flex flex-col gap-2"><form onsubmit="event.preventDefault(); window.adicionarPacienteFirebase(event);" class="flex gap-2"><input type="text" id="cadNomePaciente" required placeholder="Adicionar manualmente..." class="flex-1 p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500"><button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 rounded-xl font-bold text-xs transition shadow"><i class="fas fa-plus"></i></button></form><div id="areaImportacaoPacientes" class="hidden w-full"><input type="file" id="inputImportXlsx" accept=".xlsx, .xls" class="hidden" onchange="window.importarPacientesXlsx(this)"><button type="button" onclick="document.getElementById('inputImportXlsx').click()" class="w-full bg-green-600/20 hover:bg-green-600/40 border border-green-500/40 text-green-400 py-2.5 rounded-xl font-bold text-xs transition flex items-center justify-center gap-2"><i class="fas fa-file-excel"></i> Importar Lote (.xlsx)</button></div></div>
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fas fa-users text-blue-500"></i> Banco de Pacientes</h3>
+                <button onclick="window.fecharModalPacientes()" class="text-gray-500 hover:text-white"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            
+            <p class="text-xs text-gray-400 leading-tight">A IA usará esses nomes de referência. Administradores podem importar listas inteiras (.xlsx).</p>
+
+            <div class="flex flex-col gap-2">
+                <form onsubmit="event.preventDefault(); window.adicionarPacienteFirebase(event);" class="flex gap-2">
+                    <input type="text" id="cadNomePaciente" required placeholder="Adicionar manualmente..." class="flex-1 p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 rounded-xl font-bold text-xs transition shadow"><i class="fas fa-plus"></i></button>
+                </form>
+
+                <div id="areaImportacaoPacientes" class="hidden w-full">
+                    <input type="file" id="inputImportXlsx" accept=".xlsx, .xls" class="hidden" onchange="window.importarPacientesXlsx(this)">
+                    <button type="button" onclick="document.getElementById('inputImportXlsx').click()" class="w-full bg-green-600/20 hover:bg-green-600/40 border border-green-500/40 text-green-400 py-2.5 rounded-xl font-bold text-xs transition flex items-center justify-center gap-2">
+                        <i class="fas fa-file-excel"></i> Importar Lote (.xlsx)
+                    </button>
+                </div>
+            </div>
+
             <div class="flex flex-col gap-2 max-h-56 overflow-y-auto custom-scrollbar pr-1 mt-1" id="listaPacientesBanco"></div>
         </div>
     </div>
+
+    <!-- MODAL DE REVISÃO DA EXPORTAÇÃO -->
     <div id="modalRevisaoExportacao" class="fixed inset-0 bg-black/95 popup-blur hidden flex-col items-center justify-center p-4 z-[400]">
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-2xl shadow-2xl flex flex-col gap-4 max-h-[90vh]">
-            <div class="flex justify-between items-center border-b border-gray-800 pb-3"><h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fas fa-file-export text-blue-500"></i> Gerar Dossiê / Relatório</h3><button onclick="window.fecharModalRevisaoExportacao()" class="text-gray-500 hover:text-white text-xl"><i class="fas fa-times"></i></button></div>
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fas fa-file-export text-blue-500"></i> Gerar Dossiê / Relatório</h3>
+                <button onclick="window.fecharModalRevisaoExportacao()" class="text-gray-500 hover:text-white text-xl"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <p class="text-xs text-gray-400">Os arquivos selecionados foram organizados em <strong class="text-white">Ordem Alfabética (Paciente)</strong> e <strong class="text-white">Ordem Cronológica (Data)</strong>.</p>
+            
             <input type="text" id="inputNomeExportacao" placeholder="Digite o nome do Dossiê/Arquivo Final..." class="w-full p-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm focus:outline-none focus:border-blue-500">
-            <div class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-2 pr-1" id="listaRevisaoExportacao"></div>
-            <div class="flex gap-2 pt-2 border-t border-gray-800 mt-2"><button onclick="window.fecharModalRevisaoExportacao()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2"><i class="fas fa-pen"></i> Selecionar Mais</button><button id="btnConfirmarExportacao" onclick="window.gerarPdfExportacao()" class="flex-[2] bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl text-sm font-bold transition shadow-lg flex items-center justify-center gap-2"><i class="fas fa-cogs"></i> Gerar e Salvar PDF</button></div>
+            
+            <div class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-2 pr-1" id="listaRevisaoExportacao">
+                <!-- Injetado via JS -->
+            </div>
+
+            <div class="flex gap-2 pt-2 border-t border-gray-800 mt-2">
+                <button onclick="window.fecharModalRevisaoExportacao()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2"><i class="fas fa-pen"></i> Selecionar Mais</button>
+                <button id="btnConfirmarExportacao" onclick="window.gerarPdfExportacao()" class="flex-[2] bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl text-sm font-bold transition shadow-lg flex items-center justify-center gap-2"><i class="fas fa-cogs"></i> Gerar e Salvar PDF</button>
+            </div>
         </div>
     </div>
 
@@ -122,15 +255,30 @@
             </div>
             <button onclick="window.toggleSidebar(false)" class="text-gray-400 hover:text-white text-xl p-1"><i class="fas fa-times"></i></button>
         </div>
+        
         <div class="p-4 flex flex-col gap-2 flex-1">
-            <button onclick="window.abrirExportacao()" class="w-full bg-blue-900/40 hover:bg-blue-800/60 border border-blue-700/60 text-blue-300 p-3 rounded-xl font-bold text-xs transition flex items-center gap-2.5 mb-2 shadow-sm"><i class="fas fa-file-export text-blue-400"></i> Exportar Dados</button>
-            <button id="btnSidebarCadastrarUsuario" onclick="window.abrirModalCadastroUsuario()" class="hidden w-full bg-gray-800 hover:bg-gray-700 text-gray-300 p-3 rounded-xl font-bold text-xs transition flex items-center gap-2.5"><i class="fas fa-user-plus text-gray-400"></i> Cadastrar Novo Usuário</button>
-            <button id="btnSidebarPacientes" onclick="window.abrirModalPacientes()" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 p-3 rounded-xl font-bold text-xs transition flex items-center gap-2.5"><i class="fas fa-address-book text-gray-400"></i> Banco de Pacientes</button>
+            <button onclick="window.abrirExportacao()" class="w-full bg-blue-900/40 hover:bg-blue-800/60 border border-blue-700/60 text-blue-300 p-3 rounded-xl font-bold text-xs transition flex items-center gap-2.5 mb-2 shadow-sm">
+                <i class="fas fa-file-export text-blue-400"></i> Exportar Dados
+            </button>
+
+            <button id="btnSidebarCadastrarUsuario" onclick="window.abrirModalCadastroUsuario()" class="hidden w-full bg-gray-800 hover:bg-gray-700 text-gray-300 p-3 rounded-xl font-bold text-xs transition flex items-center gap-2.5">
+                <i class="fas fa-user-plus text-gray-400"></i> Cadastrar Novo Usuário
+            </button>
+            <button id="btnSidebarPacientes" onclick="window.abrirModalPacientes()" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 p-3 rounded-xl font-bold text-xs transition flex items-center gap-2.5">
+                <i class="fas fa-address-book text-gray-400"></i> Banco de Pacientes
+            </button>
+            
             <div class="border-t border-gray-800 my-2"></div>
-            <button onclick="window.abrirLixeira()" class="w-full bg-red-900/20 hover:bg-red-900/40 border border-red-800/40 text-red-400 p-3 rounded-xl font-bold text-xs transition flex items-center gap-2.5"><i class="fas fa-trash"></i> Lixeira</button>
+            
+            <button onclick="window.abrirLixeira()" class="w-full bg-red-900/20 hover:bg-red-900/40 border border-red-800/40 text-red-400 p-3 rounded-xl font-bold text-xs transition flex items-center gap-2.5">
+                <i class="fas fa-trash"></i> Lixeira
+            </button>
         </div>
+
         <div class="p-4 border-t border-gray-800">
-            <button onclick="window.fazerLogout()" class="w-full bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 py-3 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2"><i class="fas fa-sign-out-alt"></i> Sair do Sistema</button>
+            <button onclick="window.fazerLogout()" class="w-full bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 py-3 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2">
+                <i class="fas fa-sign-out-alt"></i> Sair do Sistema
+            </button>
         </div>
     </aside>
 
@@ -146,29 +294,52 @@
     </header>
 
     <main class="flex-1 max-w-5xl w-full mx-auto p-4 flex flex-col gap-6">
+        <!-- Barra de Filtros -->
         <section class="bg-gray-900 border border-gray-800 p-4 rounded-xl shadow-lg flex flex-col gap-3" id="secaoFiltros">
             <div class="relative w-full">
                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500"></i>
-                <input type="text" id="inputBuscaAnexo" placeholder="Buscar por paciente ou data..." class="w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-blue-500 text-sm focus:outline-none transition-all">
+                <input type="text" id="inputBuscaAnexo" placeholder="Buscar por paciente, relatórios ou data..." class="w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-blue-500 focus:outline-none text-sm transition-all text-white">
             </div>
+            
             <div class="grid grid-cols-2 gap-3">
-                <div class="flex flex-col gap-1"><label class="text-[10px] text-gray-400 font-bold uppercase">Data Início</label><input type="date" id="dataInicioFiltro" class="w-full p-2 rounded-lg bg-gray-800 border border-gray-700 text-sm text-white focus:border-blue-500 focus:outline-none"></div>
-                <div class="flex flex-col gap-1"><label class="text-[10px] text-gray-400 font-bold uppercase">Data Fim</label><input type="date" id="dataFimFiltro" class="w-full p-2 rounded-lg bg-gray-800 border border-gray-700 text-sm text-white focus:border-blue-500 focus:outline-none"></div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] text-gray-400 font-bold uppercase">Data Início</label>
+                    <input type="date" id="dataInicioFiltro" class="w-full p-2 rounded-lg bg-gray-800 border border-gray-700 text-sm focus:border-blue-500 focus:outline-none text-gray-300">
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] text-gray-400 font-bold uppercase">Data Fim</label>
+                    <input type="date" id="dataFimFiltro" class="w-full p-2 rounded-lg bg-gray-800 border border-gray-700 text-sm focus:border-blue-500 focus:outline-none text-gray-300">
+                </div>
             </div>
         </section>
 
         <!-- Galeria Principal Dinâmica -->
         <section class="flex flex-col gap-3 relative">
+            
+            <!-- BARRA DO MODO DE SELEÇÃO -->
             <div id="barraSelecao" class="hidden justify-between items-center bg-blue-600 border border-blue-500 p-3 rounded-xl mb-1 shadow-lg sticky top-20 z-30">
-                <button onclick="window.cancelarModoSelecao()" class="text-white font-bold text-xs flex items-center gap-1.5 hover:text-gray-200 transition"><i class="fas fa-arrow-left"></i> Cancelar</button>
+                <button onclick="window.cancelarModoSelecao()" class="text-white font-bold text-xs flex items-center gap-1.5 hover:text-gray-200 transition">
+                    <i class="fas fa-arrow-left"></i> Cancelar
+                </button>
                 <span id="txtContagemSelecao" class="text-xs font-bold text-white">0 selecionados</span>
-                <button id="btnAcaoSelecao" onclick="window.executarAcaoSelecao()" class="bg-red-700 hover:bg-red-800 text-white text-xs font-bold py-1.5 px-3 rounded shadow transition flex items-center gap-1.5"><i class="fas fa-trash"></i> Apagar</button>
+                <button id="btnAcaoSelecao" onclick="window.executarAcaoSelecao()" class="bg-red-700 hover:bg-red-800 text-white text-xs font-bold py-1.5 px-3 rounded shadow transition flex items-center gap-1.5">
+                    <i class="fas fa-trash"></i> Apagar
+                </button>
             </div>
+
             <div class="flex justify-between items-center text-sm text-gray-400 px-1 border-b border-gray-800 pb-2" id="areaBreadcrumb"></div>
-            <div class="flex justify-between items-center text-xs text-gray-500 px-1 pt-1"><span id="txtInfoVista">Visualizando Pastas</span><span id="txtContadorArquivos">0 itens</span></div>
+            <div class="flex justify-between items-center text-xs text-gray-500 px-1 pt-1">
+                <span id="txtInfoVista">Visualizando Pastas</span>
+                <span id="txtContadorArquivos">0 itens</span>
+            </div>
             
             <div id="listaAnexos" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 custom-scrollbar select-none"></div>
-            <div id="areaEsvaziarLixeira" class="hidden w-full mt-4"><button onclick="window.esvaziarLixeira()" class="w-full bg-red-950/60 hover:bg-red-900 border border-red-800/60 text-red-400 py-3 rounded-xl font-bold text-sm transition shadow"><i class="fas fa-dumpster"></i> Esvaziar Lixeira</button></div>
+
+            <div id="areaEsvaziarLixeira" class="hidden w-full mt-4">
+                <button onclick="window.esvaziarLixeira()" class="w-full bg-red-950/60 hover:bg-red-900 border border-red-800/60 text-red-400 py-3 rounded-xl font-bold text-sm transition shadow">
+                    <i class="fas fa-dumpster"></i> Esvaziar Lixeira
+                </button>
+            </div>
         </section>
     </main>
 
@@ -197,6 +368,8 @@
                 <img id="imagemEmDestaque" src="" class="max-w-full max-h-full object-contain hidden">
                 <iframe id="iframePreview" src="" class="w-full h-full hidden bg-white rounded-lg"></iframe>
                 <video id="videoPreview" controls controlsList="nodownload" class="w-full h-full hidden rounded-lg bg-black"></video>
+                
+                <!-- ÁREA EXCLUSIVA PARA VISUALIZAÇÃO DE PLANILHAS (XLSX / CSV) -->
                 <div id="excelPreview" class="w-full h-full overflow-auto hidden bg-gray-900 p-3 custom-scrollbar text-white text-xs"></div>
 
                 <div id="iconeDestaque" class="hidden flex-col items-center justify-center gap-4 text-gray-500 w-full h-full p-4">
@@ -206,12 +379,14 @@
                 </div>
             </div>
 
-            <!-- BOTÕES NORMAIS DA GALERIA (COM O NOVO INICIAR EXCLUSÃO) -->
+            <!-- BOTÕES NORMAIS DA GALERIA -->
             <div id="gridAcoesNormal" class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button onclick="window.abrirEdicaoNome()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-pen text-blue-500"></i> Editar</button>
                 <button onclick="window.compartilharAnexoAtivo()" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-share-nodes"></i> Enviar</button>
                 <button id="btnBaixarAnexo" onclick="window.baixarAnexoAtivo()" class="bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-download"></i> Baixar</button>
-                <button onclick="window.iniciarExclusaoArquivo()" class="bg-red-950/60 hover:bg-red-900/80 text-red-400 border border-red-800/60 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-trash-alt"></i> Excluir</button>
+                
+                <!-- BOTÃO EXCLUIR AJUSTADO COM LÓGICA DIRETA -->
+                <button onclick="window.excluirArquivoDireto()" class="bg-red-950/60 hover:bg-red-900/80 text-red-400 border border-red-800/60 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-trash-alt"></i> Excluir</button>
             </div>
 
             <!-- BOTÕES DA LIXEIRA -->
@@ -220,6 +395,7 @@
                 <button onclick="window.acaoDefinitivaLixeira([window.idImagemAtiva])" class="bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[11px] sm:text-xs shadow-md"><i class="fas fa-trash-alt"></i> Apagar Definitivamente</button>
             </div>
             
+            <!-- BOTÃO MODO PREVIEW EXPORTAÇÃO -->
             <div id="gridAcoesExportacao" class="hidden grid grid-cols-1 gap-2">
                 <button onclick="window.fecharModalVisualizacao()" class="bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-xs shadow-md"><i class="fas fa-arrow-left"></i> Voltar à Seleção</button>
             </div>
@@ -229,10 +405,10 @@
     <!-- MÚLTIPLOS MODAIS AUXILIARES OCULTOS -->
     <div id="modalPerguntaSelecao" class="fixed inset-0 bg-black/90 popup-blur hidden items-center justify-center p-4 z-[600]">
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-5 w-full max-w-xs shadow-2xl flex flex-col gap-4 text-center">
-            <h3 class="text-sm font-bold text-white flex items-center justify-center gap-2" id="txtTituloPerguntaSelecao"><i class="fas fa-question-circle text-blue-500"></i> Deseja apagar mais itens?</h3>
-            <p class="text-xs text-gray-400" id="txtDescPerguntaSelecao">Você pode selecionar vários itens para apagar de uma vez só.</p>
+            <h3 class="text-sm font-bold text-white flex items-center justify-center gap-2" id="txtTituloPerguntaSelecao"><i class="fas fa-question-circle text-blue-500"></i> Deseja apagar mais pastas?</h3>
+            <p class="text-xs text-gray-400" id="txtDescPerguntaSelecao">Você pode selecionar várias pastas de uma vez.</p>
             <div class="flex gap-2 mt-2">
-                <button onclick="window.responderPerguntaSelecao(false)" class="flex-1 bg-gray-800 text-gray-300 py-2.5 rounded-xl text-xs font-bold transition shadow">Não, só este</button>
+                <button onclick="window.responderPerguntaSelecao(false)" class="flex-1 bg-gray-800 text-gray-300 py-2.5 rounded-xl text-xs font-bold transition shadow">Não, só esta</button>
                 <button onclick="window.responderPerguntaSelecao(true)" class="flex-1 bg-blue-600 text-white py-2.5 rounded-xl text-xs font-bold transition shadow">Sim, selecionar</button>
             </div>
         </div>
@@ -264,51 +440,90 @@
     <!-- MODAL DE UPLOAD GERAL -->
     <div id="modalUpload" class="fixed inset-0 bg-black/80 popup-blur hidden items-center justify-center p-4 z-[150] overflow-y-auto">
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 w-full max-w-md shadow-2xl flex flex-col gap-4 transform transition-all scale-95 opacity-0 my-auto" id="modalUploadContent">
+            <!-- Conteúdo do Upload -->
             <div class="flex justify-between items-center border-b border-gray-800 pb-3">
                 <h3 class="text-lg font-bold text-white"><i class="fas fa-cloud-upload-alt text-blue-500"></i> Enviar Arquivos</h3>
                 <button onclick="window.fecharModalUpload()" class="text-gray-500 hover:text-white transition text-xl"><i class="fas fa-times"></i></button>
             </div>
+
             <div class="flex flex-col gap-3">
-                <input type="text" id="nomeArquivoManual" placeholder="Nome ou Descrição Base..." class="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 text-white text-sm focus:border-blue-500">
+                <label class="text-xs text-gray-400">Nome ou Descrição do Arquivo Base:</label>
+                <input type="text" id="nomeArquivoManual" placeholder="Ex: Relatório Evoluções..." class="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-blue-500">
+                
                 <div id="areaEscolhaModo" class="grid grid-cols-2 gap-2 mt-2">
-                    <button onclick="document.getElementById('inputArquivoCamera').click()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-xl text-[11px] font-bold transition"><i class="fas fa-camera text-blue-400"></i> Câmera</button>
-                    <button onclick="document.getElementById('inputArquivoGaleria').click()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-xl text-[11px] font-bold transition"><i class="fas fa-images text-blue-400"></i> Fotos</button>
-                    <button onclick="window.abrirModalOrigemScanner()" class="col-span-2 sm:col-span-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-xl text-[11px] font-bold relative overflow-hidden transition"><div class="absolute inset-0 bg-red-500/10 opacity-50"></div><i class="fas fa-file-pdf text-red-500"></i> Escanear</button>
-                    <button onclick="document.getElementById('inputArquivoGenerico').click()" class="col-span-2 sm:col-span-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-xl text-[11px] font-bold transition"><i class="fas fa-file-upload text-purple-400"></i> Outros Arquivos</button>
+                    <button onclick="document.getElementById('inputArquivoCamera').click()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition">
+                        <i class="fas fa-camera text-blue-400"></i><span class="text-[11px] font-bold">Câmera</span>
+                    </button>
+                    <button onclick="document.getElementById('inputArquivoGaleria').click()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition">
+                        <i class="fas fa-images text-blue-400"></i><span class="text-[11px] font-bold">Múltiplas Fotos</span>
+                    </button>
+                    <button onclick="window.abrirModalOrigemScanner()" class="col-span-2 sm:col-span-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition relative overflow-hidden">
+                        <div class="absolute inset-0 bg-red-500/10 opacity-50"></div>
+                        <i class="fas fa-file-pdf text-red-500"></i><span class="text-[11px] font-bold">Escanear Documento</span>
+                    </button>
+                    
+                    <button onclick="document.getElementById('inputArquivoGenerico').click()" class="col-span-2 sm:col-span-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition">
+                        <i class="fas fa-file-upload text-purple-400"></i><span class="text-[11px] font-bold">Outros Arquivos</span>
+                    </button>
                 </div>
+
                 <input type="file" id="inputArquivoCamera" accept="image/*" capture="environment" class="hidden" onchange="window.processarArquivosLote(this, 'camera')">
                 <input type="file" id="inputArquivoGaleria" accept="image/*" multiple class="hidden" onchange="window.processarArquivosLote(this, 'galeria')">
+                <input type="file" id="inputArquivoScannerCamera" accept="image/*" capture="environment" class="hidden" onchange="window.abrirModoScanner(this, 'camera')">
+                <input type="file" id="inputArquivoScannerGaleria" accept="image/*" class="hidden" onchange="window.abrirModoScanner(this, 'galeria')">
+                
+                <!-- INPUT QUE ACEITA QUALQUER ARQUIVO PARA FILA DIRETA -->
                 <input type="file" id="inputArquivoGenerico" class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.zip,.rar,.mp3,.wav,.mp4,.avi" multiple onchange="window.processarArquivosLote(this, 'generico')">
 
-                <!-- PREVIEW SCANNER -->
+                <!-- PREVIEW SCANNER E REVISÃO INTELIGENTE -->
                 <div id="areaPreviewScanner" class="hidden flex-col gap-3 mt-2">
-                    <div class="flex justify-between items-center border-b border-gray-800 pb-2"><span class="text-xs font-bold text-red-400"><i class="fas fa-file-pdf"></i> Revisão de Documentos</span><span id="txtQtdPaginas" class="text-[10px] text-gray-400 bg-gray-800 px-2 py-1 rounded">0 páginas</span></div>
-                    <p class="text-[10px] text-yellow-500 mb-1 leading-tight"><i class="fas fa-info-circle"></i> O layout ajustado na primeira página (carimbo, assinatura e posição do paciente) será repetido nas demais!</p>
+                    <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                        <span class="text-xs font-bold text-red-400"><i class="fas fa-file-pdf"></i> Revisão de Documentos</span>
+                        <span id="txtQtdPaginas" class="text-[10px] text-gray-400 bg-gray-800 px-2 py-1 rounded border border-gray-700">0 páginas</span>
+                    </div>
+                    <p class="text-[10px] text-yellow-500 mb-1 leading-tight"><i class="fas fa-info-circle"></i> O carimbo inserido em uma página é aplicado nas próximas automaticamente. A IA seleciona o nome. Clique no Lápis para editar a página.</p>
                     <div id="gridPaginasScanner" class="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto custom-scrollbar p-1"></div>
                     <div class="grid grid-cols-2 gap-2 mt-1">
-                        <button onclick="window.limparModosUpload()" class="bg-red-950/50 text-red-400 py-2.5 rounded-lg text-xs font-bold transition">Cancelar</button>
-                        <button onclick="window.abrirModalOrigemScanner()" class="bg-gray-800 text-gray-300 py-2.5 rounded-lg text-xs font-bold transition"><i class="fas fa-plus"></i> Add Pág.</button>
+                        <button onclick="window.limparModosUpload()" class="bg-red-950/50 hover:bg-red-900/60 border border-red-900/50 text-red-400 py-2.5 rounded-lg text-xs font-bold transition">Cancelar</button>
+                        <button onclick="window.abrirModalOrigemScanner()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                            <i class="fas fa-plus"></i> Add Pág.
+                        </button>
                     </div>
                 </div>
 
                 <!-- PREVIEW DIVERSOS -->
                 <div id="areaPreviewArquivos" class="hidden flex-col gap-3 mt-2">
-                    <div class="flex justify-between items-center border-b border-gray-800 pb-2"><span class="text-xs font-bold text-blue-400"><i class="fas fa-layer-group"></i> Fila de Envio</span><span id="txtQtdFila" class="text-[10px] text-gray-400 bg-gray-800 px-2 py-1 rounded">0 itens</span></div>
+                    <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                        <span class="text-xs font-bold text-blue-400"><i class="fas fa-layer-group"></i> Fila de Envio</span>
+                        <span id="txtQtdFila" class="text-[10px] text-gray-400 bg-gray-800 px-2 py-1 rounded border border-gray-700">0 itens</span>
+                    </div>
                     <div id="listaArquivosFila" class="flex flex-col gap-2 max-h-40 overflow-y-auto custom-scrollbar pr-1"></div>
-                    <button onclick="document.getElementById('inputArquivoGenerico').click()" class="w-full bg-gray-800 text-gray-300 py-3 rounded-lg text-xs font-bold transition"><i class="fas fa-plus"></i> Adicionar Mais Itens</button>
+                    <button onclick="document.getElementById('inputArquivoGenerico').click()" class="w-full bg-gray-800 hover:bg-gray-700 border border-dashed border-gray-600 text-gray-300 py-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition">
+                        <i class="fas fa-plus"></i> Adicionar Mais Itens
+                    </button>
                 </div>
             </div>
             
+            <!-- NOVA BARRA DE PROGRESSO COM PORCENTAGEM -->
             <div id="containerProgresso" class="hidden w-full flex-col gap-1.5 mt-4">
-                <div class="flex justify-between items-end px-1"><span id="textoStatusProgresso" class="text-[10px] font-bold text-blue-400 uppercase tracking-wide">Preparando...</span><span id="textoPorcentagem" class="text-lg font-bold text-white leading-none">0%</span></div>
-                <div class="w-full bg-gray-950 rounded-full h-3 border border-gray-800 shadow-inner overflow-hidden"><div id="barraProgresso" class="bg-blue-500 h-full rounded-full transition-all duration-300 relative" style="width: 0%"><div class="absolute inset-0 bg-white/20 w-full h-full animate-pulse"></div></div></div>
+                <div class="flex justify-between items-end px-1">
+                    <span id="textoStatusProgresso" class="text-[10px] font-bold text-blue-400 uppercase tracking-wide">Preparando...</span>
+                    <span id="textoPorcentagem" class="text-lg font-bold text-white leading-none">0%</span>
+                </div>
+                <div class="w-full bg-gray-950 rounded-full h-3 border border-gray-800 shadow-inner overflow-hidden">
+                    <div id="barraProgresso" class="bg-blue-500 h-full rounded-full transition-all duration-300 relative" style="width: 0%">
+                        <div class="absolute inset-0 bg-white/20 w-full h-full animate-pulse"></div>
+                    </div>
+                </div>
             </div>
             
-            <button id="btnSalvarUpload" onclick="window.iniciarUploadStorage()" class="hidden w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition shadow-md flex items-center justify-center gap-2"><i class="fas fa-cloud-upload-alt"></i> Salvar e Enviar</button>
+            <button id="btnSalvarUpload" onclick="window.iniciarUploadStorage()" class="hidden w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition shadow-md flex items-center justify-center gap-2">
+                <i class="fas fa-cloud-upload-alt"></i> Salvar e Enviar
+            </button>
         </div>
     </div>
 
-    <!-- MODAL ORIGEM SCANNER -->
+    <!-- MODAL ORIGEM SCANNER (Z-INDEX 350 PARA ABRIR NA FRENTE DO UPLOAD) -->
     <div id="modalZoomPagina" onclick="window.fecharZoomPagina()" class="fixed inset-0 bg-black/95 popup-blur hidden items-center justify-center p-4 z-[540] cursor-zoom-out">
         <img id="imgZoomPagina" src="" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
         <button onclick="window.fecharZoomPagina()" class="absolute top-4 right-4 text-white hover:text-red-400 transition text-3xl"><i class="fas fa-times"></i></button>
@@ -318,18 +533,20 @@
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-5 w-full max-w-xs shadow-2xl flex flex-col gap-4 text-center">
             <h3 class="text-sm font-bold text-white flex items-center justify-center gap-2"><i class="fas fa-file-pdf text-red-500"></i> Escanear de onde?</h3>
             <div class="flex flex-col gap-2">
-                <button onclick="window.escolherOrigemScanner('camera')" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold text-xs transition"><i class="fas fa-camera"></i> Usar Câmera</button>
-                <button onclick="window.escolherOrigemScanner('galeria')" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-xl font-bold text-xs transition"><i class="fas fa-images"></i> Da Galeria</button>
-                <button onclick="window.escolherOrigemScanner('pdf')" class="w-full bg-red-900/60 hover:bg-red-800/80 text-white py-3 rounded-xl font-bold text-xs transition mt-2"><i class="fas fa-file-pdf"></i> PDF para Escanear</button>
-                <button onclick="window.fecharModalOrigemScanner()" class="w-full bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 py-2 rounded-xl font-bold text-xs transition mt-1">Cancelar</button>
+                <button onclick="window.escolherOrigemScanner('camera')" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold text-xs transition">
+                    <i class="fas fa-camera"></i> Usar Câmera
+                </button>
+                <button onclick="window.escolherOrigemScanner('galeria')" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-xl font-bold text-xs transition">
+                    <i class="fas fa-images"></i> Da Galeria
+                </button>
+                <button onclick="window.fecharModalOrigemScanner()" class="w-full bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 py-2 rounded-xl font-bold text-xs transition mt-1">
+                    Cancelar
+                </button>
             </div>
         </div>
-        <input type="file" id="inputScannerPDF" accept="application/pdf" class="hidden" onchange="window.processarArquivosLote(this, 'scanner_pdf')">
-        <input type="file" id="inputArquivoScannerCamera" accept="image/*" capture="environment" class="hidden" onchange="window.abrirModoScanner(this, 'camera')">
-        <input type="file" id="inputArquivoScannerGaleria" accept="image/*" class="hidden" onchange="window.abrirModoScanner(this, 'galeria')">
     </div>
 
-    <!-- CROPPER E FILTROS -->
+    <!-- CROPPER E FILTROS (Z-INDEX 510 e 520 PARA FICAR ACIMA DE TUDO) -->
     <div id="modalCropperScanner" class="fixed inset-0 bg-gray-950 z-[510] hidden flex-col">
         <div class="flex justify-between items-center bg-gray-900 border-b border-gray-800 p-4 shadow-md">
             <h3 class="text-white font-bold text-sm flex items-center gap-2"><i class="fas fa-crop-alt text-blue-500"></i> Ajustar Bordas</h3>
@@ -340,9 +557,9 @@
         </div>
         <div class="bg-gray-900 px-5 pt-4 border-t border-gray-800 flex flex-col gap-2">
             <div class="flex items-center gap-4">
-                <button onclick="window.ajustarNivelamento(-1)" class="text-gray-400 bg-gray-800 border border-gray-700 w-8 h-8 rounded-full flex items-center justify-center transition shadow-md"><i class="fas fa-minus text-xs"></i></button>
+                <button onclick="window.ajustarNivelamento(-1)" class="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 border border-gray-700 w-8 h-8 rounded-full flex items-center justify-center transition shadow-md"><i class="fas fa-minus text-xs"></i></button>
                 <input type="range" id="sliderNivelamento" min="-180" max="180" value="0" class="flex-1" oninput="window.nivelarCropper(this.value)">
-                <button onclick="window.ajustarNivelamento(1)" class="text-gray-400 bg-gray-800 border border-gray-700 w-8 h-8 rounded-full flex items-center justify-center transition shadow-md"><i class="fas fa-plus text-xs"></i></button>
+                <button onclick="window.ajustarNivelamento(1)" class="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 border border-gray-700 w-8 h-8 rounded-full flex items-center justify-center transition shadow-md"><i class="fas fa-plus text-xs"></i></button>
             </div>
         </div>
         <div class="bg-gray-900 p-4 pb-8 flex gap-3">
@@ -356,7 +573,7 @@
     <div id="modalFiltrosScanner" class="fixed inset-0 bg-gray-950 z-[520] hidden flex-col overflow-y-auto">
         <div class="flex justify-between items-center bg-gray-900 border-b border-gray-800 p-4 shadow-md">
             <button onclick="window.voltarParaCropper()" class="text-gray-400 hover:text-white"><i class="fas fa-arrow-left text-xl"></i></button>
-            <h3 class="text-white font-bold text-sm flex items-center gap-2"><i class="fas fa-magic text-blue-500"></i> Passo 2: Edição</h3>
+            <h3 class="text-white font-bold text-sm flex items-center gap-2"><i class="fas fa-magic text-blue-500"></i> Passo 2: Edição e Assinatura</h3>
             <div class="w-6"></div> 
         </div>
         
@@ -376,60 +593,130 @@
                 </div>
             </div>
 
+            <!-- NOVA LINHA DE BOTÕES + CHECKBOX MARCELLY -->
             <div class="flex justify-between items-center px-4 mt-1 gap-2">
                 <div class="flex overflow-x-auto gap-3 hide-scrollbar pb-1 flex-1">
-                    <button id="btnFiltro_original" onclick="window.aplicarFiltroBase('original')" class="flex flex-col items-center gap-1.5 min-w-[70px]"><div class="w-10 h-10 bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center text-gray-400 transition" id="iconFiltro_original"><i class="fas fa-image text-sm"></i></div><span class="text-[9px] font-bold text-gray-400" id="txtFiltro_original">Original</span></button>
-                    <button id="btnFiltro_auto" onclick="window.aplicarFiltroBase('auto')" class="flex flex-col items-center gap-1.5 min-w-[70px]"><div class="w-10 h-10 bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center text-yellow-500 transition" id="iconFiltro_auto"><i class="fas fa-wand-magic-sparkles text-sm"></i></div><span class="text-[9px] font-bold text-gray-400" id="txtFiltro_auto">Auto</span></button>
-                    <button id="btnFiltro_cor" onclick="window.aplicarFiltroBase('cor')" class="flex flex-col items-center gap-1.5 min-w-[70px]"><div class="w-10 h-10 bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center text-blue-400 transition" id="iconFiltro_cor"><i class="fas fa-palette text-sm"></i></div><span class="text-[9px] font-bold text-gray-400" id="txtFiltro_cor">Cor</span></button>
-                    <button id="btnFiltro_cinza" onclick="window.aplicarFiltroBase('cinza')" class="flex flex-col items-center gap-1.5 min-w-[70px]"><div class="w-10 h-10 bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center text-gray-400 transition" id="iconFiltro_cinza"><i class="fas fa-tint-slash text-sm"></i></div><span class="text-[9px] font-bold text-gray-400" id="txtFiltro_cinza">Cinza</span></button>
-                    <button id="btnFiltro_pb" onclick="window.aplicarFiltroBase('pb')" class="flex flex-col items-center gap-1.5 min-w-[70px]"><div class="w-10 h-10 bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center text-white transition filtro-ativo" id="iconFiltro_pb"><i class="fas fa-copy text-sm"></i></div><span class="text-[9px] font-bold text-blue-400" id="txtFiltro_pb">P&B</span></button>
+                    <button id="btnFiltro_original" onclick="window.aplicarFiltroBase('original')" class="flex flex-col items-center gap-1.5 min-w-[70px]">
+                        <div class="w-10 h-10 bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center text-gray-400 transition" id="iconFiltro_original"><i class="fas fa-image text-sm"></i></div>
+                        <span class="text-[9px] font-bold text-gray-400" id="txtFiltro_original">Original</span>
+                    </button>
+                    <button id="btnFiltro_auto" onclick="window.aplicarFiltroBase('auto')" class="flex flex-col items-center gap-1.5 min-w-[70px]">
+                        <div class="w-10 h-10 bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center text-yellow-500 transition" id="iconFiltro_auto"><i class="fas fa-wand-magic-sparkles text-sm"></i></div>
+                        <span class="text-[9px] font-bold text-gray-400" id="txtFiltro_auto">Auto</span>
+                    </button>
+                    <button id="btnFiltro_cor" onclick="window.aplicarFiltroBase('cor')" class="flex flex-col items-center gap-1.5 min-w-[70px]">
+                        <div class="w-10 h-10 bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center text-blue-400 transition" id="iconFiltro_cor"><i class="fas fa-palette text-sm"></i></div>
+                        <span class="text-[9px] font-bold text-gray-400" id="txtFiltro_cor">Cor</span>
+                    </button>
+                    <button id="btnFiltro_cinza" onclick="window.aplicarFiltroBase('cinza')" class="flex flex-col items-center gap-1.5 min-w-[70px]">
+                        <div class="w-10 h-10 bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center text-gray-400 transition" id="iconFiltro_cinza"><i class="fas fa-tint-slash text-sm"></i></div>
+                        <span class="text-[9px] font-bold text-gray-400" id="txtFiltro_cinza">Cinza</span>
+                    </button>
+                    <button id="btnFiltro_pb" onclick="window.aplicarFiltroBase('pb')" class="flex flex-col items-center gap-1.5 min-w-[70px]">
+                        <div class="w-10 h-10 bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center text-white transition filtro-ativo" id="iconFiltro_pb"><i class="fas fa-copy text-sm"></i></div>
+                        <span class="text-[9px] font-bold text-blue-400" id="txtFiltro_pb">P&B</span>
+                    </button>
                 </div>
-                <div class="flex flex-col items-center justify-center border-l border-gray-700 pl-3"><span class="text-[9px] font-bold text-gray-400 mb-1 text-center leading-tight">Add</span><input type="checkbox" id="checkMarcelly" class="checkbox-selecao" onchange="window.toggleMarcellyDefault(this.checked)"></div>
+                
+                <div class="flex flex-col items-center justify-center border-l border-gray-700 pl-3">
+                    <span class="text-[9px] font-bold text-gray-400 mb-1 text-center leading-tight">Add</span>
+                    <input type="checkbox" id="checkMarcelly" class="checkbox-selecao" onchange="window.toggleMarcellyDefault(this.checked)">
+                </div>
             </div>
 
             <div class="px-4 mt-2">
                 <div class="bg-gray-800/60 p-3 rounded-xl border border-gray-700/60 flex flex-col gap-2">
-                    <div class="flex justify-between items-center"><span class="text-xs font-bold text-blue-400 flex items-center gap-1.5"><i class="fas fa-id-badge"></i> Etiqueta</span><button onclick="window.removerCaixaTextoAtiva()" title="Excluir Etiqueta Selecionada" class="bg-red-950/60 hover:bg-red-900 border border-red-800/60 text-red-400 px-2.5 py-1 rounded-lg transition"><i class="fas fa-trash-alt text-xs"></i> Remover</button></div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-blue-400 flex items-center gap-1.5"><i class="fas fa-id-badge"></i> Etiqueta</span>
+                        <button onclick="window.removerCaixaTextoAtiva()" title="Excluir Etiqueta Selecionada" class="bg-red-950/60 hover:bg-red-900 border border-red-800/60 text-red-400 px-2.5 py-1 rounded-lg transition"><i class="fas fa-trash-alt text-xs"></i> Remover</button>
+                    </div>
+                    
                     <div class="flex gap-2 items-center">
                         <select id="selectPacienteCaixaTexto" onchange="window.adicionarCaixaPacienteSelect(this.value)" class="w-full p-2.5 rounded-lg bg-gray-900 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500 custom-scrollbar">
                             <option value="">Selecione um paciente para adicionar...</option>
                         </select>
                     </div>
+
                     <div id="painelEdicaoCaixaAtiva" class="hidden flex-col gap-3 mt-1">
                         <div class="grid grid-cols-2 gap-3 items-center">
-                            <div class="flex items-center gap-2"><label class="text-[10px] text-gray-400 font-bold uppercase whitespace-nowrap">Tam:</label><input type="range" id="sliderTamanhoFonte" min="12" max="100" value="36" oninput="window.atualizarTamanhoCaixaAtiva()"><span id="lblTamanhoFonte" class="text-xs font-bold text-white w-8">36px</span></div>
-                            <div class="flex items-center gap-2"><label class="text-[10px] text-gray-400 font-bold uppercase whitespace-nowrap">Largura:</label><input type="range" id="sliderLarguraCaixaTexto" min="100" max="1500" value="400" oninput="window.atualizarLarguraCaixaAtiva()"><span id="lblLarguraCaixaTexto" class="text-xs font-bold text-white w-10">400px</span></div>
+                            <div class="flex items-center gap-2">
+                                <label class="text-[10px] text-gray-400 font-bold uppercase whitespace-nowrap">Tam:</label>
+                                <input type="range" id="sliderTamanhoFonte" min="12" max="100" value="36" oninput="window.atualizarTamanhoCaixaAtiva()">
+                                <span id="lblTamanhoFonte" class="text-xs font-bold text-white w-8">36px</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <label class="text-[10px] text-gray-400 font-bold uppercase whitespace-nowrap">Largura:</label>
+                                <input type="range" id="sliderLarguraCaixaTexto" min="100" max="1500" value="400" oninput="window.atualizarLarguraCaixaAtiva()">
+                                <span id="lblLarguraCaixaTexto" class="text-xs font-bold text-white w-10">400px</span>
+                            </div>
                         </div>
                     </div>
-                    <div id="msgSemCaixaTexto" class="text-center py-2 text-xs text-gray-500 italic">Nenhuma etiqueta selecionada.</div>
+                    <div id="msgSemCaixaTexto" class="text-center py-2 text-xs text-gray-500 italic">
+                        Nenhuma etiqueta selecionada.
+                    </div>
                 </div>
             </div>
 
             <div class="px-4 mt-2 grid grid-cols-2 gap-2" id="gridControlesExtras">
                 <div id="painelControleAssinatura" class="hidden bg-indigo-950/40 p-2 rounded-xl border border-indigo-800/60 flex-col gap-1">
-                    <div class="flex justify-between items-center"><span class="text-[10px] font-bold text-indigo-400 flex items-center gap-1"><i class="fas fa-pen-nib"></i> Assinatura</span><div class="flex gap-1"><button onclick="window.alterarOrdemAssinatura('tras')" class="bg-gray-800 text-gray-300 text-[8px] font-bold px-1 rounded shadow">Atrás</button><button onclick="window.alterarOrdemAssinatura('frente')" class="bg-gray-800 text-gray-300 text-[8px] font-bold px-1 rounded shadow">Frente</button></div><button onclick="window.removerAssinaturaCanvas()" class="text-red-400 text-[10px] p-1"><i class="fas fa-trash-alt"></i></button></div>
-                    <div class="flex items-center gap-2 mt-1"><label class="text-[9px] text-gray-400 font-bold uppercase">Escala:</label><input type="range" id="sliderEscalaAssinatura" min="30" max="300" value="120" oninput="window.renderizarFiltroAtual(true)"></div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-[10px] font-bold text-indigo-400 flex items-center gap-1"><i class="fas fa-pen-nib"></i> Assinatura</span>
+                        <div class="flex gap-1">
+                            <button onclick="window.alterarOrdemAssinatura('tras')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-[8px] font-bold px-1 rounded shadow">Atrás</button>
+                            <button onclick="window.alterarOrdemAssinatura('frente')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-[8px] font-bold px-1 rounded shadow">Frente</button>
+                        </div>
+                        <button onclick="window.removerAssinaturaCanvas()" class="text-red-400 hover:text-red-300 text-[10px] p-1"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                    <div class="flex items-center gap-2 mt-1">
+                        <label class="text-[9px] text-gray-400 font-bold uppercase">Escala:</label>
+                        <input type="range" id="sliderEscalaAssinatura" min="30" max="300" value="120" oninput="window.renderizarFiltroAtual(true)">
+                    </div>
                 </div>
+
                 <div id="painelControleCarimbo" class="hidden bg-red-950/40 p-2 rounded-xl border border-red-800/60 flex-col gap-1">
-                    <div class="flex justify-between items-center"><span class="text-[10px] font-bold text-red-400 flex items-center gap-1"><i class="fas fa-stamp"></i> Carimbo</span><div class="flex gap-1"><button onclick="window.alterarOrdemCarimbo('tras')" class="bg-gray-800 text-gray-300 text-[8px] font-bold px-1 rounded shadow">Atrás</button><button onclick="window.alterarOrdemCarimbo('frente')" class="bg-gray-800 text-gray-300 text-[8px] font-bold px-1 rounded shadow">Frente</button></div><button onclick="window.removerCarimboCanvas()" class="text-red-400 text-[10px] p-1"><i class="fas fa-trash-alt"></i></button></div>
-                    <div class="flex items-center gap-2 mt-1"><label class="text-[9px] text-gray-400 font-bold uppercase">Escala:</label><input type="range" id="sliderEscalaCarimbo" min="20" max="250" value="85" oninput="window.renderizarFiltroAtual(true)"></div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-[10px] font-bold text-red-400 flex items-center gap-1"><i class="fas fa-stamp"></i> Carimbo</span>
+                        <div class="flex gap-1">
+                            <button onclick="window.alterarOrdemCarimbo('tras')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-[8px] font-bold px-1 rounded shadow">Atrás</button>
+                            <button onclick="window.alterarOrdemCarimbo('frente')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-[8px] font-bold px-1 rounded shadow">Frente</button>
+                        </div>
+                        <button onclick="window.removerCarimboCanvas()" class="text-red-400 hover:text-red-300 text-[10px] p-1"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                    <div class="flex items-center gap-2 mt-1">
+                        <label class="text-[9px] text-gray-400 font-bold uppercase">Escala:</label>
+                        <input type="range" id="sliderEscalaCarimbo" min="20" max="250" value="85" oninput="window.renderizarFiltroAtual(true)">
+                    </div>
                 </div>
             </div>
 
             <div class="px-4 mt-2 flex gap-2">
-                <button onclick="window.adicionarCarimboEmpresa()" class="bg-red-600 hover:bg-red-500 text-white py-3.5 rounded-xl font-bold text-xs sm:text-sm flex-1 flex items-center justify-center gap-2 transition shadow-lg"><i class="fas fa-stamp"></i> <span id="txtBtnCarimbo">Carimbar</span></button>
-                <button onclick="window.abrirModalAssinatura()" class="bg-indigo-600 hover:bg-indigo-500 text-white py-3.5 rounded-xl font-bold text-xs sm:text-sm flex-1 flex items-center justify-center gap-2 transition shadow-lg"><i class="fas fa-signature"></i> <span id="txtBtnAssinatura">Assinar</span></button>
-                <button onclick="window.confirmarSalvarPaginaScanner()" class="bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-xl font-bold text-xs sm:text-sm flex-1 flex items-center justify-center gap-2 shadow-lg"><i class="fas fa-check"></i> Salvar</button>
+                <button onclick="window.adicionarCarimboEmpresa()" class="bg-red-600 hover:bg-red-500 text-white py-3.5 rounded-xl font-bold text-xs sm:text-sm flex-1 flex items-center justify-center gap-2 transition shadow-lg">
+                    <i class="fas fa-stamp"></i> <span id="txtBtnCarimbo">Carimbar</span>
+                </button>
+                <button onclick="window.abrirModalAssinatura()" class="bg-indigo-600 hover:bg-indigo-500 text-white py-3.5 rounded-xl font-bold text-xs sm:text-sm flex-1 flex items-center justify-center gap-2 transition shadow-lg">
+                    <i class="fas fa-signature"></i> <span id="txtBtnAssinatura">Assinar</span>
+                </button>
+                <button onclick="window.confirmarSalvarPaginaScanner()" class="bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-xl font-bold text-xs sm:text-sm flex-1 flex items-center justify-center gap-2 shadow-lg">
+                    <i class="fas fa-check"></i> Salvar
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- PAD DE ASSINATURA -->
+    <!-- PAD DE ASSINATURA (Z-INDEX 530) -->
     <div id="modalAssinatura" class="fixed inset-0 bg-black/95 popup-blur hidden items-center justify-center p-4 z-[530]">
         <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 w-full max-w-lg shadow-2xl flex flex-col gap-4">
-            <div class="flex justify-between items-center border-b border-gray-800 pb-3"><h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fas fa-pen-nib text-indigo-400"></i> Assinatura Digital</h3><button onclick="window.fecharModalAssinatura()" class="text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button></div>
-            <div class="w-full h-56 bg-white rounded-xl overflow-hidden relative touch-none border-2 border-gray-700 shadow-inner"><canvas id="canvasAssinatura" class="w-full h-full cursor-crosshair"></canvas></div>
-            <div class="flex gap-3 mt-1"><button onclick="window.limparAssinaturaPad()" class="flex-1 bg-gray-800 text-white py-3 rounded-xl text-xs font-bold border border-gray-700">Limpar</button><button onclick="window.salvarAssinaturaParaCanvas()" class="flex-1 bg-blue-600 text-white py-3 rounded-xl text-xs font-bold shadow-lg">Inserir</button></div>
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fas fa-pen-nib text-indigo-400"></i> Assinatura Digital</h3>
+                <button onclick="window.fecharModalAssinatura()" class="text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="w-full h-56 bg-white rounded-xl overflow-hidden relative touch-none border-2 border-gray-700 shadow-inner">
+                <canvas id="canvasAssinatura" class="w-full h-full cursor-crosshair"></canvas>
+            </div>
+            <div class="flex gap-3 mt-1">
+                <button onclick="window.limparAssinaturaPad()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-xl text-xs font-bold transition border border-gray-700">Limpar</button>
+                <button onclick="window.salvarAssinaturaParaCanvas()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl text-xs font-bold transition shadow-lg">Inserir</button>
+            </div>
         </div>
     </div>
 
@@ -1397,60 +1684,16 @@
                 arrayPaginasEscaneadas.push({ finalDataUrl: imgSalvaDataUrl, baseDataUrl: cleanBaseUrl, estadoEdicao: estadoEdicao, paciente: nomeSugerido }); 
             }
 
-            // --- LÓGICA DE PROPAGAÇÃO DE ASSINATURA, CARIMBO E LAYOUT DO PACIENTE ---
-            let currentMarcellyBox = estadoEdicao.caixasTexto.find(c => c.isMarcelly === true);
-            let currentPatientBox = estadoEdicao.caixasTexto.find(c => c.isMarcelly !== true);
-
-            if ((imgAssinaturaElemento || imgCarimboElemento || window.isMarcellyDefault || currentPatientBox) && indexAtual < arrayPaginasEscaneadas.length - 1) {
+            if ((imgAssinaturaElemento || imgCarimboElemento || window.isMarcellyDefault) && indexAtual < arrayPaginasEscaneadas.length - 1) {
                 if(btnSalvar) { btnSalvar.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Aplicando...`; }
                 const refWidth = larguraCrop; const refHeight = alturaCrop;
 
                 for (let i = indexAtual + 1; i < arrayPaginasEscaneadas.length; i++) {
                     let pag = arrayPaginasEscaneadas[i];
                     let baseSrc = pag.baseDataUrl || pag.finalDataUrl;
-
-                    if (!pag.estadoEdicao) {
-                        pag.estadoEdicao = JSON.parse(JSON.stringify(estadoEdicao));
-                        pag.estadoEdicao.caixasTexto = [];
-                    }
-
-                    pag.estadoEdicao.posicaoAssinatura = { ...estadoEdicao.posicaoAssinatura };
-                    pag.estadoEdicao.imgAssinaturaSrc = estadoEdicao.imgAssinaturaSrc;
-                    pag.estadoEdicao.posicaoCarimbo = { ...estadoEdicao.posicaoCarimbo };
-                    pag.estadoEdicao.imgCarimboSrc = estadoEdicao.imgCarimboSrc;
-                    pag.estadoEdicao.escalaAssinatura = estadoEdicao.escalaAssinatura;
-                    pag.estadoEdicao.escalaCarimbo = estadoEdicao.escalaCarimbo;
-                    pag.estadoEdicao.isMarcellyDefault = estadoEdicao.isMarcellyDefault;
-
-                    let nextCaixas = [];
-                    let nextPatientBox = pag.estadoEdicao.caixasTexto.find(c => c.isMarcelly !== true);
-
-                    if (currentPatientBox) {
-                        if (nextPatientBox) {
-                            nextPatientBox.posicao = { ...currentPatientBox.posicao };
-                            nextPatientBox.tamanhoFonte = currentPatientBox.tamanhoFonte;
-                            nextPatientBox.larguraCaixa = currentPatientBox.larguraCaixa;
-                            nextPatientBox.cor = currentPatientBox.cor;
-                            nextCaixas.push(nextPatientBox);
-                        } else {
-                            let textoPaciente = pag.paciente || "";
-                            if (textoPaciente) {
-                                nextCaixas.push({
-                                    ...JSON.parse(JSON.stringify(currentPatientBox)),
-                                    id: Date.now() + Math.random(),
-                                    texto: textoPaciente
-                                });
-                            }
-                        }
-                    } else if (nextPatientBox) {
-                        nextCaixas.push(nextPatientBox);
-                    }
-
-                    if (currentMarcellyBox) {
-                        nextCaixas.push(JSON.parse(JSON.stringify(currentMarcellyBox)));
-                    }
-
-                    pag.estadoEdicao.caixasTexto = nextCaixas;
+                    
+                    pag.estadoEdicao = JSON.parse(JSON.stringify(estadoEdicao));
+                    if (!estadoEdicao.isMarcellyDefault) { pag.estadoEdicao.caixasTexto = []; } else { pag.estadoEdicao.caixasTexto = pag.estadoEdicao.caixasTexto.filter(c => c.isMarcelly === true); }
 
                     await new Promise((resolve) => {
                         let img = new Image();
@@ -1459,22 +1702,23 @@
                             let tCtx = tempCanvas.getContext('2d'); tCtx.drawImage(img, 0, 0);
                             let scaleX = img.width / refWidth, scaleY = img.height / refHeight;
                             let loadPromises = [], imC, imA;
-
-                            if(pag.estadoEdicao.imgCarimboSrc) { loadPromises.push(new Promise((resImg) => { imC = new Image(); imC.onload = resImg; imC.src = pag.estadoEdicao.imgCarimboSrc; })); }
-                            if(pag.estadoEdicao.imgAssinaturaSrc) { loadPromises.push(new Promise((resImg) => { imA = new Image(); imA.onload = resImg; imA.src = pag.estadoEdicao.imgAssinaturaSrc; })); }
+                            if(estadoEdicao.imgCarimboSrc) { loadPromises.push(new Promise((resImg) => { imC = new Image(); imC.onload = resImg; imC.src = estadoEdicao.imgCarimboSrc; })); }
+                            if(estadoEdicao.imgAssinaturaSrc) { loadPromises.push(new Promise((resImg) => { imA = new Image(); imA.onload = resImg; imA.src = estadoEdicao.imgAssinaturaSrc; })); }
                             
                             Promise.all(loadPromises).then(() => {
-                                pag.estadoEdicao.caixasTexto.forEach(caixa => {
-                                    if (caixa.texto.trim() !== "") { desenharTextoEstiloDocumentoAutoAjustavel(tCtx, caixa.texto, caixa.posicao.x * scaleX, caixa.posicao.y * scaleY, caixa.larguraCaixa * scaleX, caixa.tamanhoFonte * scaleX, caixa.cor); }
+                                ordemCamadas.forEach(camada => {
+                                    if (camada === 'texto' && pag.estadoEdicao.caixasTexto.length > 0) {
+                                        pag.estadoEdicao.caixasTexto.forEach(caixa => {
+                                            if (caixa.texto.trim() !== "") { desenharTextoEstiloDocumentoAutoAjustavel(tCtx, caixa.texto, caixa.posicao.x * scaleX, caixa.posicao.y * scaleY, caixa.larguraCaixa * scaleX, caixa.tamanhoFonte * scaleX, caixa.cor); }
+                                        });
+                                    } else if (camada === 'assinatura' && imA) {
+                                        let escalaA = estadoEdicao.escalaAssinatura / 100, larguraAss = (refWidth * 0.35) * escalaA * scaleX, alturaAss = (imA.height * (larguraAss / scaleX)) / imA.width * scaleY;
+                                        tCtx.drawImage(imA, estadoEdicao.posicaoAssinatura.x * scaleX, estadoEdicao.posicaoAssinatura.y * scaleY, larguraAss, alturaAss);
+                                    } else if (camada === 'carimbo' && imC) {
+                                        let escalaC = estadoEdicao.escalaCarimbo / 100, larguraCar = 380 * escalaC * scaleX, alturaCar = (imC.height * (larguraCar / scaleX)) / imC.width * scaleY;
+                                        tCtx.drawImage(imC, estadoEdicao.posicaoCarimbo.x * scaleX, estadoEdicao.posicaoCarimbo.y * scaleY, larguraCar, alturaCar);
+                                    }
                                 });
-                                if (imA) {
-                                    let escalaA = pag.estadoEdicao.escalaAssinatura / 100, larguraAss = (refWidth * 0.35) * escalaA * scaleX, alturaAss = (imA.height * (larguraAss / scaleX)) / imA.width * scaleY;
-                                    tCtx.drawImage(imA, pag.estadoEdicao.posicaoAssinatura.x * scaleX, pag.estadoEdicao.posicaoAssinatura.y * scaleY, larguraAss, alturaAss);
-                                }
-                                if (imC) {
-                                    let escalaC = pag.estadoEdicao.escalaCarimbo / 100, larguraCar = 380 * escalaC * scaleX, alturaCar = (imC.height * (larguraCar / scaleX)) / imC.width * scaleY;
-                                    tCtx.drawImage(imC, pag.estadoEdicao.posicaoCarimbo.x * scaleX, pag.estadoEdicao.posicaoCarimbo.y * scaleY, larguraCar, alturaCar);
-                                }
                                 pag.finalDataUrl = tempCanvas.toDataURL('image/jpeg', 0.85); resolve();
                             });
                         }; img.src = baseSrc;
@@ -1838,7 +2082,7 @@
             }
         };
 
-        window.iniciarExclusaoArquivo = function() { window.fecharModalVisualizacao(); alvoAtualExclusao = window.idImagemAtiva; tipoAtualExclusao = 'arquivo'; document.getElementById("txtTituloPerguntaSelecao").innerHTML = `<i class="fas fa-trash text-red-500"></i> Deseja apagar mais itens?`; document.getElementById("txtDescPerguntaSelecao").innerText = `Você pode selecionar vários arquivos de uma vez para excluir.`; document.getElementById("modalPerguntaSelecao").classList.remove('hidden'); document.getElementById("modalPerguntaSelecao").classList.add('flex'); };
+        window.iniciarExclusaoArquivo = function() { window.fecharModalVisualizacao(); alvoAtualExclusao = window.idImagemAtiva; tipoAtualExclusao = 'arquivo'; document.getElementById("txtTituloPerguntaSelecao").innerHTML = `<i class="fas fa-trash text-red-500"></i> Deseja apagar mais arquivos?`; document.getElementById("txtDescPerguntaSelecao").innerText = `Você pode selecionar vários arquivos de uma vez.`; document.getElementById("modalPerguntaSelecao").classList.remove('hidden'); document.getElementById("modalPerguntaSelecao").classList.add('flex'); };
         window.perguntarApagarPasta = function(nomePasta) { window.pastaAbertaAtual = 'diversos_root'; window.aplicarFiltrosNaGaleria(); alvoAtualExclusao = nomePasta; tipoAtualExclusao = 'pasta'; document.getElementById("txtTituloPerguntaSelecao").innerHTML = `<i class="fas fa-trash text-red-500"></i> Deseja apagar mais pastas?`; document.getElementById("txtDescPerguntaSelecao").innerText = `Você pode excluir várias pastas de uma vez.`; document.getElementById("modalPerguntaSelecao").classList.remove('hidden'); document.getElementById("modalPerguntaSelecao").classList.add('flex'); };
         window.responderPerguntaSelecao = function(querSelecionar) { document.getElementById("modalPerguntaSelecao").classList.add('hidden'); document.getElementById("modalPerguntaSelecao").classList.remove('flex'); if (querSelecionar) { window.iniciarModoSelecao(tipoAtualExclusao === 'arquivo' ? 'arquivos' : 'pastas', alvoAtualExclusao); } else { if (tipoAtualExclusao === 'arquivo') { if(confirm("Confirmar exclusão deste arquivo?")) window.moverParaLixeira([alvoAtualExclusao]); } else { if(confirm("Confirmar exclusão desta pasta inteira?")) window.moverPastaParaLixeira([alvoAtualExclusao]); } } };
 
@@ -2232,6 +2476,7 @@
             const elIconeFa = document.getElementById("iconeDestaqueFa");
             const txtExtensao = document.getElementById("txtDestaqueExt");
             
+            // Oculta e reseta todos os elementos
             if (elImagem) elImagem.classList.add("hidden"); 
             if (elIframe) elIframe.classList.add("hidden"); 
             if (elExcel) { elExcel.classList.add("hidden"); elExcel.innerHTML = ""; }
@@ -2239,9 +2484,244 @@
             if (elAudio) { elAudio.classList.add("hidden"); elAudio.pause(); }
             if (elIconeArea) { elIconeArea.classList.remove("flex"); elIconeArea.classList.add("hidden"); }
             
+            // Lógica de Renderização por Extensão
             if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'imagem'].includes(tp)) { 
                 if (elImagem) { elImagem.src = url; elImagem.classList.remove("hidden"); } 
             } else if (['mp4', 'avi', 'mov', 'webm', 'video'].includes(tp)) {
                 if (elVideo) { elVideo.src = url; elVideo.classList.remove("hidden"); }
             } else if (['mp3', 'wav', 'ogg', 'm4a', 'audio'].includes(tp)) {
-                Sou uma IA baseada em texto. Isso está além das minhas capacidades.
+                if (elIconeArea) { elIconeArea.classList.remove("hidden"); elIconeArea.classList.add("flex"); }
+                if (txtExtensao) txtExtensao.innerText = `Áudio ${tp.toUpperCase()}`; 
+                if (elIconeFa) elIconeFa.className = "fas fa-file-audio text-6xl text-pink-500";
+                if (elAudio) { elAudio.src = url; elAudio.classList.remove("hidden"); }
+            } else if (['xls', 'xlsx', 'csv'].includes(tp)) {
+                if (elExcel) {
+                    elExcel.classList.remove("hidden");
+                    elExcel.innerHTML = `<div class="flex flex-col items-center justify-center h-full gap-2 text-blue-400"><i class="fas fa-spinner fa-spin text-2xl"></i><span>Carregando planilha...</span></div>`;
+                    
+                    fetch(url)
+                        .then(res => res.arrayBuffer())
+                        .then(buffer => {
+                            const workbook = XLSX.read(buffer, { type: 'array' });
+                            const primeraAba = workbook.SheetNames[0];
+                            const htmlTabela = XLSX.utils.sheet_to_html(workbook.Sheets[primeraAba]);
+                            
+                            elExcel.innerHTML = `
+                                <style>
+                                    #excelPreview table { border-collapse: collapse; width: 100%; color: #e5e7eb; }
+                                    #excelPreview td, #excelPreview th { border: 1px solid #374151; padding: 6px 10px; text-align: left; }
+                                    #excelPreview tr:nth-child(even) { background-color: #1f2937; }
+                                </style>
+                                <div class="overflow-x-auto h-full w-full">${htmlTabela}</div>
+                            `;
+                        })
+                        .catch(err => {
+                            elExcel.innerHTML = `<div class="text-red-400 text-center p-4">Erro ao carregar pré-visualização. Clique em "Baixar" para abrir o arquivo.</div>`;
+                        });
+                }
+            } else if (['pdf', 'doc', 'docx', 'ppt', 'pptx'].includes(tp)) { 
+                // Restore Google Viewer for DOC/DOCX/PDF/PPT
+                if (elIframe) { 
+                    elIframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`; 
+                    elIframe.classList.remove("hidden"); 
+                }
+            } else { 
+                if (elIconeArea) { elIconeArea.classList.remove("hidden"); elIconeArea.classList.add("flex"); }
+                if (txtExtensao) txtExtensao.innerText = `Arquivo ${tp.toUpperCase()}`; 
+                if (elIconeFa) {
+                    if (['zip', 'rar'].includes(tp)) { elIconeFa.className = "fas fa-file-archive text-6xl text-yellow-500"; }
+                    else { elIconeFa.className = "fas fa-file-alt text-6xl text-purple-500"; } 
+                }
+            }
+            
+            // Gerenciamento de Visibilidade dos Botões de Ação
+            const gridN = document.getElementById('gridAcoesNormal');
+            const gridL = document.getElementById('gridAcoesLixeira');
+            const gridE = document.getElementById('gridAcoesExportacao');
+
+            if(gridN) gridN.classList.add('hidden');
+            if(gridL) gridL.classList.add('hidden');
+            if(gridE) gridE.classList.add('hidden');
+
+            if (window.pastaAbertaAtual === 'lixeira') {
+                if(gridL) gridL.classList.remove('hidden');
+            } else if (window.tipoSelecaoAtual === 'exportacao') {
+                if(gridE) gridE.classList.remove('hidden');
+            } else {
+                if(gridN) gridN.classList.remove('hidden');
+            }
+
+            window.cancelarEdicaoNome();
+            const modal = document.getElementById("modalVisualizacao"); 
+            const content = document.getElementById("modalVisualizacaoContent");
+            if (modal && content) {
+                modal.classList.remove("hidden"); 
+                modal.classList.add("flex");
+                setTimeout(() => { 
+                    content.classList.remove("scale-95", "opacity-0"); 
+                    content.classList.add("scale-100", "opacity-100"); 
+                }, 10);
+            }
+        };
+
+        window.fecharModalVisualizacao = function() {
+            const modal = document.getElementById("modalVisualizacao");
+            const content = document.getElementById("modalVisualizacaoContent");
+            if (modal && content) {
+                content.classList.remove("scale-100", "opacity-100"); 
+                content.classList.add("scale-95", "opacity-0");
+                setTimeout(() => { 
+                    modal.classList.remove("flex"); 
+                    modal.classList.add("hidden"); 
+                    const elImg = document.getElementById("imagemEmDestaque"); 
+                    if (elImg) elImg.src = ""; 
+                    const elIf = document.getElementById("iframePreview"); 
+                    if (elIf) elIf.src = ""; 
+                    const elExcel = document.getElementById("excelPreview");
+                    if (elExcel) elExcel.innerHTML = "";
+                    
+                    const elVideo = document.getElementById("videoPreview");
+                    if (elVideo) { elVideo.pause(); elVideo.src = ""; }
+                    const elAudio = document.getElementById("audioPreview");
+                    if (elAudio) { elAudio.pause(); elAudio.src = ""; }
+
+                }, 200);
+            }
+        };
+
+        window.compartilharAnexoAtivo = async function() {
+            const tCard = document.getElementById("tituloImagemCard"); 
+            let nomeLimpo = tCard ? tCard.innerText : "Documento do Sistema";
+            if (navigator.share) { 
+                try { await navigator.share({ title: nomeLimpo, text: `Confira este documento: ${nomeLimpo}`, url: window.urlImagemAtiva }); } catch (err) {}
+            } else { 
+                navigator.clipboard.writeText(window.urlImagemAtiva).then(() => alert("🔗 Link copiado para a área de transferência!")); 
+            }
+        };
+
+        window.baixarAnexoAtivo = async function() {
+            const btnBaixar = document.getElementById("btnBaixarAnexo"); 
+            const htmlOriginal = btnBaixar ? btnBaixar.innerHTML : "";
+            if (btnBaixar) btnBaixar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Preparando...`;
+            try {
+                const resposta = await fetch(window.urlImagemAtiva); 
+                const blob = await resposta.blob(); 
+                const urlBlob = window.URL.createObjectURL(blob);
+                const a = document.createElement('a'); 
+                a.style.display = 'none'; 
+                a.href = urlBlob;
+                
+                let tp = window.tipoAnexoAtivo.toLowerCase().trim();
+                let extensao = `.${tp}`; 
+                if (tp === 'imagem') extensao = '.jpg';
+                if (tp === 'generico' || !tp) extensao = '';
+                
+                const tCard = document.getElementById("tituloImagemCard"); 
+                let nomeLimpo = tCard ? tCard.innerText.replace(/[^a-zA-Z0-9.\- ()_]/g, "") : "arquivo"; 
+                if(!nomeLimpo.toLowerCase().endsWith(extensao) && extensao !== '') {
+                    nomeLimpo += extensao;
+                }
+                a.download = nomeLimpo;
+                document.body.appendChild(a); 
+                a.click(); 
+                
+                setTimeout(() => { 
+                    if (document.body.contains(a)) document.body.removeChild(a); 
+                    window.URL.revokeObjectURL(urlBlob); 
+                }, 2000);
+            } catch (erro) { 
+                window.open(window.urlImagemAtiva, "_blank"); 
+            }
+            if (btnBaixar) btnBaixar.innerHTML = htmlOriginal;
+        };
+
+        window.abrirEdicaoNome = function() {
+            const tCard = document.getElementById("tituloImagemCard"); 
+            if (tCard) tCard.classList.add("hidden");
+            const aEd = document.getElementById("areaEdicaoNome"); 
+            if (aEd) { aEd.classList.remove("hidden"); aEd.classList.add("flex"); }
+        };
+
+        window.cancelarEdicaoNome = function() {
+            const aEd = document.getElementById("areaEdicaoNome"); 
+            if (aEd) { aEd.classList.add("hidden"); aEd.classList.remove("flex"); }
+            const tCard = document.getElementById("tituloImagemCard"); 
+            if (tCard) tCard.classList.remove("hidden");
+        };
+
+        window.salvarNovoNome = function() {
+            const inEd = document.getElementById("inputEdicaoNome"); 
+            const novoNome = inEd ? inEd.value.trim() : "";
+            if (!novoNome) return alert("⚠️ Digite um nome válido!");
+            
+            const btnSalvar = document.getElementById("btnSalvarEdicao"); 
+            if (btnSalvar) { btnSalvar.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Salvando...`; btnSalvar.disabled = true; }
+            
+            update(dbRef(db, 'arquivos_anexos/' + window.idImagemAtiva), { nome: novoNome }).then(() => { 
+                const tCard = document.getElementById("tituloImagemCard"); 
+                if (tCard) tCard.innerText = novoNome; 
+                window.cancelarEdicaoNome(); 
+                if (btnSalvar) { btnSalvar.innerHTML = `<i class="fas fa-save"></i> Salvar`; btnSalvar.disabled = false; }
+            }).catch(erro => { 
+                alert("Erro ao salvar o nome: " + erro.message); 
+                if (btnSalvar) { btnSalvar.innerHTML = `<i class="fas fa-save"></i> Salvar`; btnSalvar.disabled = false; } 
+            });
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            const modalLogin = document.getElementById("modalLoginApp");
+
+            if (user) {
+                if (modalLogin) modalLogin.classList.add("hidden");
+                uidUsuarioLogado = user.uid;
+                window.resetarTimerInatividade();
+                const fallbackUsername = user.email.split('@')[0];
+
+                onValue(dbRef(db, 'usuarios_sistema/' + user.uid), (snap) => {
+                    let dadosUser = null;
+                    if (snap.exists()) {
+                        dadosUser = snap.val();
+                        usuarioLogado = dadosUser.username || fallbackUsername;
+                        perfilUsuario = dadosUser.perfil || "operador";
+                    } else {
+                        usuarioLogado = fallbackUsername;
+                        perfilUsuario = "administrador";
+                    }
+
+                    const elSidebarNome = document.getElementById("sidebarNomeUsuario");
+                    const elSidebarPerfil = document.getElementById("sidebarPerfilUsuario");
+                    if (elSidebarNome) elSidebarNome.innerText = `@${usuarioLogado}`;
+                    if (elSidebarPerfil) elSidebarPerfil.innerText = perfilUsuario === "administrador" ? "Administrativo" : "Usuário";
+
+                    const btnBancoPacientes = document.getElementById("btnSidebarPacientes");
+                    const btnCadastroUsuario = document.getElementById("btnSidebarCadastrarUsuario");
+                    const areaImportacao = document.getElementById("areaImportacaoPacientes");
+                    
+                    if (perfilUsuario === "administrador") {
+                        if (btnBancoPacientes) { btnBancoPacientes.classList.remove("hidden"); btnBancoPacientes.classList.add("flex"); }
+                        if (btnCadastroUsuario) { btnCadastroUsuario.classList.remove("hidden"); btnCadastroUsuario.classList.add("flex"); }
+                        if (areaImportacao) { areaImportacao.classList.remove("hidden"); }
+                    } else {
+                        if (btnBancoPacientes) { btnBancoPacientes.classList.remove("hidden"); btnBancoPacientes.classList.add("flex"); }
+                        if (btnCadastroUsuario) { btnCadastroUsuario.classList.add("hidden"); btnCadastroUsuario.classList.remove("flex"); }
+                        if (areaImportacao) { areaImportacao.classList.add("hidden"); }
+                    }
+                    
+                    carregarPacientesBanco();
+                    carregarGaleriaDeAnexos();
+                });
+            } else {
+                if (modalLogin) modalLogin.classList.remove("hidden");
+                const elSidebarNome = document.getElementById("sidebarNomeUsuario");
+                const elSidebarPerfil = document.getElementById("sidebarPerfilUsuario");
+                if (elSidebarNome) elSidebarNome.innerText = "@Visitante"; 
+                if (elSidebarPerfil) elSidebarPerfil.innerText = "Usuário";
+            }
+        });
+
+        escutarEventoSeguro("inputBuscaAnexo", "input", window.aplicarFiltrosNaGaleria);
+        escutarEventoSeguro("dataInicioFiltro", "change", window.aplicarFiltrosNaGaleria);
+        escutarEventoSeguro("dataFimFiltro", "change", window.aplicarFiltrosNaGaleria);
+    </script>
+</body>
+</html>
