@@ -3479,18 +3479,20 @@
         };
 
         function renderizarCardPasta(container, nomePasta, subtitulo, rota, tipoPasta = 'geral') {
-            let iconClass = "fa-folder-open text-blue-500";
             let bgClass = "bg-blue-900/20 border-blue-800/40";
+            let iconeHtml = '<i class="fas fa-folder-open text-blue-500 text-2xl"></i>';
             
+            // VERIFICA SE É PASTA DE PACIENTE PARA USAR A SUA IMAGEM
             if (tipoPasta === 'paciente') { 
-                iconClass = "fa-user-injured text-indigo-400"; 
                 bgClass = "bg-indigo-900/20 border-indigo-800/40"; 
+                // A mágica acontece aqui: A imagem vira branca com o filtro de inversão!
+                iconeHtml = '<img src="./psicologo.png" class="w-8 h-8 object-contain" style="filter: brightness(0) invert(1) opacity(0.9);">'; 
             } else if (tipoPasta === 'diversos') { 
-                iconClass = "fa-layer-group text-purple-400"; 
                 bgClass = "bg-purple-900/20 border-purple-800/40"; 
+                iconeHtml = '<i class="fas fa-layer-group text-purple-400 text-2xl"></i>';
             } else if (tipoPasta === 'data') { 
-                iconClass = "fa-calendar-day text-orange-400"; 
                 bgClass = "bg-orange-900/20 border-orange-800/40"; 
+                iconeHtml = '<i class="fas fa-calendar-day text-orange-400 text-2xl"></i>';
             }
 
             let isChecked = false;
@@ -3529,7 +3531,7 @@
                 };
             }
 
-            card.innerHTML = `${checkHTML}<div class="w-12 h-12 ${bgClass} rounded-lg flex items-center justify-center border flex-shrink-0"><i class="fas ${iconClass} text-2xl"></i></div><div class="flex-1 min-w-0"><span class="font-bold text-gray-200 text-sm truncate uppercase block">${nomePasta}</span><p class="text-[10px] text-gray-400 mt-0.5">${subtitulo}</p></div><i class="fas fa-chevron-right text-gray-600 text-xs mr-1"></i>`;
+            card.innerHTML = `${checkHTML}<div class="w-12 h-12 ${bgClass} rounded-lg flex items-center justify-center border flex-shrink-0">${iconeHtml}</div><div class="flex-1 min-w-0"><span class="font-bold text-gray-200 text-sm truncate uppercase block">${nomePasta}</span><p class="text-[10px] text-gray-400 mt-0.5">${subtitulo}</p></div><i class="fas fa-chevron-right text-gray-600 text-xs mr-1"></i>`;
             container.appendChild(card);
         }
 
