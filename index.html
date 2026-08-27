@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Anexos - Sistema</title>
 
-    <!-- CONFIGURAÇÕES DE PWA E ÍCONES -->
     <meta name="theme-color" content="#030712">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,30 +14,16 @@
     <link rel="icon" type="image/png" href="./icon.png">
     <link rel="apple-touch-icon" href="./icon.png">
 
-    <!-- MANIFEST DINÂMICO PARA PWA -->
     <script>
         (function() {
             const baseUrl = window.location.href.split('?')[0].replace(/\/[^\/]*$/, '/');
             const manifest = {
-                name: "Sistema de Anexos",
-                short_name: "Anexos",
-                description: "Gestão e Escaneamento de Anexos e Documentos",
-                start_url: baseUrl,
-                display: "standalone",
-                background_color: "#030712",
-                theme_color: "#030712",
-                orientation: "portrait",
-                icons: [
-                    { src: baseUrl + "icon.png", sizes: "192x192", type: "image/png", purpose: "any" },
-                    { src: baseUrl + "icon.png", sizes: "512x512", type: "image/png", purpose: "any" }
-                ]
+                name: "Sistema de Anexos", short_name: "Anexos", description: "Gestão e Escaneamento de Anexos e Documentos",
+                start_url: baseUrl, display: "standalone", background_color: "#030712", theme_color: "#030712", orientation: "portrait",
+                icons: [{ src: baseUrl + "icon.png", sizes: "192x192", type: "image/png", purpose: "any" }, { src: baseUrl + "icon.png", sizes: "512x512", type: "image/png", purpose: "any" }]
             };
-            const stringManifest = JSON.stringify(manifest);
-            const blob = new Blob([stringManifest], {type: 'application/json'});
-            const manifestUrl = URL.createObjectURL(blob);
-            const link = document.createElement('link');
-            link.rel = 'manifest';
-            link.href = manifestUrl;
+            const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+            const link = document.createElement('link'); link.rel = 'manifest'; link.href = URL.createObjectURL(blob);
             document.head.appendChild(link);
         })();
     </script>
@@ -46,7 +31,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Bibliotecas para Scanner, Manipulação de PDF, OCR e Excel -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -54,11 +38,8 @@
     <script src="https://unpkg.com/tesseract.js@5.0.5/dist/tesseract.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
-    <!-- PDF.JS para extrair texto de PDFs -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-    <script>
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-    </script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';</script>
 
     <style>
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -376,16 +357,22 @@
                     <span id="txtDestaqueExt" class="text-sm font-bold uppercase">Arquivo</span>
                 </div>
             </div>
+
+            <!-- BOTÕES NORMAIS DA GALERIA -->
             <div id="gridAcoesNormal" class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button onclick="window.abrirEdicaoNome()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-pen text-blue-500"></i> Editar</button>
                 <button onclick="window.compartilharAnexoAtivo()" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-share-nodes"></i> Enviar</button>
                 <button id="btnBaixarAnexo" onclick="window.baixarAnexoAtivo()" class="bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-download"></i> Baixar</button>
                 <button onclick="window.iniciarExclusaoArquivo()" class="bg-red-950/60 hover:bg-red-900/80 text-red-400 border border-red-800/60 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-trash-alt"></i> Excluir</button>
             </div>
+
+            <!-- BOTÕES DA LIXEIRA -->
             <div id="gridAcoesLixeira" class="hidden grid grid-cols-2 gap-2">
                 <button onclick="window.restaurarDaLixeira([window.idImagemAtiva])" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[11px] sm:text-xs shadow-md"><i class="fas fa-undo"></i> Restaurar</button>
                 <button onclick="window.acaoDefinitivaLixeira([window.idImagemAtiva])" class="bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[11px] sm:text-xs shadow-md"><i class="fas fa-trash-alt"></i> Apagar Definitivamente</button>
             </div>
+            
+            <!-- BOTÃO MODO PREVIEW EXPORTAÇÃO -->
             <div id="gridAcoesExportacao" class="hidden grid grid-cols-1 gap-2">
                 <button onclick="window.fecharModalVisualizacao()" class="bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-xs shadow-md"><i class="fas fa-arrow-left"></i> Voltar à Seleção</button>
             </div>
@@ -531,6 +518,7 @@
             <button onclick="window.cancelarScannerTotal()" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
         </div>
         <div class="flex-1 w-full bg-black relative overflow-hidden flex items-center justify-center p-4">
+            <!-- AQUI: "block max-w-full" GARANTE QUE A IMAGEM NÃO ABRA GIGANTE E CAIBA NA TELA -->
             <img id="imgParaCortar" src="" class="block max-w-full">
         </div>
         <div class="bg-gray-900 px-5 pt-4 border-t border-gray-800 flex flex-col gap-2">
@@ -551,7 +539,7 @@
     <div id="modalFiltrosScanner" class="fixed inset-0 bg-gray-950 z-[520] hidden flex-col overflow-y-auto">
         <div class="flex justify-between items-center bg-gray-900 border-b border-gray-800 p-4 shadow-md">
             <button onclick="window.voltarParaCropper()" class="text-gray-400 hover:text-white"><i class="fas fa-arrow-left text-xl"></i></button>
-            <h3 class="text-white font-bold text-sm flex items-center gap-2"><i class="fas fa-magic text-blue-500"></i> Edição</h3>
+            <h3 class="text-white font-bold text-sm flex items-center gap-2"><i class="fas fa-magic text-blue-500"></i> Passo 2: Edição e Assinatura</h3>
             <div class="w-6"></div> 
         </div>
         
@@ -597,7 +585,7 @@
                 </div>
                 
                 <div class="flex flex-col items-center justify-center border-l border-gray-700 pl-3">
-                    <span class="text-[9px] font-bold text-gray-400 mb-1 text-center leading-tight">Add<br>Marcelly</span>
+                    <span class="text-[9px] font-bold text-gray-400 mb-1 text-center leading-tight">Add</span>
                     <input type="checkbox" id="checkMarcelly" class="checkbox-selecao" onchange="window.toggleMarcellyDefault(this.checked)">
                 </div>
             </div>
@@ -1535,7 +1523,8 @@
 
                     const slLarg = document.getElementById("sliderLarguraCaixaTexto"); 
                     if (slLarg) { 
-                        slLarg.max = Math.max(larguraCrop, 1130); 
+                        slLarg.max = Math.max(larguraCrop, 1500); 
+                        slLarg.value = Math.min(400, larguraCrop - 80); 
                     }
                     
                     const modalCrop = document.getElementById("modalCropperScanner"); 
@@ -1614,7 +1603,6 @@
             }
 
             if (estadoAnterior) {
-                // SE FOR A MARCELLY, COPIA O NOME GIGANTE PARA A PRÓXIMA! SE NÃO FOR, NASCE SEM NOME.
                 window.isMarcellyDefault = estadoAnterior.isMarcellyDefault || false;
                 const chk = document.getElementById("checkMarcelly");
                 if(chk) chk.checked = window.isMarcellyDefault;
@@ -1719,7 +1707,8 @@
 
                 const slLarg = document.getElementById("sliderLarguraCaixaTexto"); 
                 if (slLarg) { 
-                    slLarg.max = Math.max(larguraCrop, 1130); 
+                    slLarg.max = Math.max(larguraCrop, 1500); 
+                    slLarg.value = Math.min(400, larguraCrop - 80); 
                 }
                 
                 const modalCrop = document.getElementById("modalCropperScanner"); 
@@ -1779,24 +1768,25 @@
             window.renderizarFiltroAtual(true);
         };
 
-        // --- SISTEMA DA MARCELLY NO CHECKBOX ---
         window.toggleMarcellyDefault = function(isChecked) {
             window.isMarcellyDefault = isChecked;
             if (isChecked) {
-                caixasTexto = [{ 
+                caixasTexto.push({ 
                     id: Date.now(), 
                     texto: "Marcelly Souza da Silva Rosa", 
                     posicao: { x: 40, y: 40 }, 
                     cor: "#000000", 
                     tamanhoFonte: 80, 
                     larguraCaixa: 1130, 
-                    dimensaoCalculada: { w: 1130, h: 100 } 
-                }];
-                indiceCaixaTextoAtiva = 0;
+                    dimensaoCalculada: { w: 1130, h: 100 },
+                    isMarcelly: true 
+                });
+                indiceCaixaTextoAtiva = caixasTexto.length - 1;
             } else {
-                if (caixasTexto.length > 0 && caixasTexto[0].texto === "Marcelly Souza da Silva Rosa") {
-                    caixasTexto = [];
-                    indiceCaixaTextoAtiva = null;
+                const idx = caixasTexto.findIndex(c => c.isMarcelly === true);
+                if (idx !== -1) {
+                    caixasTexto.splice(idx, 1);
+                    indiceCaixaTextoAtiva = caixasTexto.length > 0 ? caixasTexto.length - 1 : null;
                 }
             }
             sincronizarPainelComCaixaAtiva(); 
@@ -1821,20 +1811,26 @@
         window.adicionarCaixaPacienteSelect = function(nomePaciente) {
             if (!nomePaciente) return;
             
-            if (caixasTexto.length > 0) {
-                caixasTexto[0].texto = nomePaciente;
-                indiceCaixaTextoAtiva = 0;
+            let idxPaciente = caixasTexto.findIndex(c => !c.isMarcelly);
+            
+            if (idxPaciente !== -1) {
+                caixasTexto[idxPaciente].texto = nomePaciente;
+                indiceCaixaTextoAtiva = idxPaciente;
             } else {
+                let posY = 40;
+                if (caixasTexto.some(c => c.isMarcelly)) posY = 150;
+
                 caixasTexto.push({ 
                     id: Date.now(), 
                     texto: nomePaciente, 
-                    posicao: { x: 40, y: 40 }, 
+                    posicao: { x: 40, y: posY }, 
                     cor: "#000000", 
                     tamanhoFonte: 36, 
                     larguraCaixa: Math.min(400, larguraCrop - 80), 
-                    dimensaoCalculada: { w: 400, h: 40 } 
+                    dimensaoCalculada: { w: 400, h: 40 },
+                    isMarcelly: false
                 });
-                indiceCaixaTextoAtiva = 0; 
+                indiceCaixaTextoAtiva = caixasTexto.length - 1; 
             }
             
             sincronizarPainelComCaixaAtiva(); 
@@ -1844,7 +1840,7 @@
 
         window.removerCaixaTextoAtiva = function() {
             if (indiceCaixaTextoAtiva !== null && caixasTexto.length > 0) { 
-                if(caixasTexto[indiceCaixaTextoAtiva].texto === "Marcelly Souza da Silva Rosa") {
+                if(caixasTexto[indiceCaixaTextoAtiva].isMarcelly) {
                     window.isMarcellyDefault = false;
                     const chk = document.getElementById("checkMarcelly");
                     if (chk) chk.checked = false;
@@ -1884,22 +1880,6 @@
             }
         }
 
-        window.atualizarTextoCaixaAtiva = function() { 
-            if (indiceCaixaTextoAtiva !== null && caixasTexto[indiceCaixaTextoAtiva]) { 
-                const el = document.getElementById("inputTextoCanvas"); 
-                if (el) caixasTexto[indiceCaixaTextoAtiva].texto = el.value; 
-                window.renderizarFiltroAtual(true); 
-            } 
-        };
-        
-        window.atualizarCorCaixaAtiva = function() { 
-            if (indiceCaixaTextoAtiva !== null && caixasTexto[indiceCaixaTextoAtiva]) { 
-                const el = document.getElementById("corTextoCanvas"); 
-                if (el) caixasTexto[indiceCaixaTextoAtiva].cor = el.value; 
-                window.renderizarFiltroAtual(true); 
-            } 
-        };
-        
         window.atualizarTamanhoCaixaAtiva = function() { 
             if (indiceCaixaTextoAtiva !== null && caixasTexto[indiceCaixaTextoAtiva]) { 
                 const el = document.getElementById("sliderTamanhoFonte"); 
@@ -2317,9 +2297,11 @@
             let indexAtual = indicePaginaSendoEditada !== null ? indicePaginaSendoEditada : arrayPaginasEscaneadas.length;
 
             let nomeSugerido = "";
-            
-            if (caixasTexto.length > 0 && caixasTexto[0].texto.trim() !== "") {
-                nomeSugerido = caixasTexto[0].texto;
+            let caixaPaciente = caixasTexto.find(c => c.isMarcelly !== true);
+
+            // CORREÇÃO CRUCIAL AQUI: Usa APENAS a caixa do paciente para nomear a pasta.
+            if (caixaPaciente && caixaPaciente.texto.trim() !== "") {
+                nomeSugerido = caixaPaciente.texto;
             } else {
                 if(btnSalvar) { 
                     btnSalvar.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Lendo Nome...`; 
@@ -2332,7 +2314,7 @@
                     let nomeVisto = encontrarPacienteNoBanco(ret.data.text);
                     if (nomeVisto !== "Desconhecido") nomeSugerido = nomeVisto;
                     await worker.terminate();
-                } catch(e) {}
+                } catch(e) { console.error(e); }
             }
 
             if (indicePaginaSendoEditada !== null) {
@@ -2363,9 +2345,10 @@
                     
                     pag.estadoEdicao = JSON.parse(JSON.stringify(estadoEdicao));
                     
-                    // SE A MARCELLY NÃO ESTIVER MARCADA, APAGA O NOME NAS PRÓXIMAS FOLHAS
                     if (!estadoEdicao.isMarcellyDefault) {
                         pag.estadoEdicao.caixasTexto = [];
+                    } else {
+                        pag.estadoEdicao.caixasTexto = pag.estadoEdicao.caixasTexto.filter(c => c.isMarcelly === true);
                     }
 
                     await new Promise((resolve) => {
@@ -2987,7 +2970,7 @@
         };
 
         window.atualizarContagemSelecao = function() { 
-            document.getElementById('txtContagemSelecao').innerText = `${window.itensSelecionados.size} selected`; 
+            document.getElementById('txtContagemSelecao').innerText = `${window.itensSelecionados.size} selecionado(s)`; 
         };
 
         window.cancelarModoSelecao = function() {
