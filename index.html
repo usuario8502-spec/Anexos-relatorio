@@ -298,17 +298,17 @@
         <section class="bg-gray-900 border border-gray-800 p-4 rounded-xl shadow-lg flex flex-col gap-3" id="secaoFiltros">
             <div class="relative w-full">
                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500"></i>
-                <input type="text" id="inputBuscaAnexo" placeholder="Buscar por paciente ou data..." class="w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-blue-500 focus:outline-none text-sm transition-all text-white">
+                <input type="text" id="inputBuscaAnexo" placeholder="Buscar por paciente ou data..." class="w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-blue-500 text-sm focus:outline-none transition-all">
             </div>
             
             <div class="grid grid-cols-2 gap-3">
                 <div class="flex flex-col gap-1">
                     <label class="text-[10px] text-gray-400 font-bold uppercase">Data Início</label>
-                    <input type="date" id="dataInicioFiltro" class="w-full p-2 rounded-lg bg-gray-800 border border-gray-700 text-sm focus:border-blue-500 focus:outline-none text-gray-300">
+                    <input type="date" id="dataInicioFiltro" class="w-full p-2 rounded-lg bg-gray-800 border border-gray-700 text-sm text-white focus:border-blue-500 focus:outline-none">
                 </div>
                 <div class="flex flex-col gap-1">
                     <label class="text-[10px] text-gray-400 font-bold uppercase">Data Fim</label>
-                    <input type="date" id="dataFimFiltro" class="w-full p-2 rounded-lg bg-gray-800 border border-gray-700 text-sm focus:border-blue-500 focus:outline-none text-gray-300">
+                    <input type="date" id="dataFimFiltro" class="w-full p-2 rounded-lg bg-gray-800 border border-gray-700 text-sm text-white focus:border-blue-500 focus:outline-none">
                 </div>
             </div>
         </section>
@@ -369,6 +369,9 @@
                 <iframe id="iframePreview" src="" class="w-full h-full hidden bg-white rounded-lg"></iframe>
                 <video id="videoPreview" controls controlsList="nodownload" class="w-full h-full hidden rounded-lg bg-black"></video>
                 
+                <!-- ÁREA EXCLUSIVA PARA VISUALIZAÇÃO DE PLANILHAS (XLSX / CSV) -->
+                <div id="excelPreview" class="w-full h-full overflow-auto hidden bg-gray-900 p-3 custom-scrollbar text-white text-xs"></div>
+
                 <div id="iconeDestaque" class="hidden flex-col items-center justify-center gap-4 text-gray-500 w-full h-full p-4">
                     <i id="iconeDestaqueFa" class="fas fa-file text-6xl"></i>
                     <span id="txtDestaqueExt" class="text-sm font-bold uppercase text-center break-words">Arquivo</span>
@@ -381,8 +384,6 @@
                 <button onclick="window.abrirEdicaoNome()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-pen text-blue-500"></i> Editar</button>
                 <button onclick="window.compartilharAnexoAtivo()" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-share-nodes"></i> Enviar</button>
                 <button id="btnBaixarAnexo" onclick="window.baixarAnexoAtivo()" class="bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-download"></i> Baixar</button>
-                
-                <!-- BOTÃO EXCLUIR AJUSTADO COM LÓGICA DIRETA -->
                 <button onclick="window.excluirArquivoDireto()" class="bg-red-950/60 hover:bg-red-900/80 text-red-400 border border-red-800/60 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-trash-alt"></i> Excluir</button>
             </div>
 
@@ -434,9 +435,10 @@
         </div>
     </div>
 
-    <!-- MODAL DE UPLOAD GERAL -->
+    <!-- MODAL DE UPLOAD -->
     <div id="modalUpload" class="fixed inset-0 bg-black/80 popup-blur hidden items-center justify-center p-4 z-[150] overflow-y-auto">
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 w-full max-w-md shadow-2xl flex flex-col gap-4 transform transition-all scale-95 opacity-0 my-auto" id="modalUploadContent">
+            <!-- Conteúdo do Upload -->
             <div class="flex justify-between items-center border-b border-gray-800 pb-3">
                 <h3 class="text-lg font-bold text-white"><i class="fas fa-cloud-upload-alt text-blue-500"></i> Enviar Arquivos</h3>
                 <button onclick="window.fecharModalUpload()" class="text-gray-500 hover:text-white transition text-xl"><i class="fas fa-times"></i></button>
@@ -451,13 +453,14 @@
                         <i class="fas fa-camera text-blue-400"></i><span class="text-[11px] font-bold">Câmera</span>
                     </button>
                     <button onclick="document.getElementById('inputArquivoGaleria').click()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition">
-                        <i class="fas fa-images text-blue-400"></i><span class="text-[11px] font-bold">Fotos</span>
+                        <i class="fas fa-images text-blue-400"></i><span class="text-[11px] font-bold">Múltiplas Fotos</span>
                     </button>
                     <button onclick="window.abrirModalOrigemScanner()" class="col-span-2 sm:col-span-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition relative overflow-hidden">
                         <div class="absolute inset-0 bg-red-500/10 opacity-50"></div>
-                        <i class="fas fa-file-pdf text-red-500"></i><span class="text-[11px] font-bold">Escanear</span>
+                        <i class="fas fa-file-pdf text-red-500"></i><span class="text-[11px] font-bold">Escanear Documento</span>
                     </button>
                     
+                    <!-- BOTÃO ALTERADO PARA "OUTROS ARQUIVOS" E FUNÇÃO ESTREITA -->
                     <button onclick="document.getElementById('inputArquivoGenerico').click()" class="col-span-2 sm:col-span-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition">
                         <i class="fas fa-file-upload text-purple-400"></i><span class="text-[11px] font-bold">Outros Arquivos</span>
                     </button>
@@ -468,7 +471,8 @@
                 <input type="file" id="inputArquivoScannerCamera" accept="image/*" capture="environment" class="hidden" onchange="window.abrirModoScanner(this, 'camera')">
                 <input type="file" id="inputArquivoScannerGaleria" accept="image/*" class="hidden" onchange="window.abrirModoScanner(this, 'galeria')">
                 
-                <input type="file" id="inputArquivoGenerico" class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.mp3,.wav,.mp4,.avi" multiple onchange="window.processarArquivosLote(this, 'generico')">
+                <!-- INPUT QUE ACEITA QUALQUER ARQUIVO PARA FILA DIRETA -->
+                <input type="file" id="inputArquivoGenerico" class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.zip,.rar,.mp3,.wav,.mp4,.avi" multiple onchange="window.processarArquivosLote(this, 'generico')">
 
                 <!-- PREVIEW SCANNER E REVISÃO INTELIGENTE -->
                 <div id="areaPreviewScanner" class="hidden flex-col gap-3 mt-2">
@@ -476,7 +480,7 @@
                         <span class="text-xs font-bold text-red-400"><i class="fas fa-file-pdf"></i> Revisão de Documentos</span>
                         <span id="txtQtdPaginas" class="text-[10px] text-gray-400 bg-gray-800 px-2 py-1 rounded border border-gray-700">0 páginas</span>
                     </div>
-                    <p class="text-[10px] text-yellow-500 mb-1 leading-tight"><i class="fas fa-info-circle"></i> O carimbo inserido em uma página é aplicado nas próximas automaticamente.</p>
+                    <p class="text-[10px] text-yellow-500 mb-1 leading-tight"><i class="fas fa-info-circle"></i> O carimbo inserido em uma página é aplicado nas próximas automaticamente. A IA seleciona o nome. Clique no Lápis para editar a página.</p>
                     <div id="gridPaginasScanner" class="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto custom-scrollbar p-1"></div>
                     <div class="grid grid-cols-2 gap-2 mt-1">
                         <button onclick="window.limparModosUpload()" class="bg-red-950/50 hover:bg-red-900/60 border border-red-900/50 text-red-400 py-2.5 rounded-lg text-xs font-bold transition">Cancelar</button>
@@ -499,6 +503,7 @@
                 </div>
             </div>
             
+            <!-- NOVA BARRA DE PROGRESSO COM PORCENTAGEM -->
             <div id="containerProgresso" class="hidden w-full flex-col gap-1.5 mt-4">
                 <div class="flex justify-between items-end px-1">
                     <span id="textoStatusProgresso" class="text-[10px] font-bold text-blue-400 uppercase tracking-wide">Preparando...</span>
@@ -517,7 +522,7 @@
         </div>
     </div>
 
-    <!-- MODAL ORIGEM SCANNER -->
+    <!-- MODAL ORIGEM SCANNER (Z-INDEX 350 PARA ABRIR NA FRENTE DO UPLOAD) -->
     <div id="modalZoomPagina" onclick="window.fecharZoomPagina()" class="fixed inset-0 bg-black/95 popup-blur hidden items-center justify-center p-4 z-[540] cursor-zoom-out">
         <img id="imgZoomPagina" src="" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
         <button onclick="window.fecharZoomPagina()" class="absolute top-4 right-4 text-white hover:text-red-400 transition text-3xl"><i class="fas fa-times"></i></button>
@@ -538,9 +543,11 @@
                 </button>
             </div>
         </div>
+        <input type="file" id="inputArquivoScannerCamera" accept="image/*" capture="environment" class="hidden" onchange="window.abrirModoScanner(this, 'camera')">
+        <input type="file" id="inputArquivoScannerGaleria" accept="image/*" class="hidden" onchange="window.abrirModoScanner(this, 'galeria')">
     </div>
 
-    <!-- CROPPER E FILTROS -->
+    <!-- CROPPER E FILTROS (Z-INDEX 510 e 520 PARA FICAR ACIMA DE TUDO) -->
     <div id="modalCropperScanner" class="fixed inset-0 bg-gray-950 z-[510] hidden flex-col">
         <div class="flex justify-between items-center bg-gray-900 border-b border-gray-800 p-4 shadow-md">
             <h3 class="text-white font-bold text-sm flex items-center gap-2"><i class="fas fa-crop-alt text-blue-500"></i> Ajustar Bordas</h3>
@@ -567,7 +574,7 @@
     <div id="modalFiltrosScanner" class="fixed inset-0 bg-gray-950 z-[520] hidden flex-col overflow-y-auto">
         <div class="flex justify-between items-center bg-gray-900 border-b border-gray-800 p-4 shadow-md">
             <button onclick="window.voltarParaCropper()" class="text-gray-400 hover:text-white"><i class="fas fa-arrow-left text-xl"></i></button>
-            <h3 class="text-white font-bold text-sm flex items-center gap-2"><i class="fas fa-magic text-blue-500"></i> Passo 2: Edição</h3>
+            <h3 class="text-white font-bold text-sm flex items-center gap-2"><i class="fas fa-magic text-blue-500"></i> Passo 2: Edição e Assinatura</h3>
             <div class="w-6"></div> 
         </div>
         
@@ -1343,6 +1350,7 @@
             function abrirModalsFiltro(hasState) {
                 const canvasLive = document.getElementById("canvasLivePreview");
                 if (canvasLive) { canvasLive.width = larguraCrop; canvasLive.height = alturaCrop; canvasFiltered.width = larguraCrop; canvasFiltered.height = alturaCrop; configurarEventosArrastoCanvas(canvasLive); }
+
                 const pAss = document.getElementById("painelControleAssinatura"); 
                 if (pAss) { pAss.classList[imgAssinaturaElemento ? 'remove' : 'add']("hidden"); pAss.classList[imgAssinaturaElemento ? 'add' : 'remove']("flex"); }
                 const txtBtnAss = document.getElementById("txtBtnAssinatura"); 
@@ -2043,7 +2051,6 @@
         window.atualizarContagemSelecao = function() { document.getElementById('txtContagemSelecao').innerText = `${window.itensSelecionados.size} selecionado(s)`; };
         window.cancelarModoSelecao = function() { window.modoSelecaoAtivo = false; window.tipoSelecaoAtual = ''; window.itensSelecionados.clear(); document.getElementById('barraSelecao').classList.add('hidden'); document.getElementById('barraSelecao').classList.remove('flex'); document.getElementById('secaoFiltros').classList.remove('hidden'); document.getElementById('fabUpload').classList.remove('hidden'); if(window.pastaAbertaAtual === 'historico_exportacao_raiz') { window.pastaAbertaAtual = null; } window.aplicarFiltrosNaGaleria(); };
         
-        // --- NOVA LÓGICA DE APAGAR DIRETAMENTE (SINGLE FILE) ---
         window.excluirArquivoDireto = function() { 
             if(confirm("Tem certeza que deseja mover este arquivo para a lixeira?")) {
                 window.moverParaLixeira([window.idImagemAtiva]);
@@ -2051,7 +2058,6 @@
             }
         };
 
-        // Continua perguntando para pastas e seleções múltiplas
         window.iniciarExclusaoArquivo = function() { window.fecharModalVisualizacao(); alvoAtualExclusao = window.idImagemAtiva; tipoAtualExclusao = 'arquivo'; document.getElementById("txtTituloPerguntaSelecao").innerHTML = `<i class="fas fa-trash text-red-500"></i> Deseja apagar mais arquivos?`; document.getElementById("txtDescPerguntaSelecao").innerText = `Você pode selecionar vários arquivos de uma vez.`; document.getElementById("modalPerguntaSelecao").classList.remove('hidden'); document.getElementById("modalPerguntaSelecao").classList.add('flex'); };
         window.perguntarApagarPasta = function(nomePasta) { window.pastaAbertaAtual = 'diversos_root'; window.aplicarFiltrosNaGaleria(); alvoAtualExclusao = nomePasta; tipoAtualExclusao = 'pasta'; document.getElementById("txtTituloPerguntaSelecao").innerHTML = `<i class="fas fa-trash text-red-500"></i> Deseja apagar mais pastas?`; document.getElementById("txtDescPerguntaSelecao").innerText = `Você pode excluir várias pastas de uma vez.`; document.getElementById("modalPerguntaSelecao").classList.remove('hidden'); document.getElementById("modalPerguntaSelecao").classList.add('flex'); };
         window.responderPerguntaSelecao = function(querSelecionar) { document.getElementById("modalPerguntaSelecao").classList.add('hidden'); document.getElementById("modalPerguntaSelecao").classList.remove('flex'); if (querSelecionar) { window.iniciarModoSelecao(tipoAtualExclusao === 'arquivo' ? 'arquivos' : 'pastas', alvoAtualExclusao); } else { if (tipoAtualExclusao === 'arquivo') { if(confirm("Confirmar exclusão deste arquivo?")) window.moverParaLixeira([alvoAtualExclusao]); } else { if(confirm("Confirmar exclusão desta pasta inteira?")) window.moverPastaParaLixeira([alvoAtualExclusao]); } } };
@@ -2115,6 +2121,146 @@
                 window.aplicarFiltrosNaGaleria();
             });
         }
+
+        window.abrirModalVisualizacao = function(id, url, nome, tipo) {
+            window.idImagemAtiva = id; 
+            window.urlImagemAtiva = url; 
+            window.tipoAnexoAtivo = tipo || 'imagem';
+            
+            const tCard = document.getElementById("tituloImagemCard"); 
+            if (tCard) tCard.innerText = nome;
+            
+            const inEd = document.getElementById("inputEdicaoNome"); 
+            if (inEd) inEd.value = nome;
+            
+            let tp = window.tipoAnexoAtivo.toLowerCase().trim();
+            if (!tp || tp === 'generico') {
+                const partes = url.split('?')[0].split('.');
+                if(partes.length > 1) tp = partes.pop().toLowerCase();
+            }
+            if (!tp || tp === 'generico' || tp.length > 5) {
+                const partesNome = nome.split('.');
+                if(partesNome.length > 1) tp = partesNome.pop().toLowerCase();
+            }
+
+            const elImagem = document.getElementById("imagemEmDestaque");
+            const elIframe = document.getElementById("iframePreview");
+            const elVideo = document.getElementById("videoPreview");
+            const elAudio = document.getElementById("audioPreview");
+            const elExcel = document.getElementById("excelPreview");
+            const elIconeArea = document.getElementById("iconeDestaque");
+            const elIconeFa = document.getElementById("iconeDestaqueFa");
+            const txtExtensao = document.getElementById("txtDestaqueExt");
+            
+            if (elImagem) elImagem.classList.add("hidden"); 
+            if (elIframe) elIframe.classList.add("hidden"); 
+            if (elExcel) { elExcel.classList.add("hidden"); elExcel.innerHTML = ""; }
+            if (elVideo) { elVideo.classList.add("hidden"); elVideo.pause(); }
+            if (elAudio) { elAudio.classList.add("hidden"); elAudio.pause(); }
+            if (elIconeArea) { elIconeArea.classList.remove("flex"); elIconeArea.classList.add("hidden"); }
+            
+            if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'imagem'].includes(tp)) { 
+                if (elImagem) { elImagem.src = url; elImagem.classList.remove("hidden"); } 
+            } else if (['mp4', 'avi', 'mov', 'webm', 'video'].includes(tp)) {
+                if (elVideo) { elVideo.src = url; elVideo.classList.remove("hidden"); }
+            } else if (['mp3', 'wav', 'ogg', 'm4a', 'audio'].includes(tp)) {
+                if (elIconeArea) { elIconeArea.classList.remove("hidden"); elIconeArea.classList.add("flex"); }
+                if (txtExtensao) txtExtensao.innerText = `Áudio ${tp.toUpperCase()}`; 
+                if (elIconeFa) elIconeFa.className = "fas fa-file-audio text-6xl text-pink-500";
+                if (elAudio) { elAudio.src = url; elAudio.classList.remove("hidden"); }
+            } else if (['xls', 'xlsx', 'csv'].includes(tp)) {
+                if (elExcel) {
+                    elExcel.classList.remove("hidden");
+                    elExcel.innerHTML = `<div class="flex flex-col items-center justify-center h-full gap-2 text-blue-400"><i class="fas fa-spinner fa-spin text-2xl"></i><span>Carregando planilha...</span></div>`;
+                    
+                    fetch(url)
+                        .then(res => res.arrayBuffer())
+                        .then(buffer => {
+                            const workbook = XLSX.read(buffer, { type: 'array' });
+                            const primeraAba = workbook.SheetNames[0];
+                            const htmlTabela = XLSX.utils.sheet_to_html(workbook.Sheets[primeraAba]);
+                            
+                            elExcel.innerHTML = `
+                                <style>
+                                    #excelPreview table { border-collapse: collapse; width: 100%; color: #e5e7eb; }
+                                    #excelPreview td, #excelPreview th { border: 1px solid #374151; padding: 6px 10px; text-align: left; }
+                                    #excelPreview tr:nth-child(even) { background-color: #1f2937; }
+                                </style>
+                                <div class="overflow-x-auto h-full w-full">${htmlTabela}</div>
+                            `;
+                        })
+                        .catch(err => {
+                            elExcel.innerHTML = `<div class="text-red-400 text-center p-4">Erro ao carregar pré-visualização. Clique em "Baixar" para abrir o arquivo.</div>`;
+                        });
+                }
+            } else if (tp === 'pdf') {
+                if (elIframe) { 
+                    elIframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`; 
+                    elIframe.classList.remove("hidden"); 
+                }
+            } else { 
+                if (elIconeArea) { elIconeArea.classList.remove("hidden"); elIconeArea.classList.add("flex"); }
+                if (txtExtensao) txtExtensao.innerText = `Arquivo ${tp.toUpperCase()}`; 
+                if (elIconeFa) {
+                    if (['doc', 'docx', 'ppt', 'pptx'].includes(tp)) { elIconeFa.className = "fas fa-file-word text-6xl text-blue-500"; }
+                    else if (['zip', 'rar'].includes(tp)) { elIconeFa.className = "fas fa-file-archive text-6xl text-yellow-500"; }
+                    else { elIconeFa.className = "fas fa-file-alt text-6xl text-purple-500"; } 
+                }
+            }
+            
+            const gridN = document.getElementById('gridAcoesNormal');
+            const gridL = document.getElementById('gridAcoesLixeira');
+            const gridE = document.getElementById('gridAcoesExportacao');
+
+            if(gridN) gridN.classList.add('hidden');
+            if(gridL) gridL.classList.add('hidden');
+            if(gridE) gridE.classList.add('hidden');
+
+            if (window.pastaAbertaAtual === 'lixeira') {
+                if(gridL) gridL.classList.remove('hidden');
+            } else if (window.tipoSelecaoAtual === 'exportacao') {
+                if(gridE) gridE.classList.remove('hidden');
+            } else {
+                if(gridN) gridN.classList.remove('hidden');
+            }
+
+            window.cancelarEdicaoNome();
+            const modal = document.getElementById("modalVisualizacao"); 
+            const content = document.getElementById("modalVisualizacaoContent");
+            if (modal && content) {
+                modal.classList.remove("hidden"); 
+                modal.classList.add("flex");
+                setTimeout(() => { 
+                    content.classList.remove("scale-95", "opacity-0"); 
+                    content.classList.add("scale-100", "opacity-100"); 
+                }, 10);
+            }
+        };
+
+        window.fecharModalVisualizacao = function() {
+            const modal = document.getElementById("modalVisualizacao");
+            const content = document.getElementById("modalVisualizacaoContent");
+            if (modal && content) {
+                content.classList.remove("scale-100", "opacity-100"); 
+                content.classList.add("scale-95", "opacity-0");
+                setTimeout(() => { 
+                    modal.classList.remove("flex"); 
+                    modal.classList.add("hidden"); 
+                    const elImg = document.getElementById("imagemEmDestaque"); 
+                    if (elImg) elImg.src = ""; 
+                    const elIf = document.getElementById("iframePreview"); 
+                    if (elIf) elIf.src = ""; 
+                    const elExcel = document.getElementById("excelPreview");
+                    if (elExcel) elExcel.innerHTML = "";
+                    
+                    const elVideo = document.getElementById("videoPreview");
+                    if (elVideo) { elVideo.pause(); elVideo.src = ""; }
+                    const elAudio = document.getElementById("audioPreview");
+                    if (elAudio) { elAudio.pause(); elAudio.src = ""; }
+
+                }, 200);
+            }
+        };
 
         window.abrirPasta = function(rota) { window.pastaAbertaAtual = rota; window.aplicarFiltrosNaGaleria(); };
         window.voltarParaPastas = function() { window.pastaAbertaAtual = null; window.aplicarFiltrosNaGaleria(); };
@@ -2441,12 +2587,14 @@
             const elIframe = document.getElementById("iframePreview");
             const elVideo = document.getElementById("videoPreview");
             const elAudio = document.getElementById("audioPreview");
+            const elExcel = document.getElementById("excelPreview");
             const elIconeArea = document.getElementById("iconeDestaque");
             const elIconeFa = document.getElementById("iconeDestaqueFa");
             const txtExtensao = document.getElementById("txtDestaqueExt");
             
             if (elImagem) elImagem.classList.add("hidden"); 
             if (elIframe) elIframe.classList.add("hidden"); 
+            if (elExcel) { elExcel.classList.add("hidden"); elExcel.innerHTML = ""; }
             if (elVideo) { elVideo.classList.add("hidden"); elVideo.pause(); }
             if (elAudio) { elAudio.classList.add("hidden"); elAudio.pause(); }
             if (elIconeArea) { elIconeArea.classList.remove("flex"); elIconeArea.classList.add("hidden"); }
@@ -2460,11 +2608,31 @@
                 if (txtExtensao) txtExtensao.innerText = `Áudio ${tp.toUpperCase()}`; 
                 if (elIconeFa) elIconeFa.className = "fas fa-file-audio text-6xl text-pink-500";
                 if (elAudio) { elAudio.src = url; elAudio.classList.remove("hidden"); }
-            } else if (['xls', 'xlsx', 'doc', 'docx', 'ppt', 'pptx', 'csv'].includes(tp)) { 
-                if (elIframe) { 
-                    elIframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`; 
-                    elIframe.classList.remove("hidden"); 
-                } 
+            } else if (['xls', 'xlsx', 'csv'].includes(tp)) {
+                if (elExcel) {
+                    elExcel.classList.remove("hidden");
+                    elExcel.innerHTML = `<div class="flex flex-col items-center justify-center h-full gap-2 text-blue-400"><i class="fas fa-spinner fa-spin text-2xl"></i><span>Carregando planilha...</span></div>`;
+                    
+                    fetch(url)
+                        .then(res => res.arrayBuffer())
+                        .then(buffer => {
+                            const workbook = XLSX.read(buffer, { type: 'array' });
+                            const primeraAba = workbook.SheetNames[0];
+                            const htmlTabela = XLSX.utils.sheet_to_html(workbook.Sheets[primeraAba]);
+                            
+                            elExcel.innerHTML = `
+                                <style>
+                                    #excelPreview table { border-collapse: collapse; width: 100%; color: #e5e7eb; }
+                                    #excelPreview td, #excelPreview th { border: 1px solid #374151; padding: 6px 10px; text-align: left; }
+                                    #excelPreview tr:nth-child(even) { background-color: #1f2937; }
+                                </style>
+                                <div class="overflow-x-auto h-full w-full">${htmlTabela}</div>
+                            `;
+                        })
+                        .catch(err => {
+                            elExcel.innerHTML = `<div class="text-red-400 text-center p-4">Erro ao carregar pré-visualização. Clique em "Baixar" para abrir o arquivo.</div>`;
+                        });
+                }
             } else if (tp === 'pdf') {
                 if (elIframe) { 
                     elIframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`; 
@@ -2474,7 +2642,8 @@
                 if (elIconeArea) { elIconeArea.classList.remove("hidden"); elIconeArea.classList.add("flex"); }
                 if (txtExtensao) txtExtensao.innerText = `Arquivo ${tp.toUpperCase()}`; 
                 if (elIconeFa) {
-                    if (['zip', 'rar'].includes(tp)) { elIconeFa.className = "fas fa-file-archive text-6xl text-yellow-500"; }
+                    if (['doc', 'docx', 'ppt', 'pptx'].includes(tp)) { elIconeFa.className = "fas fa-file-word text-6xl text-blue-500"; }
+                    else if (['zip', 'rar'].includes(tp)) { elIconeFa.className = "fas fa-file-archive text-6xl text-yellow-500"; }
                     else { elIconeFa.className = "fas fa-file-alt text-6xl text-purple-500"; } 
                 }
             }
@@ -2521,6 +2690,8 @@
                     if (elImg) elImg.src = ""; 
                     const elIf = document.getElementById("iframePreview"); 
                     if (elIf) elIf.src = ""; 
+                    const elExcel = document.getElementById("excelPreview");
+                    if (elExcel) elExcel.innerHTML = "";
                     
                     const elVideo = document.getElementById("videoPreview");
                     if (elVideo) { elVideo.pause(); elVideo.src = ""; }
