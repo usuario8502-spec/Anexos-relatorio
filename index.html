@@ -298,17 +298,17 @@
         <section class="bg-gray-900 border border-gray-800 p-4 rounded-xl shadow-lg flex flex-col gap-3" id="secaoFiltros">
             <div class="relative w-full">
                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500"></i>
-                <input type="text" id="inputBuscaAnexo" placeholder="Buscar por paciente ou data..." class="w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-blue-500 text-sm focus:outline-none transition-all">
+                <input type="text" id="inputBuscaAnexo" placeholder="Buscar por paciente, relatórios ou data..." class="w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-blue-500 focus:outline-none text-sm transition-all text-white">
             </div>
             
             <div class="grid grid-cols-2 gap-3">
                 <div class="flex flex-col gap-1">
                     <label class="text-[10px] text-gray-400 font-bold uppercase">Data Início</label>
-                    <input type="date" id="dataInicioFiltro" class="w-full p-2 rounded-lg bg-gray-800 border border-gray-700 text-sm text-white focus:border-blue-500 focus:outline-none">
+                    <input type="date" id="dataInicioFiltro" class="w-full p-2 rounded-lg bg-gray-800 border border-gray-700 text-sm focus:border-blue-500 focus:outline-none text-gray-300">
                 </div>
                 <div class="flex flex-col gap-1">
                     <label class="text-[10px] text-gray-400 font-bold uppercase">Data Fim</label>
-                    <input type="date" id="dataFimFiltro" class="w-full p-2 rounded-lg bg-gray-800 border border-gray-700 text-sm text-white focus:border-blue-500 focus:outline-none">
+                    <input type="date" id="dataFimFiltro" class="w-full p-2 rounded-lg bg-gray-800 border border-gray-700 text-sm focus:border-blue-500 focus:outline-none text-gray-300">
                 </div>
             </div>
         </section>
@@ -384,6 +384,8 @@
                 <button onclick="window.abrirEdicaoNome()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-pen text-blue-500"></i> Editar</button>
                 <button onclick="window.compartilharAnexoAtivo()" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-share-nodes"></i> Enviar</button>
                 <button id="btnBaixarAnexo" onclick="window.baixarAnexoAtivo()" class="bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-download"></i> Baixar</button>
+                
+                <!-- BOTÃO EXCLUIR AJUSTADO COM LÓGICA DIRETA -->
                 <button onclick="window.excluirArquivoDireto()" class="bg-red-950/60 hover:bg-red-900/80 text-red-400 border border-red-800/60 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-trash-alt"></i> Excluir</button>
             </div>
 
@@ -435,7 +437,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE UPLOAD -->
+    <!-- MODAL DE UPLOAD GERAL -->
     <div id="modalUpload" class="fixed inset-0 bg-black/80 popup-blur hidden items-center justify-center p-4 z-[150] overflow-y-auto">
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 w-full max-w-md shadow-2xl flex flex-col gap-4 transform transition-all scale-95 opacity-0 my-auto" id="modalUploadContent">
             <!-- Conteúdo do Upload -->
@@ -460,7 +462,6 @@
                         <i class="fas fa-file-pdf text-red-500"></i><span class="text-[11px] font-bold">Escanear Documento</span>
                     </button>
                     
-                    <!-- BOTÃO ALTERADO PARA "OUTROS ARQUIVOS" E FUNÇÃO ESTREITA -->
                     <button onclick="document.getElementById('inputArquivoGenerico').click()" class="col-span-2 sm:col-span-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 transition">
                         <i class="fas fa-file-upload text-purple-400"></i><span class="text-[11px] font-bold">Outros Arquivos</span>
                     </button>
@@ -543,8 +544,6 @@
                 </button>
             </div>
         </div>
-        <input type="file" id="inputArquivoScannerCamera" accept="image/*" capture="environment" class="hidden" onchange="window.abrirModoScanner(this, 'camera')">
-        <input type="file" id="inputArquivoScannerGaleria" accept="image/*" class="hidden" onchange="window.abrirModoScanner(this, 'galeria')">
     </div>
 
     <!-- CROPPER E FILTROS (Z-INDEX 510 e 520 PARA FICAR ACIMA DE TUDO) -->
@@ -594,6 +593,7 @@
                 </div>
             </div>
 
+            <!-- NOVA LINHA DE BOTÕES + CHECKBOX MARCELLY -->
             <div class="flex justify-between items-center px-4 mt-1 gap-2">
                 <div class="flex overflow-x-auto gap-3 hide-scrollbar pb-1 flex-1">
                     <button id="btnFiltro_original" onclick="window.aplicarFiltroBase('original')" class="flex flex-col items-center gap-1.5 min-w-[70px]">
@@ -703,7 +703,7 @@
         </div>
     </div>
 
-    <!-- PAD DE ASSINATURA -->
+    <!-- PAD DE ASSINATURA (Z-INDEX 530) -->
     <div id="modalAssinatura" class="fixed inset-0 bg-black/95 popup-blur hidden items-center justify-center p-4 z-[530]">
         <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6 w-full max-w-lg shadow-2xl flex flex-col gap-4">
             <div class="flex justify-between items-center border-b border-gray-800 pb-3">
@@ -1350,7 +1350,6 @@
             function abrirModalsFiltro(hasState) {
                 const canvasLive = document.getElementById("canvasLivePreview");
                 if (canvasLive) { canvasLive.width = larguraCrop; canvasLive.height = alturaCrop; canvasFiltered.width = larguraCrop; canvasFiltered.height = alturaCrop; configurarEventosArrastoCanvas(canvasLive); }
-
                 const pAss = document.getElementById("painelControleAssinatura"); 
                 if (pAss) { pAss.classList[imgAssinaturaElemento ? 'remove' : 'add']("hidden"); pAss.classList[imgAssinaturaElemento ? 'add' : 'remove']("flex"); }
                 const txtBtnAss = document.getElementById("txtBtnAssinatura"); 
@@ -1791,8 +1790,33 @@
             if (input.files && input.files.length > 0) {
                 const file = input.files[0];
                 
-                // FLUXO NORMAL GENÉRICO
-                modoUploadAtual = tipo; 
+                if (tipo === 'scanner_pdf' && file.type === 'application/pdf') {
+                    modoUploadAtual = 'scanner'; 
+                    const areaEscolha = document.getElementById("areaEscolhaModo"); if (areaEscolha) areaEscolha.classList.add("hidden");
+                    const areaPrev = document.getElementById("areaPreviewScanner"); if (areaPrev) { areaPrev.classList.remove("hidden"); areaPrev.classList.add("flex"); }
+                    const btnSalvar = document.getElementById("btnSalvarUpload"); if (btnSalvar) { btnSalvar.classList.remove("hidden"); btnSalvar.classList.add("flex"); btnSalvar.disabled = true; btnSalvar.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Lendo Páginas do PDF...`; }
+                    const grid = document.getElementById("gridPaginasScanner"); if (grid) grid.innerHTML = `<div class="col-span-2 text-center text-xs text-gray-400 py-8">Aguarde, a Inteligência Artificial está escaneando a letra do PDF...</div>`;
+
+                    try {
+                        const arrayBuffer = await file.arrayBuffer(); const pdfDocJs = await window.pdfjsLib.getDocument({data: arrayBuffer}).promise; 
+                        const worker = await Tesseract.createWorker('por');
+
+                        for (let pageNum = 1; pageNum <= pdfDocJs.numPages; pageNum++) {
+                            const page = await pdfDocJs.getPage(pageNum), viewport = page.getViewport({ scale: 1.5 }), canvas = document.createElement('canvas'), ctx = canvas.getContext('2d'); canvas.height = viewport.height; canvas.width = viewport.width;
+                            ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height); await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                            const imgDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                            let nomeSugerido = "";
+                            try { const imgBw = await preProcessarImagemParaOCR(imgDataUrl); const ret = await worker.recognize(imgBw); let nomeVisto = encontrarPacienteNoBanco(ret.data.text); if (nomeVisto !== "Desconhecido") nomeSugerido = nomeVisto; } catch(e) {}
+                            arrayPaginasEscaneadas.push({ finalDataUrl: imgDataUrl, baseDataUrl: imgDataUrl, paciente: nomeSugerido, arquivoOriginalParaRelatorioGeral: file });
+                        }
+                        await worker.terminate();
+                    } catch (err) {}
+                    
+                    window.renderizarCarrinhoScanner(); if (btnSalvar) { btnSalvar.disabled = false; btnSalvar.innerHTML = `<i class="fas fa-cloud-upload-alt"></i> Salvar e Enviar`; }
+                    input.value = ""; return;
+                }
+
+                modoUploadAtual = (tipo === 'scanner_pdf') ? 'generico' : tipo; 
                 for (let i = 0; i < input.files.length; i++) { arquivosFilaEnvio.push(input.files[i]); }
                 const areaEscolha = document.getElementById("areaEscolhaModo"); if (areaEscolha) areaEscolha.classList.add("hidden");
                 const areaPrevArq = document.getElementById("areaPreviewArquivos"); if (areaPrevArq) { areaPrevArq.classList.remove("hidden"); areaPrevArq.classList.add("flex"); }
@@ -2121,146 +2145,6 @@
                 window.aplicarFiltrosNaGaleria();
             });
         }
-
-        window.abrirModalVisualizacao = function(id, url, nome, tipo) {
-            window.idImagemAtiva = id; 
-            window.urlImagemAtiva = url; 
-            window.tipoAnexoAtivo = tipo || 'imagem';
-            
-            const tCard = document.getElementById("tituloImagemCard"); 
-            if (tCard) tCard.innerText = nome;
-            
-            const inEd = document.getElementById("inputEdicaoNome"); 
-            if (inEd) inEd.value = nome;
-            
-            let tp = window.tipoAnexoAtivo.toLowerCase().trim();
-            if (!tp || tp === 'generico') {
-                const partes = url.split('?')[0].split('.');
-                if(partes.length > 1) tp = partes.pop().toLowerCase();
-            }
-            if (!tp || tp === 'generico' || tp.length > 5) {
-                const partesNome = nome.split('.');
-                if(partesNome.length > 1) tp = partesNome.pop().toLowerCase();
-            }
-
-            const elImagem = document.getElementById("imagemEmDestaque");
-            const elIframe = document.getElementById("iframePreview");
-            const elVideo = document.getElementById("videoPreview");
-            const elAudio = document.getElementById("audioPreview");
-            const elExcel = document.getElementById("excelPreview");
-            const elIconeArea = document.getElementById("iconeDestaque");
-            const elIconeFa = document.getElementById("iconeDestaqueFa");
-            const txtExtensao = document.getElementById("txtDestaqueExt");
-            
-            if (elImagem) elImagem.classList.add("hidden"); 
-            if (elIframe) elIframe.classList.add("hidden"); 
-            if (elExcel) { elExcel.classList.add("hidden"); elExcel.innerHTML = ""; }
-            if (elVideo) { elVideo.classList.add("hidden"); elVideo.pause(); }
-            if (elAudio) { elAudio.classList.add("hidden"); elAudio.pause(); }
-            if (elIconeArea) { elIconeArea.classList.remove("flex"); elIconeArea.classList.add("hidden"); }
-            
-            if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'imagem'].includes(tp)) { 
-                if (elImagem) { elImagem.src = url; elImagem.classList.remove("hidden"); } 
-            } else if (['mp4', 'avi', 'mov', 'webm', 'video'].includes(tp)) {
-                if (elVideo) { elVideo.src = url; elVideo.classList.remove("hidden"); }
-            } else if (['mp3', 'wav', 'ogg', 'm4a', 'audio'].includes(tp)) {
-                if (elIconeArea) { elIconeArea.classList.remove("hidden"); elIconeArea.classList.add("flex"); }
-                if (txtExtensao) txtExtensao.innerText = `Áudio ${tp.toUpperCase()}`; 
-                if (elIconeFa) elIconeFa.className = "fas fa-file-audio text-6xl text-pink-500";
-                if (elAudio) { elAudio.src = url; elAudio.classList.remove("hidden"); }
-            } else if (['xls', 'xlsx', 'csv'].includes(tp)) {
-                if (elExcel) {
-                    elExcel.classList.remove("hidden");
-                    elExcel.innerHTML = `<div class="flex flex-col items-center justify-center h-full gap-2 text-blue-400"><i class="fas fa-spinner fa-spin text-2xl"></i><span>Carregando planilha...</span></div>`;
-                    
-                    fetch(url)
-                        .then(res => res.arrayBuffer())
-                        .then(buffer => {
-                            const workbook = XLSX.read(buffer, { type: 'array' });
-                            const primeraAba = workbook.SheetNames[0];
-                            const htmlTabela = XLSX.utils.sheet_to_html(workbook.Sheets[primeraAba]);
-                            
-                            elExcel.innerHTML = `
-                                <style>
-                                    #excelPreview table { border-collapse: collapse; width: 100%; color: #e5e7eb; }
-                                    #excelPreview td, #excelPreview th { border: 1px solid #374151; padding: 6px 10px; text-align: left; }
-                                    #excelPreview tr:nth-child(even) { background-color: #1f2937; }
-                                </style>
-                                <div class="overflow-x-auto h-full w-full">${htmlTabela}</div>
-                            `;
-                        })
-                        .catch(err => {
-                            elExcel.innerHTML = `<div class="text-red-400 text-center p-4">Erro ao carregar pré-visualização. Clique em "Baixar" para abrir o arquivo.</div>`;
-                        });
-                }
-            } else if (tp === 'pdf') {
-                if (elIframe) { 
-                    elIframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`; 
-                    elIframe.classList.remove("hidden"); 
-                }
-            } else { 
-                if (elIconeArea) { elIconeArea.classList.remove("hidden"); elIconeArea.classList.add("flex"); }
-                if (txtExtensao) txtExtensao.innerText = `Arquivo ${tp.toUpperCase()}`; 
-                if (elIconeFa) {
-                    if (['doc', 'docx', 'ppt', 'pptx'].includes(tp)) { elIconeFa.className = "fas fa-file-word text-6xl text-blue-500"; }
-                    else if (['zip', 'rar'].includes(tp)) { elIconeFa.className = "fas fa-file-archive text-6xl text-yellow-500"; }
-                    else { elIconeFa.className = "fas fa-file-alt text-6xl text-purple-500"; } 
-                }
-            }
-            
-            const gridN = document.getElementById('gridAcoesNormal');
-            const gridL = document.getElementById('gridAcoesLixeira');
-            const gridE = document.getElementById('gridAcoesExportacao');
-
-            if(gridN) gridN.classList.add('hidden');
-            if(gridL) gridL.classList.add('hidden');
-            if(gridE) gridE.classList.add('hidden');
-
-            if (window.pastaAbertaAtual === 'lixeira') {
-                if(gridL) gridL.classList.remove('hidden');
-            } else if (window.tipoSelecaoAtual === 'exportacao') {
-                if(gridE) gridE.classList.remove('hidden');
-            } else {
-                if(gridN) gridN.classList.remove('hidden');
-            }
-
-            window.cancelarEdicaoNome();
-            const modal = document.getElementById("modalVisualizacao"); 
-            const content = document.getElementById("modalVisualizacaoContent");
-            if (modal && content) {
-                modal.classList.remove("hidden"); 
-                modal.classList.add("flex");
-                setTimeout(() => { 
-                    content.classList.remove("scale-95", "opacity-0"); 
-                    content.classList.add("scale-100", "opacity-100"); 
-                }, 10);
-            }
-        };
-
-        window.fecharModalVisualizacao = function() {
-            const modal = document.getElementById("modalVisualizacao");
-            const content = document.getElementById("modalVisualizacaoContent");
-            if (modal && content) {
-                content.classList.remove("scale-100", "opacity-100"); 
-                content.classList.add("scale-95", "opacity-0");
-                setTimeout(() => { 
-                    modal.classList.remove("flex"); 
-                    modal.classList.add("hidden"); 
-                    const elImg = document.getElementById("imagemEmDestaque"); 
-                    if (elImg) elImg.src = ""; 
-                    const elIf = document.getElementById("iframePreview"); 
-                    if (elIf) elIf.src = ""; 
-                    const elExcel = document.getElementById("excelPreview");
-                    if (elExcel) elExcel.innerHTML = "";
-                    
-                    const elVideo = document.getElementById("videoPreview");
-                    if (elVideo) { elVideo.pause(); elVideo.src = ""; }
-                    const elAudio = document.getElementById("audioPreview");
-                    if (elAudio) { elAudio.pause(); elAudio.src = ""; }
-
-                }, 200);
-            }
-        };
 
         window.abrirPasta = function(rota) { window.pastaAbertaAtual = rota; window.aplicarFiltrosNaGaleria(); };
         window.voltarParaPastas = function() { window.pastaAbertaAtual = null; window.aplicarFiltrosNaGaleria(); };
@@ -2592,6 +2476,7 @@
             const elIconeFa = document.getElementById("iconeDestaqueFa");
             const txtExtensao = document.getElementById("txtDestaqueExt");
             
+            // Oculta e reseta todos os elementos
             if (elImagem) elImagem.classList.add("hidden"); 
             if (elIframe) elIframe.classList.add("hidden"); 
             if (elExcel) { elExcel.classList.add("hidden"); elExcel.innerHTML = ""; }
@@ -2599,6 +2484,7 @@
             if (elAudio) { elAudio.classList.add("hidden"); elAudio.pause(); }
             if (elIconeArea) { elIconeArea.classList.remove("flex"); elIconeArea.classList.add("hidden"); }
             
+            // Lógica de Renderização por Extensão
             if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'imagem'].includes(tp)) { 
                 if (elImagem) { elImagem.src = url; elImagem.classList.remove("hidden"); } 
             } else if (['mp4', 'avi', 'mov', 'webm', 'video'].includes(tp)) {
@@ -2633,7 +2519,8 @@
                             elExcel.innerHTML = `<div class="text-red-400 text-center p-4">Erro ao carregar pré-visualização. Clique em "Baixar" para abrir o arquivo.</div>`;
                         });
                 }
-            } else if (tp === 'pdf') {
+            } else if (['pdf', 'doc', 'docx', 'ppt', 'pptx'].includes(tp)) { 
+                // Restore Google Viewer for DOC/DOCX/PDF/PPT
                 if (elIframe) { 
                     elIframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`; 
                     elIframe.classList.remove("hidden"); 
@@ -2642,12 +2529,12 @@
                 if (elIconeArea) { elIconeArea.classList.remove("hidden"); elIconeArea.classList.add("flex"); }
                 if (txtExtensao) txtExtensao.innerText = `Arquivo ${tp.toUpperCase()}`; 
                 if (elIconeFa) {
-                    if (['doc', 'docx', 'ppt', 'pptx'].includes(tp)) { elIconeFa.className = "fas fa-file-word text-6xl text-blue-500"; }
-                    else if (['zip', 'rar'].includes(tp)) { elIconeFa.className = "fas fa-file-archive text-6xl text-yellow-500"; }
+                    if (['zip', 'rar'].includes(tp)) { elIconeFa.className = "fas fa-file-archive text-6xl text-yellow-500"; }
                     else { elIconeFa.className = "fas fa-file-alt text-6xl text-purple-500"; } 
                 }
             }
             
+            // Gerenciamento de Visibilidade dos Botões de Ação
             const gridN = document.getElementById('gridAcoesNormal');
             const gridL = document.getElementById('gridAcoesLixeira');
             const gridE = document.getElementById('gridAcoesExportacao');
