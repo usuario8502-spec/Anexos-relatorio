@@ -45,7 +45,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Bibliotecas para Scanner, OCR e Excel -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -368,7 +367,6 @@
                 <iframe id="iframePreview" src="" class="w-full h-full hidden bg-white rounded-lg"></iframe>
                 <video id="videoPreview" controls controlsList="nodownload" class="w-full h-full hidden rounded-lg bg-black"></video>
                 
-                <!-- ÁREA EXCLUSIVA PARA VISUALIZAÇÃO DE PLANILHAS (XLSX / CSV) -->
                 <div id="excelPreview" class="w-full h-full overflow-auto hidden bg-gray-900 p-3 custom-scrollbar text-white text-xs"></div>
 
                 <div id="iconeDestaque" class="hidden flex-col items-center justify-center gap-4 text-gray-500 w-full h-full p-4">
@@ -378,23 +376,18 @@
                 </div>
             </div>
 
-            <!-- BOTÕES NORMAIS DA GALERIA -->
             <div id="gridAcoesNormal" class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button onclick="window.abrirEdicaoNome()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-pen text-blue-500"></i> Editar</button>
                 <button onclick="window.compartilharAnexoAtivo()" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-share-nodes"></i> Enviar</button>
                 <button id="btnBaixarAnexo" onclick="window.baixarAnexoAtivo()" class="bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-download"></i> Baixar</button>
-                
-                <!-- BOTÃO EXCLUIR RESTAURADO COM LÓGICA DE CONFIRMAÇÃO -->
                 <button onclick="window.iniciarExclusaoArquivo()" class="bg-red-950/60 hover:bg-red-900/80 text-red-400 border border-red-800/60 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[10px] sm:text-xs shadow-md"><i class="fas fa-trash-alt"></i> Excluir</button>
             </div>
 
-            <!-- BOTÕES DA LIXEIRA -->
             <div id="gridAcoesLixeira" class="hidden grid grid-cols-2 gap-2">
                 <button onclick="window.restaurarDaLixeira([window.idImagemAtiva])" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[11px] sm:text-xs shadow-md"><i class="fas fa-undo"></i> Restaurar</button>
                 <button onclick="window.acaoDefinitivaLixeira([window.idImagemAtiva])" class="bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-[11px] sm:text-xs shadow-md"><i class="fas fa-trash-alt"></i> Apagar Definitivamente</button>
             </div>
             
-            <!-- BOTÃO MODO PREVIEW EXPORTAÇÃO -->
             <div id="gridAcoesExportacao" class="hidden grid grid-cols-1 gap-2">
                 <button onclick="window.fecharModalVisualizacao()" class="bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 text-xs shadow-md"><i class="fas fa-arrow-left"></i> Voltar à Seleção</button>
             </div>
@@ -436,10 +429,9 @@
         </div>
     </div>
 
-    <!-- MODAL DE UPLOAD GERAL -->
+    <!-- MODAL DE UPLOAD -->
     <div id="modalUpload" class="fixed inset-0 bg-black/80 popup-blur hidden items-center justify-center p-4 z-[150] overflow-y-auto">
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 w-full max-w-md shadow-2xl flex flex-col gap-4 transform transition-all scale-95 opacity-0 my-auto" id="modalUploadContent">
-            <!-- Conteúdo do Upload -->
             <div class="flex justify-between items-center border-b border-gray-800 pb-3">
                 <h3 class="text-lg font-bold text-white"><i class="fas fa-cloud-upload-alt text-blue-500"></i> Enviar Arquivos</h3>
                 <button onclick="window.fecharModalUpload()" class="text-gray-500 hover:text-white transition text-xl"><i class="fas fa-times"></i></button>
@@ -471,7 +463,6 @@
                 <input type="file" id="inputArquivoScannerCamera" accept="image/*" capture="environment" class="hidden" onchange="window.abrirModoScanner(this, 'camera')">
                 <input type="file" id="inputArquivoScannerGaleria" accept="image/*" class="hidden" onchange="window.abrirModoScanner(this, 'galeria')">
                 
-                <!-- INPUT QUE ACEITA QUALQUER ARQUIVO PARA FILA DIRETA -->
                 <input type="file" id="inputArquivoGenerico" class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.zip,.rar,.mp3,.wav,.mp4,.avi" multiple onchange="window.processarArquivosLote(this, 'generico')">
 
                 <!-- PREVIEW SCANNER E REVISÃO INTELIGENTE -->
@@ -480,7 +471,7 @@
                         <span class="text-xs font-bold text-red-400"><i class="fas fa-file-pdf"></i> Revisão de Documentos</span>
                         <span id="txtQtdPaginas" class="text-[10px] text-gray-400 bg-gray-800 px-2 py-1 rounded border border-gray-700">0 páginas</span>
                     </div>
-                    <p class="text-[10px] text-yellow-500 mb-1 leading-tight"><i class="fas fa-info-circle"></i> O layout ajustado na primeira página (carimbo, assinatura e posição do paciente) será repetido nas demais!</p>
+                    <p class="text-[10px] text-yellow-500 mb-1 leading-tight"><i class="fas fa-info-circle"></i> O carimbo inserido em uma página é aplicado nas próximas automaticamente. A IA seleciona o nome. Clique no Lápis para editar a página.</p>
                     <div id="gridPaginasScanner" class="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto custom-scrollbar p-1"></div>
                     <div class="grid grid-cols-2 gap-2 mt-1">
                         <button onclick="window.limparModosUpload()" class="bg-red-950/50 hover:bg-red-900/60 border border-red-900/50 text-red-400 py-2.5 rounded-lg text-xs font-bold transition">Cancelar</button>
@@ -503,7 +494,6 @@
                 </div>
             </div>
             
-            <!-- NOVA BARRA DE PROGRESSO COM PORCENTAGEM -->
             <div id="containerProgresso" class="hidden w-full flex-col gap-1.5 mt-4">
                 <div class="flex justify-between items-end px-1">
                     <span id="textoStatusProgresso" class="text-[10px] font-bold text-blue-400 uppercase tracking-wide">Preparando...</span>
@@ -522,7 +512,7 @@
         </div>
     </div>
 
-    <!-- MODAL ORIGEM SCANNER (Z-INDEX 350 PARA ABRIR NA FRENTE DO UPLOAD) -->
+    <!-- MODAL ORIGEM SCANNER -->
     <div id="modalZoomPagina" onclick="window.fecharZoomPagina()" class="fixed inset-0 bg-black/95 popup-blur hidden items-center justify-center p-4 z-[540] cursor-zoom-out">
         <img id="imgZoomPagina" src="" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
         <button onclick="window.fecharZoomPagina()" class="absolute top-4 right-4 text-white hover:text-red-400 transition text-3xl"><i class="fas fa-times"></i></button>
@@ -538,20 +528,14 @@
                 <button onclick="window.escolherOrigemScanner('galeria')" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-xl font-bold text-xs transition">
                     <i class="fas fa-images"></i> Da Galeria
                 </button>
-                <!-- NOVO BOTÃO: Exclusivo para Escanear PDF -->
-                <button onclick="window.escolherOrigemScanner('pdf')" class="w-full bg-red-900/60 hover:bg-red-800/80 text-white py-3 rounded-xl font-bold text-xs transition mt-2">
-                    <i class="fas fa-file-pdf"></i> PDF para Escanear
-                </button>
                 <button onclick="window.fecharModalOrigemScanner()" class="w-full bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 py-2 rounded-xl font-bold text-xs transition mt-1">
                     Cancelar
                 </button>
             </div>
         </div>
-        <!-- INPUT OCULTO EXCLUSIVO PARA ESCANEAR PDF -->
-        <input type="file" id="inputScannerPDF" accept="application/pdf" class="hidden" onchange="window.processarArquivosLote(this, 'scanner_pdf')">
     </div>
 
-    <!-- CROPPER E FILTROS (Z-INDEX 510 e 520 PARA FICAR ACIMA DE TUDO) -->
+    <!-- CROPPER E FILTROS -->
     <div id="modalCropperScanner" class="fixed inset-0 bg-gray-950 z-[510] hidden flex-col">
         <div class="flex justify-between items-center bg-gray-900 border-b border-gray-800 p-4 shadow-md">
             <h3 class="text-white font-bold text-sm flex items-center gap-2"><i class="fas fa-crop-alt text-blue-500"></i> Ajustar Bordas</h3>
@@ -639,7 +623,6 @@
                     <div class="flex gap-2 items-center">
                         <select id="selectPacienteCaixaTexto" onchange="window.adicionarCaixaPacienteSelect(this.value)" class="w-full p-2.5 rounded-lg bg-gray-900 border border-gray-700 text-white text-xs focus:outline-none focus:border-blue-500 custom-scrollbar">
                             <option value="">Selecione um paciente para adicionar...</option>
-                            <!-- Preenchido via JS -->
                         </select>
                     </div>
 
@@ -652,7 +635,6 @@
                             </div>
                             <div class="flex items-center gap-2">
                                 <label class="text-[10px] text-gray-400 font-bold uppercase whitespace-nowrap">Largura:</label>
-                                <!-- AUMENTADO O MAX PARA 2500 PARA SUPORTAR A LARGURA DE 1742px DE FORMA SEGURA -->
                                 <input type="range" id="sliderLarguraCaixaTexto" min="100" max="2500" value="1742" oninput="window.atualizarLarguraCaixaAtiva()">
                                 <span id="lblLarguraCaixaTexto" class="text-xs font-bold text-white w-10">1742px</span>
                             </div>
@@ -1078,7 +1060,6 @@
             window.fecharModalOrigemScanner(); indicePaginaSendoEditada = null; 
             if (origem === 'camera') { document.getElementById('inputArquivoScannerCamera')?.click(); } 
             else if (origem === 'galeria') { document.getElementById('inputArquivoScannerGaleria')?.click(); }
-            else if (origem === 'pdf') { document.getElementById('inputScannerPDF')?.click(); }
         };
 
         window.fetchComProxyFallback = async function(url) {
@@ -1241,7 +1222,6 @@
                     const txtB = document.getElementById("txtBtnCarimbo"); 
                     if (txtB) txtB.innerText = imgCarimboElemento ? "Reaplicar Carimbo" : "Carimbar";
 
-                    // AQUI A MÁGICA DO LIMITE MAIOR
                     const slLarg = document.getElementById("sliderLarguraCaixaTexto"); 
                     if (slLarg) { slLarg.max = Math.max(larguraCrop, 2500); slLarg.value = Math.min(1742, larguraCrop - 80); }
                     
@@ -1370,7 +1350,6 @@
                 const txtB = document.getElementById("txtBtnCarimbo"); 
                 if (txtB) txtB.innerText = imgCarimboElemento ? "Reaplicar Carimbo" : "Carimbar";
 
-                // AQUI A MÁGICA DO LIMITE MAIOR
                 const slLarg = document.getElementById("sliderLarguraCaixaTexto"); 
                 if (slLarg) { slLarg.max = Math.max(larguraCrop, 2500); slLarg.value = Math.min(1742, larguraCrop - 80); }
                 
@@ -1424,13 +1403,11 @@
             let idxPaciente = caixasTexto.findIndex(c => !c.isMarcelly);
             if (idxPaciente !== -1) {
                 caixasTexto[idxPaciente].texto = nomePaciente; 
-                // APLICA O NOVO PADRÃO
                 caixasTexto[idxPaciente].tamanhoFonte = 80;
                 caixasTexto[idxPaciente].larguraCaixa = 1742;
                 indiceCaixaTextoAtiva = idxPaciente;
             } else {
                 let posY = 40; if (caixasTexto.some(c => c.isMarcelly)) posY = 150;
-                // CRIA COM O NOVO PADRÃO
                 caixasTexto.push({ id: Date.now(), texto: nomePaciente, posicao: { x: 40, y: posY }, cor: "#000000", tamanhoFonte: 80, larguraCaixa: 1742, dimensaoCalculada: { w: 1742, h: 100 }, isMarcelly: false });
                 indiceCaixaTextoAtiva = caixasTexto.length - 1; 
             }
@@ -1849,33 +1826,8 @@
             if (input.files && input.files.length > 0) {
                 const file = input.files[0];
                 
-                if (tipo === 'scanner_pdf' && file.type === 'application/pdf') {
-                    modoUploadAtual = 'scanner'; 
-                    const areaEscolha = document.getElementById("areaEscolhaModo"); if (areaEscolha) areaEscolha.classList.add("hidden");
-                    const areaPrev = document.getElementById("areaPreviewScanner"); if (areaPrev) { areaPrev.classList.remove("hidden"); areaPrev.classList.add("flex"); }
-                    const btnSalvar = document.getElementById("btnSalvarUpload"); if (btnSalvar) { btnSalvar.classList.remove("hidden"); btnSalvar.classList.add("flex"); btnSalvar.disabled = true; btnSalvar.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Lendo Páginas do PDF...`; }
-                    const grid = document.getElementById("gridPaginasScanner"); if (grid) grid.innerHTML = `<div class="col-span-2 text-center text-xs text-gray-400 py-8">Aguarde, a Inteligência Artificial está escaneando a letra do PDF...</div>`;
-
-                    try {
-                        const arrayBuffer = await file.arrayBuffer(); const pdfDocJs = await window.pdfjsLib.getDocument({data: arrayBuffer}).promise; 
-                        const worker = await Tesseract.createWorker('por');
-
-                        for (let pageNum = 1; pageNum <= pdfDocJs.numPages; pageNum++) {
-                            const page = await pdfDocJs.getPage(pageNum), viewport = page.getViewport({ scale: 1.5 }), canvas = document.createElement('canvas'), ctx = canvas.getContext('2d'); canvas.height = viewport.height; canvas.width = viewport.width;
-                            ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height); await page.render({ canvasContext: ctx, viewport: viewport }).promise;
-                            const imgDataUrl = canvas.toDataURL('image/jpeg', 0.85);
-                            let nomeSugerido = "";
-                            try { const imgBw = await preProcessarImagemParaOCR(imgDataUrl); const ret = await worker.recognize(imgBw); let nomeVisto = encontrarPacienteNoBanco(ret.data.text); if (nomeVisto !== "Desconhecido") nomeSugerido = nomeVisto; } catch(e) {}
-                            arrayPaginasEscaneadas.push({ finalDataUrl: imgDataUrl, baseDataUrl: imgDataUrl, paciente: nomeSugerido, arquivoOriginalParaRelatorioGeral: file });
-                        }
-                        await worker.terminate();
-                    } catch (err) {}
-                    
-                    window.renderizarCarrinhoScanner(); if (btnSalvar) { btnSalvar.disabled = false; btnSalvar.innerHTML = `<i class="fas fa-cloud-upload-alt"></i> Salvar e Enviar`; }
-                    input.value = ""; return;
-                }
-
-                modoUploadAtual = (tipo === 'scanner_pdf') ? 'generico' : tipo; 
+                // FLUXO NORMAL GENÉRICO
+                modoUploadAtual = tipo; 
                 for (let i = 0; i < input.files.length; i++) { arquivosFilaEnvio.push(input.files[i]); }
                 const areaEscolha = document.getElementById("areaEscolhaModo"); if (areaEscolha) areaEscolha.classList.add("hidden");
                 const areaPrevArq = document.getElementById("areaPreviewArquivos"); if (areaPrevArq) { areaPrevArq.classList.remove("hidden"); areaPrevArq.classList.add("flex"); }
@@ -2134,8 +2086,7 @@
         window.atualizarContagemSelecao = function() { document.getElementById('txtContagemSelecao').innerText = `${window.itensSelecionados.size} selecionado(s)`; };
         window.cancelarModoSelecao = function() { window.modoSelecaoAtivo = false; window.tipoSelecaoAtual = ''; window.itensSelecionados.clear(); document.getElementById('barraSelecao').classList.add('hidden'); document.getElementById('barraSelecao').classList.remove('flex'); document.getElementById('secaoFiltros').classList.remove('hidden'); document.getElementById('fabUpload').classList.remove('hidden'); if(window.pastaAbertaAtual === 'historico_exportacao_raiz') { window.pastaAbertaAtual = null; } window.aplicarFiltrosNaGaleria(); };
         
-        // --- LÓGICA DE EXCLUSÃO RESTAURADA COM CONFIRMAÇÃO ---
-        window.iniciarExclusaoArquivo = function(){ 
+        window.iniciarExclusaoArquivo = function() { 
             window.fecharModalVisualizacao(); 
             alvoAtualExclusao = window.idImagemAtiva; 
             tipoAtualExclusao = 'arquivo'; 
