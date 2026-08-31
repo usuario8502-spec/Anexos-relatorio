@@ -3286,15 +3286,13 @@
                     const card = document.createElement("div"); 
                     card.className = `relative bg-gray-800 border ${sClass} p-3 rounded-lg shadow-sm flex items-center gap-3 transition cursor-pointer active:scale-95`;
                     
-                    let clickAc = '';
-                    if (window.modoSelecaoAtivo) {
-                        clickAc = `window.toggleSelecaoItem('${loteNome}')`;
-                    } else {
-                        clickAc = `window.abrirModalAcaoLoteLixeira('${loteNome}')`;
-                    }
-
-                    card.onclick = function() { eval(clickAc); };
-                    
+                    card.onclick = function() {
+                        if (window.modoSelecaoAtivo) {
+                            window.toggleSelecaoItem(loteNome);
+                        } else {
+                            window.abrirModalAcaoLoteLixeira(loteNome);
+                        }
+                    };
                     card.innerHTML = `${checkHTML} <div class="w-12 h-12 bg-red-900/20 text-red-400 border border-red-800/40 rounded-lg flex items-center justify-center flex-shrink-0"><i class="fas fa-folder text-2xl"></i></div> <div class="flex-1 min-w-0"><span class="font-bold text-gray-200 text-sm block truncate">${loteNome}</span><p class="text-[10px] text-gray-400 mt-0.5">${lotes[loteNome].length} itens excluídos</p></div>`;
                     container.appendChild(card);
                 });
@@ -3530,13 +3528,6 @@
                 };
             }
 
-            if(dblClickAc) {
-                card.ondblclick = function(e) {
-                    if (card.clickTimeout) clearTimeout(card.clickTimeout);
-                    eval(dblClickAc);
-                };
-            }
-
             card.innerHTML = `${checkHTML}<div class="w-12 h-12 ${bgClass} rounded-lg flex items-center justify-center border flex-shrink-0">${iconeHtml}</div><div class="flex-1 min-w-0"><span class="font-bold text-gray-200 text-sm truncate uppercase block">${nomePasta}</span><p class="text-[10px] text-gray-400 mt-0.5">${subtitulo}</p></div><i class="fas fa-chevron-right text-gray-600 text-xs mr-1"></i>`;
             container.appendChild(card);
         }
@@ -3597,6 +3588,7 @@
                         acaoDuploClique();
                     };
                 }
+
                 card.innerHTML = `${checkHTML}${icone}<div class="flex-1 min-w-0"><h4 class="font-bold text-white text-[11px] truncate uppercase">${arq.nome}</h4><p class="text-[9px] text-gray-500 mt-1"><i class="far fa-clock"></i> ${dataStr} às ${horaStr}</p></div>`;
                 container.appendChild(card);
             });
