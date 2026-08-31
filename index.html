@@ -3477,60 +3477,73 @@
         };
 
         function renderizarCardPasta(container, nomePasta, subtitulo, rota, tipoPasta = 'geral') {
-            let bgClass = "bg-blue-900/20 border-blue-800/40";
-            let iconeHtml = '<i class="fas fa-folder-open text-blue-500 text-2xl"></i>';
-            
-            // VERIFICA SE É PASTA DE PACIENTE PARA USAR A SUA IMAGEM
-            if (tipoPasta === 'paciente') { 
-                bgClass = "bg-indigo-900/20 border-indigo-800/40"; 
-                // A mágica acontece aqui: A imagem vira branca com o filtro de inversão!
-                iconeHtml = '<img src="./psicologo.png" class="w-8 h-8 object-contain" style="filter: brightness(0) invert(1) opacity(0.9);">'; 
-            } else if (tipoPasta === 'diversos') { 
-                bgClass = "bg-purple-900/20 border-purple-800/40"; 
-                iconeHtml = '<i class="fas fa-layer-group text-purple-400 text-2xl"></i>';
-            } else if (tipoPasta === 'data') { 
-                bgClass = "bg-orange-900/20 border-orange-800/40"; 
-                iconeHtml = '<i class="fas fa-calendar-day text-orange-400 text-2xl"></i>';
-            }
+    let bgClass = "bg-blue-900/20 border-blue-800/40";
+    let iconeHtml = '<i class="fas fa-folder-open text-blue-500 text-2xl"></i>';
 
-            let isChecked = false;
-            let selClass = '';
-            let checkHTML = '';
+    if (tipoPasta === 'paciente') { 
+        bgClass = "bg-indigo-900/20 border-indigo-800/40"; 
+        iconeHtml = '<img src="./psicologo.png" class="w-8 h-8 object-contain" style="filter: brightness(0) invert(1) opacity(0.9);">'; 
+    } else if (tipoPasta === 'diversos') { 
+        bgClass = "bg-purple-900/20 border-purple-800/40"; 
+        iconeHtml = '<i class="fas fa-layer-group text-purple-400 text-2xl"></i>';
+    } else if (tipoPasta === 'data') { 
+        bgClass = "bg-orange-900/20 border-orange-800/40"; 
+        iconeHtml = '<i class="fas fa-calendar-day text-orange-400 text-2xl"></i>';
+    } else if (tipoPasta === 'arquivo_morto') {
+        bgClass = "bg-gray-700/50 border-gray-600/50";
+        iconeHtml = '<i class="fas fa-archive text-gray-400 text-2xl"></i>';
+    }
 
-            if (window.modoSelecaoAtivo && window.tipoSelecaoAtual === 'pastas') {
-                isChecked = window.itensSelecionados.has(nomePasta);
-                checkHTML = `<input type="checkbox" class="checkbox-selecao absolute top-2 right-2 z-10 pointer-events-none" ${isChecked ? 'checked' : ''}>`;
-                if(isChecked) selClass = 'border-blue-500 bg-blue-900/40';
-            }
+    if (rota === 'relatorio_geral') {
+        bgClass = "bg-blue-900/20 border-blue-800/40";
+        iconeHtml = '<img src="./bloco-de-anotacoes.png" class="w-8 h-8 object-contain" style="filter: brightness(0) invert(1) opacity(0.9);">';
+    } else if (rota === 'historico_gerado') {
+        bgClass = "bg-teal-900/20 border-teal-800/40";
+        iconeHtml = '<img src="./exportar.png" class="w-8 h-8 object-contain" style="filter: brightness(0) invert(1) opacity(0.9);">';
+    }
 
-            let acaoClique = () => window.abrirPasta(rota); 
-            if (window.modoSelecaoAtivo && window.tipoSelecaoAtual === 'pastas') acaoClique = () => window.toggleSelecaoItem(nomePasta);
-            if (window.modoSelecaoAtivo && window.tipoSelecaoAtual === 'exportacao') acaoClique = () => window.abrirPasta(rota);
+    let isChecked = false;
+    let selClass = '';
+    let checkHTML = '';
 
-            let acaoDuploClique = null; 
-            if (tipoPasta === 'data' && !window.modoSelecaoAtivo) acaoDuploClique = () => window.perguntarApagarPasta(nomePasta);
-            if (tipoPasta === 'paciente' && !window.modoSelecaoAtivo) acaoDuploClique = () => window.arquivarPaciente(nomePasta);
-            if (tipoPasta === 'arquivo_morto' && !window.modoSelecaoAtivo) acaoDuploClique = () => window.restaurarArquivoMorto(nomePasta);
+    if (window.modoSelecaoAtivo && window.tipoSelecaoAtual === 'pastas') {
+        isChecked = window.itensSelecionados.has(nomePasta);
+        checkHTML = `<input type="checkbox" class="checkbox-selecao absolute top-2 right-2 z-10 pointer-events-none" ${isChecked ? 'checked' : ''}>`;
+        if(isChecked) selClass = 'border-blue-500 bg-blue-900/40';
+    }
 
-            card.onclick = function(e) {
-                if (acaoDuploClique) {
-                    if (card.clickTimeout) clearTimeout(card.clickTimeout);
-                    card.clickTimeout = setTimeout(() => { acaoClique(); }, 250);
-                } else {
-                    acaoClique();
-                }
-            };
+    // A LINHA ABAIXO ESTAVA FALTANDO NO SEU CÓDIGO
+    const card = document.createElement("div");
+    card.className = `relative bg-gray-800 border ${selClass || 'border-gray-700 hover:border-blue-500/50 hover:bg-gray-700/50'} p-3 rounded-lg shadow-sm flex items-center gap-3 transition cursor-pointer active:scale-95`;
 
-            if(acaoDuploClique) {
-                card.ondblclick = function(e) {
-                    if (card.clickTimeout) clearTimeout(card.clickTimeout);
-                    acaoDuploClique();
-                };
-            }
+    let acaoClique = () => window.abrirPasta(rota); 
+    if (window.modoSelecaoAtivo && window.tipoSelecaoAtual === 'pastas') acaoClique = () => window.toggleSelecaoItem(nomePasta);
+    if (window.modoSelecaoAtivo && window.tipoSelecaoAtual === 'exportacao') acaoClique = () => window.abrirPasta(rota);
 
-            card.innerHTML = `${checkHTML}<div class="w-12 h-12 ${bgClass} rounded-lg flex items-center justify-center border flex-shrink-0">${iconeHtml}</div><div class="flex-1 min-w-0"><span class="font-bold text-gray-200 text-sm truncate uppercase block">${nomePasta}</span><p class="text-[10px] text-gray-400 mt-0.5">${subtitulo}</p></div><i class="fas fa-chevron-right text-gray-600 text-xs mr-1"></i>`;
-            container.appendChild(card);
+    let acaoDuploClique = null; 
+    if (tipoPasta === 'data' && !window.modoSelecaoAtivo) acaoDuploClique = () => window.perguntarApagarPasta(nomePasta);
+    if (tipoPasta === 'paciente' && !window.modoSelecaoAtivo) acaoDuploClique = () => window.arquivarPaciente(nomePasta);
+    if (tipoPasta === 'arquivo_morto' && !window.modoSelecaoAtivo) acaoDuploClique = () => window.restaurarArquivoMorto(nomePasta);
+
+    card.onclick = function(e) {
+        if (acaoDuploClique) {
+            if (card.clickTimeout) clearTimeout(card.clickTimeout);
+            card.clickTimeout = setTimeout(() => { acaoClique(); }, 250);
+        } else {
+            acaoClique();
         }
+    };
+
+    if(acaoDuploClique) {
+        card.ondblclick = function(e) {
+            if (card.clickTimeout) clearTimeout(card.clickTimeout);
+            acaoDuploClique();
+        };
+    }
+
+    card.innerHTML = `${checkHTML}<div class="w-12 h-12 ${bgClass} rounded-lg flex items-center justify-center border flex-shrink-0">${iconeHtml}</div><div class="flex-1 min-w-0"><span class="font-bold text-gray-200 text-sm truncate uppercase block">${nomePasta}</span><p class="text-[10px] text-gray-400 mt-0.5">${subtitulo}</p></div><i class="fas fa-chevron-right text-gray-600 text-xs mr-1"></i>`;
+    container.appendChild(card);
+}
 
         function renderizarArquivosFinais(lista, container) {
             if (lista.length === 0 && window.pastaAbertaAtual !== 'lixeira') { 
