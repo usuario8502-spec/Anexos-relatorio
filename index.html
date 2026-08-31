@@ -2695,17 +2695,18 @@
                             elExcel.innerHTML = `<div class="text-red-400 text-center p-4">Erro ao carregar pré-visualização. Clique em "Baixar" para abrir o arquivo.</div>`;
                         });
                 }
-            } else if (['pdf', 'doc', 'docx', 'ppt', 'pptx'].includes(tp)) { 
+            } else if (tp === 'pdf') { 
+                if (elIframe) { 
+                    elIframe.src = url; 
+                    elIframe.classList.remove("hidden"); 
+                }
+            } else if (['doc', 'docx', 'ppt', 'pptx'].includes(tp)) { 
                 if (elIframe) { 
                     elIframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`; 
                     elIframe.classList.remove("hidden"); 
                 }
             } else { 
-                if (elIconeArea) { elIconeArea.classList.remove("hidden"); elIconeArea.classList.add("flex"); }
-                if (txtExtensao) txtExtensao.innerText = `Arquivo ${tp.toUpperCase()}`; 
-                if (elIconeFa) {
-                    if (['zip', 'rar'].includes(tp)) { elIconeFa.className = "fas fa-file-archive text-6xl text-yellow-500"; }
-                    else { elIconeFa.className = "fas fa-file-alt text-6xl text-purple-500"; } 
+                if (elIconeArea) { elIconeArea.classList.remove("hidden"); elIconeArea.classList.add("flex"); } 
                 }
             }
             
