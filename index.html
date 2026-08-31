@@ -2695,13 +2695,55 @@
                         });
                 }
             } else if (tp === 'pdf') { 
-                // CORREÇÃO: Abre o PDF direto no navegador, ignorando o limite de 25MB do Google
-                if (elIframe) { 
-                    elIframe.src = url; 
-                    elIframe.classList.remove("hidden"); 
+                // Verifica se o acesso é por um celular/tablet
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                
+                if (isMobile) {
+                    if (elExcel) {
+                        // Reutilizamos a div do Excel porque ela já tem rolagem pronta (overflow-auto)
+                        elExcel.classList.remove("hidden");
+                        elExcel.innerHTML = `<div class="flex flex-col items-center justify-center h-full gap-2 text-blue-400"><i class="fas fa-spinner fa-spin text-2xl"></i><span class="text-center text-xs">Carregando PDF completo...<br><small class="text-gray-500">(Pode levar um tempinho dependendo do tamanho)</small></span></div>`;
+                        
+                        window.fetchComProxyFallback(url).then(buffer => {
+                            window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+                            const loadingTask = window.pdfjsLib.getDocument({ data: buffer });
+                            
+                            loadingTask.promise.then(async (pdf) => {
+                                elExcel.innerHTML = '';
+                                
+                                // Renderiza TODAS as páginas sequencialmente para não estourar a RAM do celular
+                                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                                    try {
+                                        const page = await pdf.getPage(pageNum);
+                                        const viewport = page.getViewport({ scale: 1.2 }); // Escala otimizada para leitura
+                                        
+                                        const canvas = document.createElement('canvas');
+                                        canvas.className = "max-w-full h-auto mb-3 rounded border border-gray-700 mx-auto shadow-md bg-white";
+                                        const ctx = canvas.getContext('2d');
+                                        canvas.width = viewport.width;
+                                        canvas.height = viewport.height;
+                                        
+                                        await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                                        elExcel.appendChild(canvas);
+                                    } catch (errPage) {
+                                        console.warn("Erro ao renderizar a página " + pageNum, errPage);
+                                    }
+                                }
+                            }).catch(err => {
+                                elExcel.innerHTML = `<div class="flex flex-col items-center justify-center h-full gap-2 text-red-400"><i class="fas fa-exclamation-triangle text-2xl"></i><span class="text-center text-xs">Pré-visualização indisponível.<br>Clique em "Baixar" para ler o arquivo.</span></div>`;
+                            });
+                        }).catch(err => {
+                             elExcel.innerHTML = `<div class="flex flex-col items-center justify-center h-full gap-2 text-red-400"><i class="fas fa-exclamation-triangle text-2xl"></i><span class="text-center text-xs">Sem pré-visualização direta.<br>Clique em "Baixar" para abrir.</span></div>`;
+                        });
+                    }
+                } else {
+                    // No computador, usa o iframe normal que suporta PDF nativo de qualquer tamanho
+                    if (elIframe) { 
+                        elIframe.src = url; 
+                        elIframe.classList.remove("hidden"); 
+                    }
                 }
             } else if (['doc', 'docx', 'ppt', 'pptx'].includes(tp)) { 
-                // Apenas Word e PowerPoint continuam passando pelo Google Docs
                 if (elIframe) { 
                     elIframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`; 
                     elIframe.classList.remove("hidden"); 
