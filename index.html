@@ -3505,24 +3505,30 @@
                 if(isChecked) selClass = 'border-blue-500 bg-blue-900/40';
             }
 
-            const card = document.createElement("div");
-            card.className = `relative bg-gray-800 border ${selClass || 'border-gray-700 hover:border-blue-500/50 hover:bg-gray-700/50'} p-3 rounded-lg shadow-sm flex items-center gap-3 transition cursor-pointer active:scale-95`;
-            
-            let clickAc = `window.abrirPasta('${rota}')`; 
-            if (window.modoSelecaoAtivo && window.tipoSelecaoAtual === 'pastas') clickAc = `window.toggleSelecaoItem('${nomePasta}')`;
-            if (window.modoSelecaoAtivo && window.tipoSelecaoAtual === 'exportacao') clickAc = `window.abrirPasta('${rota}')`;
+            let acaoClique = () => window.abrirPasta(rota); 
+            if (window.modoSelecaoAtivo && window.tipoSelecaoAtual === 'pastas') acaoClique = () => window.toggleSelecaoItem(nomePasta);
+            if (window.modoSelecaoAtivo && window.tipoSelecaoAtual === 'exportacao') acaoClique = () => window.abrirPasta(rota);
 
-            let dblClickAc = ''; 
-            if (tipoPasta === 'data' && !window.modoSelecaoAtivo) dblClickAc = `window.perguntarApagarPasta('${nomePasta}')`;
+            let acaoDuploClique = null; 
+            if (tipoPasta === 'data' && !window.modoSelecaoAtivo) acaoDuploClique = () => window.perguntarApagarPasta(nomePasta);
+            if (tipoPasta === 'paciente' && !window.modoSelecaoAtivo) acaoDuploClique = () => window.arquivarPaciente(nomePasta);
+            if (tipoPasta === 'arquivo_morto' && !window.modoSelecaoAtivo) acaoDuploClique = () => window.restaurarArquivoMorto(nomePasta);
 
             card.onclick = function(e) {
-                if (dblClickAc) {
+                if (acaoDuploClique) {
                     if (card.clickTimeout) clearTimeout(card.clickTimeout);
-                    card.clickTimeout = setTimeout(() => { eval(clickAc); }, 250);
+                    card.clickTimeout = setTimeout(() => { acaoClique(); }, 250);
                 } else {
-                    eval(clickAc);
+                    acaoClique();
                 }
             };
+
+            if(acaoDuploClique) {
+                card.ondblclick = function(e) {
+                    if (card.clickTimeout) clearTimeout(card.clickTimeout);
+                    acaoDuploClique();
+                };
+            }
 
             if(dblClickAc) {
                 card.ondblclick = function(e) {
@@ -3564,34 +3570,33 @@
                 const card = document.createElement("div");
                 card.className = `relative bg-gray-900 border ${selClass || 'border-gray-800 hover:border-blue-500/30'} p-2.5 rounded-lg shadow flex gap-3 items-center transition cursor-pointer active:scale-95`;
                 
-                let clickAc = `window.abrirModalVisualizacao('${arq.id}', '${arq.url}', '${nomeSeguro}', '${arq.tipo}')`;
-                let dblClickAc = '';
+                let acaoClique = () => window.abrirModalVisualizacao(arq.id, arq.url, arq.nome, arq.tipo);
+                let acaoDuploClique = null;
 
                 if (window.modoSelecaoAtivo) {
                     if (window.tipoSelecaoAtual === 'exportacao') {
-                        clickAc = `window.toggleSelecaoItem('${arq.id}')`;
-                        dblClickAc = `window.abrirModalVisualizacao('${arq.id}', '${arq.url}', '${nomeSeguro}', '${arq.tipo}')`;
+                        acaoClique = () => window.toggleSelecaoItem(arq.id);
+                        acaoDuploClique = () => window.abrirModalVisualizacao(arq.id, arq.url, arq.nome, arq.tipo);
                     } else {
-                        clickAc = `window.toggleSelecaoItem('${arq.id}')`;
+                        acaoClique = () => window.toggleSelecaoItem(arq.id);
                     }
                 }
 
                 card.onclick = function(e) {
-                    if (dblClickAc) {
+                    if (acaoDuploClique) {
                         if (card.clickTimeout) clearTimeout(card.clickTimeout);
-                        card.clickTimeout = setTimeout(() => { eval(clickAc); }, 250);
+                        card.clickTimeout = setTimeout(() => { acaoClique(); }, 250);
                     } else {
-                        eval(clickAc);
+                        acaoClique();
                     }
                 };
 
-                if(dblClickAc) {
+                if(acaoDuploClique) {
                     card.ondblclick = function(e) {
                         if (card.clickTimeout) clearTimeout(card.clickTimeout);
-                        eval(dblClickAc);
+                        acaoDuploClique();
                     };
                 }
-
                 card.innerHTML = `${checkHTML}${icone}<div class="flex-1 min-w-0"><h4 class="font-bold text-white text-[11px] truncate uppercase">${arq.nome}</h4><p class="text-[9px] text-gray-500 mt-1"><i class="far fa-clock"></i> ${dataStr} às ${horaStr}</p></div>`;
                 container.appendChild(card);
             });
