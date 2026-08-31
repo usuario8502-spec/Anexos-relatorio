@@ -2590,7 +2590,6 @@
                 const card = document.createElement("div");
                 card.className = `relative bg-gray-900 border ${selClass || 'border-gray-800 hover:border-blue-500/30'} p-2.5 rounded-lg shadow flex gap-3 items-center transition cursor-pointer active:scale-95`;
                 
-                // CORREÇÃO: FUNÇÕES PURAS PARA IGNORAR APÓSTROFOS NOS ARQUIVOS
                 let acaoClique = () => window.abrirModalVisualizacao(arq.id, arq.url, arq.nome, arq.tipo);
                 let acaoDuploClique = null;
 
