@@ -2520,14 +2520,17 @@
             const card = document.createElement("div");
             card.className = `relative bg-gray-800 border ${selClass || 'border-gray-700 hover:border-blue-500/50 hover:bg-gray-700/50'} p-3 rounded-lg shadow-sm flex items-center gap-3 transition cursor-pointer active:scale-95`;
             
-            let clickAc = `window.abrirPasta('${rota}')`; 
-            if (window.modoSelecaoAtivo && window.tipoSelecaoAtual === 'pastas') clickAc = `window.toggleSelecaoItem('${nomePasta}')`;
-            if (window.modoSelecaoAtivo && window.tipoSelecaoAtual === 'exportacao') clickAc = `window.abrirPasta('${rota}')`;
+            const nomeSeguro = nomePasta.replace(/'/g, "\\'");
+            const rotaSegura = rota.replace(/'/g, "\\'");
+
+            let clickAc = `window.abrirPasta('${rotaSegura}')`; 
+            if (window.modoSelecaoAtivo && window.tipoSelecaoAtual === 'pastas') clickAc = `window.toggleSelecaoItem('${nomeSeguro}')`;
+            if (window.modoSelecaoAtivo && window.tipoSelecaoAtual === 'exportacao') clickAc = `window.abrirPasta('${rotaSegura}')`;
 
             let dblClickAc = ''; 
-            if (tipoPasta === 'data' && !window.modoSelecaoAtivo) dblClickAc = `window.perguntarApagarPasta('${nomePasta}')`;
-            if (tipoPasta === 'paciente' && !window.modoSelecaoAtivo) dblClickAc = `window.arquivarPaciente('${nomePasta}')`;
-            if (tipoPasta === 'arquivo_morto' && !window.modoSelecaoAtivo) dblClickAc = `window.restaurarArquivoMorto('${nomePasta}')`;
+            if (tipoPasta === 'data' && !window.modoSelecaoAtivo) dblClickAc = `window.perguntarApagarPasta('${nomeSeguro}')`;
+            if (tipoPasta === 'paciente' && !window.modoSelecaoAtivo) dblClickAc = `window.arquivarPaciente('${nomeSeguro}')`;
+            if (tipoPasta === 'arquivo_morto' && !window.modoSelecaoAtivo) dblClickAc = `window.restaurarArquivoMorto('${nomeSeguro}')`;
 
             card.onclick = function(e) {
                 if (dblClickAc) {
