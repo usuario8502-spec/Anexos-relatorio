@@ -3621,8 +3621,16 @@
             
             if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'imagem'].includes(tp)) { 
                 if (elImagem) { elImagem.src = url; elImagem.classList.remove("hidden"); } 
-            } else if (['pdf', 'xls', 'xlsx', 'doc', 'docx', 'csv'].includes(tp)) { 
-                if (elIframe) { elIframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`; elIframe.classList.remove("hidden"); } 
+            } else if (tp === 'pdf') {
+                if (elIframe) { 
+                    elIframe.src = url; // O navegador renderiza o PDF nativamente, sem limite de 25MB
+                    elIframe.classList.remove("hidden"); 
+                }
+            } else if (['doc', 'docx', 'ppt', 'pptx'].includes(tp)) { 
+                if (elIframe) { 
+                    elIframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`; 
+                    elIframe.classList.remove("hidden"); 
+                }
             } else { 
                 if (elIconeArea) { elIconeArea.classList.remove("hidden"); elIconeArea.classList.add("flex"); }
                 if (txtExtensao) txtExtensao.innerText = `Arquivo ${tp.toUpperCase()}`; 
